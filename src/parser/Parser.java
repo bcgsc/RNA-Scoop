@@ -9,10 +9,16 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class Parser {
+
+    /**
+     * Map of all genes parser has parsed so far
+     * Key is the gene's ID, value is the gene
+     */
     static HashMap<String, Gene> parsedGenes = new HashMap<>();
 
     /**
-     *
+     * Reads in file at given path and parses each line
+     * @param path path to the file
      */
     public static String readFile(String path) {
         try {
@@ -32,6 +38,11 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses array of exon information
+     * Adds exon to its correct isoform which is associated with its gene
+     * @param exonData array of exon information
+     */
     private static void parse(String[] exonData) {
         int chromosome = Integer.parseInt(exonData[0]);
         int start = Integer.parseInt(exonData[1]);

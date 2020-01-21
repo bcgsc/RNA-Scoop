@@ -4,7 +4,13 @@ package parser.data;
 import java.util.HashMap;
 
 public class Gene {
+
+    /**
+     * Map of all isoforms of this gene
+     * Key is transcript ID, value is the isoform
+     */
     HashMap<String, Isoform> isoforms;
+
     int startNucleotide;
     int endNucleotide;
     int chromosome;
@@ -12,6 +18,8 @@ public class Gene {
 
     public Gene(int chromosome, String strand) {
         isoforms = new HashMap<>();
+        // initializes startNucleotide to MAX_VALUE and endNucleotide to 0 in order for
+        // parser to correctly set the right values
         startNucleotide = Integer.MAX_VALUE;
         endNucleotide = 0;
         this.chromosome = chromosome;
