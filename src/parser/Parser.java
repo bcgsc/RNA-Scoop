@@ -5,8 +5,8 @@ import parser.data.Gene;
 import parser.data.Isoform;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 public class Parser {
 
@@ -14,7 +14,7 @@ public class Parser {
      * Map of all genes parser has parsed so far
      * Key is the gene's ID, value is the gene
      */
-    static HashMap<String, Gene> parsedGenes = new HashMap<>();
+    private static TreeMap<String, Gene> parsedGenes = new TreeMap<>();
 
     /**
      * Reads in file at given path and parses each line
@@ -75,7 +75,7 @@ public class Parser {
             gene.setEndNucleotide(exon.getEndNucleotide());
     }
 
-    public static HashMap<String, Gene> getParsedGenes() {
+    public static TreeMap<String, Gene> getParsedGenes() {
         return parsedGenes;
     }
 }

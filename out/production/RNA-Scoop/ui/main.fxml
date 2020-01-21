@@ -1,10 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.canvas.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.text.Text?>
-<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.text.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="ui.FXMLController" style="-fx-background-color: #d4d4d4;">
+<BorderPane style="-fx-background-color: #d8d9e3;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal" fx:controller="ui.FXMLController">
     <top>
         <VBox>
             <BorderPane.margin>
@@ -13,14 +15,18 @@
             <MenuBar>
                 <Menu text="File"/>
                 <Menu text="Edit"/>
-                <Menu text="View"/>
+                <Menu text="View">
+                    <MenuItem text="Close t-SNE Plot"/>
+                    <MenuItem text="Close Isoform View"/>
+                    <MenuItem text="Close Console"/>
+                </Menu>
                 <Menu text="Help"/>
             </MenuBar>
             <HBox alignment="CENTER">
-                <ComboBox promptText="Insert path to file here" fx:id="path" prefWidth="1050" editable="true"/>
-                <Button text="Load" onAction="#handleLoadButtonAction">
+                <ComboBox fx:id="path" editable="true" prefWidth="1050" promptText="Insert path to file here" />
+                <Button onAction="#handleLoadButtonAction" text="Load">
                     <HBox.margin>
-                        <Insets left="5"/>
+                        <Insets left="5" />
                     </HBox.margin>
                 </Button>
             </HBox>
@@ -33,16 +39,26 @@
             </BorderPane.margin>
             <HBox>
                 <VBox.margin>
-                    <Insets left="10" top="10" right="10"/>
+                    <Insets left="10" right="10" top="10"/>
                 </VBox.margin>
-                <Text text="gene: "/>
-                <ComboBox fx:id="geneSelector" editable="false" prefWidth="300" promptText="No Gene Selected"/>
+                <Text text="Gene: ">
+                    <HBox.margin>
+                        <Insets top="7"/>
+                    </HBox.margin>
+                </Text>
+                <ComboBox fx:id="geneSelector" prefWidth="300" promptText="No Gene Selected" />
             </HBox>
-            <ScrollPane fx:id="scrollPane" prefWidth="585" prefHeight="500" style="-fx-border-color: #adadad;">
+            <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585" style="-fx-background: #ffffff; -fx-border-color: #adadad;">
                 <VBox.margin>
-                    <Insets left="10" top="10" right="10" bottom="10"/>
+                    <Insets bottom="10" left="10" right="10" top="10" />
                 </VBox.margin>
-                <Canvas fx:id="canvas" height="1000"/>
+                    <VBox alignment="CENTER">
+                        <Canvas fx:id="canvas">
+                            <VBox.margin>
+                                <Insets bottom="15" left="15" right="15" top="15" />
+                            </VBox.margin>
+                        </Canvas>
+                    </VBox>
             </ScrollPane>
         </VBox>
     </center>
@@ -51,15 +67,14 @@
             <BorderPane.margin>
                 <Insets right="10"/>
             </BorderPane.margin>
-            <Text text="Where tSNE will go"/>
         </VBox>
     </right>
     <bottom>
         <VBox prefHeight="50" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
             <BorderPane.margin>
-                <Insets top="10"/>
+                <Insets top="10" />
             </BorderPane.margin>
-            <Label fx:id="console" text="Welcome to RNA-Scoop!"/>
+            <Label fx:id="console" text="Welcome to RNA-Scoop!" />
         </VBox>
     </bottom>
 </BorderPane>

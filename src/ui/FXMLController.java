@@ -20,18 +20,18 @@ import parser.data.Isoform;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.ResourceBundle;
+import java.util.TreeMap;
 
 public class FXMLController implements Initializable {
-    //private static final float CANVAS_SCALE_FACTOR = 1f;
+    private static final int CANVAS_MIN_WIDTH = 130;
     private static final int CANVAS_INIT_Y = 13;
     private static final int CANVAS_INIT_X = 0;
     private static final int SPACING = 25;
     private static final int SCROLLBAR_WIDTH = 20;
     private static final int CANVAS_MARGIN = 15;
     private static final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
-    private static final Font TRANSCRIPT_FONT = Font.font("Verdana",15);
+    private static final Font TRANSCRIPT_FONT = Font.font("Verdana",12);
     private static final int EXON_HEIGHT = 10;
 
     @FXML private ComboBox path;
@@ -58,12 +58,8 @@ public class FXMLController implements Initializable {
     @FXML
     protected void handleLoadButtonAction(ActionEvent event) {
         String consoleText = Parser.readFile((String) path.getValue());
-        HashMap<String, Gene> genes = Parser.getParsedGenes();
-        ObservableList<String> addedGenes= geneSelector.getItems();
-        for(String gene : genes.keySet()) {
-            if (!addedGenes.contains(gene))
-                addedGenes.add(gene);
-        }
+        addLoadedPaths();
+        addLoadedGenes();
         console.setText(consoleText);
     }
 
@@ -80,11 +76,13 @@ public class FXMLController implements Initializable {
      */
     private void initializeScrollPane() {
         scrollPane.widthProperty().addListener((ov, oldValue, newValue) -> {
-            canvas.setWidth(newValue.doubleValue() - (2 * CANVAS_MARGIN + SCROLLBAR_WIDTH));
-            String currGene = (String) geneSelector.getValue();
-            if (currGene != null)
-                drawGene(Parser.getParsedGenes().get(currGene), currGene);
-
+            double newCanvasWidth = newValue.doubleValue() - (2 * CANVAS_MARGIN + SCROLLBAR_WIDTH);
+            if (newCanvasWidth >= CANVAS_MIN_WIDTH) {
+                canvas.setWidth(newValue.doubleValue() - (2 * CANVAS_MARGIN + SCROLLBAR_WIDTH));
+                String currGene = (String) geneSelector.getValue();
+                if (currGene != null)
+                    drawGene(Parser.getParsedGenes().get(currGene), currGene);
+            }
         });
     }
 
@@ -95,6 +93,22 @@ public class FXMLController implements Initializable {
         geneSelector.valueProperty().addListener((ChangeListener<String>) (ov, oldValue, newValue) -> drawGene(Parser.getParsedGenes().get(newValue), newValue));
     }
 
+    private void addLoadedPaths() {
+        ObservableList<String> addedPaths = path.getItems();
+        if (!addedPaths.contains(path.getValue())) {
+            addedPaths.add((String) path.getValue());
+        }
+    }
+
+    private void addLoadedGenes() {
+        TreeMap<String, Gene> genes = Parser.getParsedGenes();
+        ObservableList<String> addedGenes= geneSelector.getItems();
+        for(String gene : genes.keySet()) {
+            if (!addedGenes.contains(gene))
+                addedGenes.add(gene);
+        }
+    }
+
     /**
      * Clears canvas, draws and labels all isoforms of the given gene
      * @param gene gene to draw
@@ -102,8 +116,17 @@ public class FXMLController implements Initializable {
      */
     private void drawGene(Gene gene, String geneID) {
         clearCanvas();
+        setCanvasHeight(gene);
         drawGeneID(geneID);
         drawAllIsoforms(gene);
+    }
+
+    /**
+     * Sets canvas height to height necessary to display given gene
+     */
+    private void setCanvasHeight(Gene gene) {
+        int numIsoforms = gene.getIsoforms().size();
+        canvas.setHeight(numIsoforms * SPACING * 2 + SPACING);
     }
 
     private void clearCanvas() {
@@ -130,9 +153,9 @@ public class FXMLController implements Initializable {
         double pixelsPerNucleotide = canvas.getWidth()/(geneEnd- geneStart);
         for(String transcriptID : gene.getIsoforms().keySet()) {
             gc.fillText(transcriptID, CANVAS_INIT_X, canvasCurrY);
-            canvasCurrY += SPACING / 2;
+            canvasCurrY += SPACING / 3;
             drawIsoform(gene.getIsoform(transcriptID), geneStart, pixelsPerNucleotide);
-            canvasCurrY += SPACING * 2;
+            canvasCurrY += SPACING * 5/3;
         }
     }
 

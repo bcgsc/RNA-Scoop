@@ -1,7 +1,7 @@
 package parser.data;
 
 
-import java.util.HashMap;
+import java.util.TreeMap;
 
 public class Gene {
 
@@ -9,7 +9,7 @@ public class Gene {
      * Map of all isoforms of this gene
      * Key is transcript ID, value is the isoform
      */
-    HashMap<String, Isoform> isoforms;
+    TreeMap<String, Isoform> isoforms;
 
     int startNucleotide;
     int endNucleotide;
@@ -17,7 +17,7 @@ public class Gene {
     String strand;
 
     public Gene(int chromosome, String strand) {
-        isoforms = new HashMap<>();
+        isoforms = new TreeMap<>();
         // initializes startNucleotide to MAX_VALUE and endNucleotide to 0 in order for
         // parser to correctly set the right values
         startNucleotide = Integer.MAX_VALUE;
@@ -46,7 +46,7 @@ public class Gene {
         return isoforms.get(transcriptID);
     }
 
-    public HashMap<String, Isoform> getIsoforms() {
+    public TreeMap<String, Isoform> getIsoforms() {
         return isoforms;
     }
 

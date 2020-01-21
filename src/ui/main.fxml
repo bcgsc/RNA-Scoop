@@ -6,17 +6,21 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane style="-fx-background-color: #d4d4d4;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal" fx:controller="ui.FXMLController">
+<BorderPane style="-fx-background-color: #d8d9e3;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal" fx:controller="ui.FXMLController">
     <top>
         <VBox>
             <BorderPane.margin>
-                <Insets bottom="10" />
+                <Insets bottom="10"/>
             </BorderPane.margin>
             <MenuBar>
-                <Menu text="File" />
-                <Menu text="Edit" />
-                <Menu text="View" />
-                <Menu text="Help" />
+                <Menu text="File"/>
+                <Menu text="Edit"/>
+                <Menu text="View">
+                    <MenuItem text="Close t-SNE Plot"/>
+                    <MenuItem text="Close Isoform View"/>
+                    <MenuItem text="Close Console"/>
+                </Menu>
+                <Menu text="Help"/>
             </MenuBar>
             <HBox alignment="CENTER">
                 <ComboBox fx:id="path" editable="true" prefWidth="1050" promptText="Insert path to file here" />
@@ -31,21 +35,25 @@
     <center>
         <VBox prefHeight="550" prefWidth="605" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
             <BorderPane.margin>
-                <Insets left="10" right="10" />
+                <Insets left="10" right="10"/>
             </BorderPane.margin>
             <HBox>
                 <VBox.margin>
-                    <Insets left="10" right="10" top="10" />
+                    <Insets left="10" right="10" top="10"/>
                 </VBox.margin>
-                <Text text="gene: " />
+                <Text text="Gene: ">
+                    <HBox.margin>
+                        <Insets top="7"/>
+                    </HBox.margin>
+                </Text>
                 <ComboBox fx:id="geneSelector" prefWidth="300" promptText="No Gene Selected" />
             </HBox>
-            <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="500" prefWidth="585" style="-fx-border-color: #adadad;">
+            <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585" style="-fx-background: #ffffff; -fx-border-color: #adadad;">
                 <VBox.margin>
                     <Insets bottom="10" left="10" right="10" top="10" />
                 </VBox.margin>
                     <VBox alignment="CENTER">
-                        <Canvas fx:id="canvas" height="1500">
+                        <Canvas fx:id="canvas">
                             <VBox.margin>
                                 <Insets bottom="15" left="15" right="15" top="15" />
                             </VBox.margin>
@@ -57,9 +65,8 @@
     <right>
         <VBox prefHeight="550" prefWidth="565" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
             <BorderPane.margin>
-                <Insets right="10" />
+                <Insets right="10"/>
             </BorderPane.margin>
-            <Text text="Where tSNE will go" />
         </VBox>
     </right>
     <bottom>
