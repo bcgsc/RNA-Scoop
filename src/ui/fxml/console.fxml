@@ -5,9 +5,9 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.controllers.ConsoleController"
-      prefHeight="50" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
+      fx:id="console" prefHeight="50" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
     <BorderPane.margin>
         <Insets top="10"/>
     </BorderPane.margin>
-    <Label fx:id="console" text="Welcome to RNA-Scoop!"/>
+    <Label fx:id="consoleMessage" text="Welcome to RNA-Scoop!"/>
 </VBox>

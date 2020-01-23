@@ -2,11 +2,17 @@ package ui.fxml.controllers;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
 public class ConsoleController {
-    @FXML private Label console;
+    @FXML private Label consoleMessage;
+    @FXML private VBox console;
 
-    public Label getConsole() {
+    public VBox getConsole() {
         return console;
+    }
+
+    public Label getConsoleMessage() {
+        return consoleMessage;
     }
 }

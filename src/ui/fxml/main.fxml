@@ -1,6 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
-<BorderPane style="-fx-background-color: #d8d9e3;" xmlns="http://javafx.com/javafx/10.0.2-internal" />
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.controllers.MainController"
+            fx:id="window" style="-fx-background-color: #d8d9e3;" >
+    <top>
+        <VBox>
+            <BorderPane.margin>
+                <Insets bottom="10"/>
+            </BorderPane.margin>
+            <MenuBar>
+                <Menu text="File"/>
+                <Menu text="Edit"/>
+                <Menu text="View">
+                    <MenuItem fx:id="tSNEToggle" onAction="#handleTSNEViewToggle" text="Close t-SNE Plot"/>
+                    <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close Isoform Plot"/>
+                    <MenuItem fx:id="consoleToggle" onAction="#handleConsoleViewToggle" text="Close Console"/>
+                </Menu>
+                <Menu text="Help"/>
+            </MenuBar>
+            <HBox alignment="CENTER">
+                <ComboBox fx:id="path" editable="true" prefWidth="1050" promptText="Insert path to file here"/>
+                <Button onAction="#handleLoadButtonAction" text="Load">
+                    <HBox.margin>
+                        <Insets left="5"/>
+                    </HBox.margin>
+                </Button>
+            </HBox>
+        </VBox>
+    </top>
+</BorderPane>
 

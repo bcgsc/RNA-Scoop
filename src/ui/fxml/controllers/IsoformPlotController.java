@@ -6,6 +6,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -37,6 +38,7 @@ public class IsoformPlotController implements Initializable {
     @FXML private Canvas canvas;
     @FXML private ScrollPane scrollPane;
     @FXML private CheckComboBox geneSelector;
+    @FXML private VBox isoformPlot;
 
     private GraphicsContext gc;
     private int canvasCurrY;
@@ -51,6 +53,11 @@ public class IsoformPlotController implements Initializable {
     public CheckComboBox getGeneSelector() {
         return geneSelector;
     }
+
+    public VBox getIsoformPlot() {
+        return isoformPlot;
+    }
+
 
     private void initializeGraphics() {
         gc = canvas.getGraphicsContext2D();

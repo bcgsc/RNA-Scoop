@@ -8,9 +8,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import ui.fxml.controllers.ConsoleController;
-import ui.fxml.controllers.IsoformPlotController;
-import ui.fxml.controllers.LoadPathController;
+import ui.fxml.controllers.MainController;
 
 
 public class Main extends Application {
@@ -19,37 +17,24 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        BorderPane root = FXMLLoader.load(getClass().getResource("fxml/main.fxml"));
         FXMLLoader centerLoader = new FXMLLoader(getClass().getResource("fxml/isoformplot.fxml"));
         FXMLLoader bottomLoader = new FXMLLoader(getClass().getResource("fxml/console.fxml"));
-        FXMLLoader topLoader = new FXMLLoader(getClass().getResource("fxml/menu.fxml"));
+        FXMLLoader rightLoader = new FXMLLoader(getClass().getResource("fxml/tsneplot.fxml"));
+        FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("fxml/main.fxml"));
 
-        loadTSNE(root);
-        loadConsole(root, bottomLoader);
-        loadIsoformViewer(root, centerLoader);
-        loadMenu(root, bottomLoader, centerLoader, topLoader);
+        BorderPane root = mainLoader.load();
+        root.setRight(rightLoader.load());
+        root.setBottom(bottomLoader.load());
+        root.setCenter(centerLoader.load());
 
+        setUpControllers(mainLoader, bottomLoader, centerLoader, rightLoader);
         setUpWindow(primaryStage, root);
     }
 
-    private void loadTSNE(BorderPane root) throws java.io.IOException {
-        root.setRight(FXMLLoader.load(getClass().getResource("fxml/tsne.fxml")));
-    }
 
-    private void loadConsole(BorderPane root, FXMLLoader bottomLoader) throws java.io.IOException {
-        root.setBottom(bottomLoader.load());
-    }
-
-    private void loadIsoformViewer(BorderPane root, FXMLLoader centerLoader) throws java.io.IOException {
-        root.setCenter(centerLoader.load());
-    }
-
-    private void loadMenu(BorderPane root, FXMLLoader bottomLoader, FXMLLoader centerLoader, FXMLLoader topLoader) throws java.io.IOException {
-        root.setTop(topLoader.load());
-        IsoformPlotController isoformPlotController = centerLoader.getController();
-        LoadPathController loadPathController = topLoader.getController();
-        ConsoleController consoleController = bottomLoader.getController();
-        loadPathController.initData(consoleController.getConsole(), isoformPlotController.getGeneSelector());
+    private void setUpControllers(FXMLLoader mainLoader, FXMLLoader bottomLoader, FXMLLoader centerLoader, FXMLLoader rightLoader) {
+        MainController mainController = mainLoader.getController();
+        mainController.initData(bottomLoader.getController(), centerLoader.getController(), rightLoader.getController());
     }
 
     private void setUpWindow(Stage primaryStage, BorderPane root) {
