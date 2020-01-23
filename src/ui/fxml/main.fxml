@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<BorderPane style="-fx-background-color: #d8d9e3;" xmlns="http://javafx.com/javafx/10.0.2-internal" />
+

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<?import org.controlsfx.control.CheckComboBox?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.controllers.IsoformPlotController"
+      prefHeight="550" prefWidth="605" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
+    <BorderPane.margin>
+        <Insets left="10" right="10"/>
+    </BorderPane.margin>
+    <HBox>
+        <VBox.margin>
+            <Insets left="10" right="10" top="10"/>
+        </VBox.margin>
+        <Text text="Gene: ">
+            <HBox.margin>
+                <Insets top="7"/>
+            </HBox.margin>
+        </Text>
+        <CheckComboBox fx:id="geneSelector" prefWidth="605"/>
+    </HBox>
+    <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585"
+                style="-fx-background: #ffffff; -fx-border-color: #adadad;">
+        <VBox.margin>
+            <Insets bottom="10" left="10" right="10" top="10"/>
+        </VBox.margin>
+        <VBox alignment="CENTER">
+            <Canvas fx:id="canvas">
+                <VBox.margin>
+                    <Insets bottom="15" left="15" right="15" top="15"/>
+                </VBox.margin>
+            </Canvas>
+        </VBox>
+    </ScrollPane>
+</VBox>

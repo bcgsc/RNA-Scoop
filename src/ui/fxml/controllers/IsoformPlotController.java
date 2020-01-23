@@ -1,14 +1,10 @@
-package ui;
+package ui.fxml.controllers;
 
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -21,9 +17,12 @@ import parser.data.Isoform;
 import ui.util.Util;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.ResourceBundle;
 
-public class FXMLController implements Initializable {
+public class IsoformPlotController implements Initializable {
     private static final int CANVAS_MIN_WIDTH = 150;
     private static final int CANVAS_INIT_Y = 13;
     private static final int GENE_ID_X_OFFSET = 0;
@@ -35,8 +34,6 @@ public class FXMLController implements Initializable {
     private static final Font TRANSCRIPT_FONT = Font.font("Verdana",12);
     private static final int EXON_HEIGHT = 10;
 
-    @FXML private ComboBox path;
-    @FXML private Label console;
     @FXML private Canvas canvas;
     @FXML private ScrollPane scrollPane;
     @FXML private CheckComboBox geneSelector;
@@ -51,17 +48,8 @@ public class FXMLController implements Initializable {
         initializeGeneSelector();
     }
 
-    /**
-     * When load button is pressed, parses path to file and retrieves parsed genes
-     * Adds parsed genes to gene selector's items
-     * Displays error (and successful completion) messages in console
-     */
-    @FXML
-    protected void handleLoadButtonAction(ActionEvent event) {
-        String consoleText = Parser.readFile((String) path.getValue());
-        addLoadedPaths();
-        addLoadedGenes();
-        console.setText(consoleText);
+    public CheckComboBox getGeneSelector() {
+        return geneSelector;
     }
 
     private void initializeGraphics() {
@@ -90,23 +78,6 @@ public class FXMLController implements Initializable {
      */
     private void initializeGeneSelector() {
         geneSelector.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) c -> drawGenes());
-    }
-
-    private void addLoadedPaths() {
-        ObservableList<String> addedPaths = path.getItems();
-        if (!addedPaths.contains(path.getValue())) {
-            addedPaths.add((String) path.getValue());
-        }
-    }
-
-    private void addLoadedGenes() {
-        HashMap<String, Gene> genes = Parser.getParsedGenes();
-        ObservableList<String> addedGenes= geneSelector.getItems();
-        for(String gene : genes.keySet()) {
-            if (!addedGenes.contains(gene))
-                addedGenes.add(gene);
-        }
-        addedGenes.sort(String::compareTo);
     }
 
     /**
@@ -161,7 +132,7 @@ public class FXMLController implements Initializable {
         int geneStart = gene.getStartNucleotide();
         int geneEnd = gene.getEndNucleotide();
         double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart);
-        Collection<String>  isoforms = gene.getIsoforms().keySet();
+        Collection<String> isoforms = gene.getIsoforms().keySet();
         List<String> sortedIsoforms = Util.asSortedList(isoforms);
         for(String transcriptID : sortedIsoforms) {
             gc.fillText(transcriptID, ISOFORM_X_OFFSET, canvasCurrY);
