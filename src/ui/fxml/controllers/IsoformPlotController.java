@@ -31,6 +31,9 @@ public class IsoformPlotController implements Initializable {
     private static final int SPACING = 25;
     private static final int SCROLLBAR_WIDTH = 20;
     private static final int CANVAS_MARGIN = 15;
+    private static final Color FONT_COLOUR = Color.BLACK;
+    private static final Color EXON_COLOUR = Color.color(0.457, 0.816, 0.555);
+    private static final Color OUTLINE_COLOUR = Color.BLACK;
     private static final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
     private static final Font TRANSCRIPT_FONT = Font.font("Verdana",12);
     private static final int EXON_HEIGHT = 10;
@@ -61,7 +64,6 @@ public class IsoformPlotController implements Initializable {
 
     private void initializeGraphics() {
         gc = canvas.getGraphicsContext2D();
-        gc.setFill(Color.BLACK);
         canvasCurrY = CANVAS_INIT_Y;
     }
 
@@ -126,6 +128,7 @@ public class IsoformPlotController implements Initializable {
      * Draws label for gene
      */
     private void drawGeneID(String geneID) {
+        gc.setFill(FONT_COLOUR);
         gc.setFont(GENE_FONT);
         gc.fillText(geneID, GENE_ID_X_OFFSET, canvasCurrY);
         canvasCurrY += SPACING;
@@ -142,6 +145,7 @@ public class IsoformPlotController implements Initializable {
         Collection<String> isoforms = gene.getIsoforms().keySet();
         List<String> sortedIsoforms = Util.asSortedList(isoforms);
         for(String transcriptID : sortedIsoforms) {
+            gc.setFill(FONT_COLOUR);
             gc.fillText(transcriptID, ISOFORM_X_OFFSET, canvasCurrY);
             canvasCurrY += SPACING / 3;
             drawIsoform(gene.getIsoform(transcriptID), geneStart, pixelsPerNucleotide);
@@ -166,8 +170,11 @@ public class IsoformPlotController implements Initializable {
         int exonStart = exons.get(i).getStartNucleotide();
         int exonEnd = exons.get(i).getEndNucleotide();
         double startX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
-        double width = (exonEnd - exonStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        double width = (exonEnd - exonStart) * pixelsPerNucleotide;
+        gc.setFill(EXON_COLOUR);
         gc.fillRect(startX, canvasCurrY, width, EXON_HEIGHT);
+        gc.setFill(OUTLINE_COLOUR);
+        gc.strokeRect(startX, canvasCurrY, width, EXON_HEIGHT);
     }
 
     private void drawIntron(int geneStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
@@ -176,6 +183,7 @@ public class IsoformPlotController implements Initializable {
         double startX = (prevExonEnd - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         double endX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         double y = canvasCurrY + (double) EXON_HEIGHT / 2;
+        gc.setFill(OUTLINE_COLOUR);
         gc.strokeLine(startX, y, endX, y);
     }
 }

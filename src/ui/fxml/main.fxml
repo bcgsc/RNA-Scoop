@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.controllers.MainController"
-            fx:id="window" style="-fx-background-color: #d8d9e3;" >
+            fx:id="window" style="-fx-background-color: #d8dae8;" >
     <top>
         <VBox>
             <BorderPane.margin>
