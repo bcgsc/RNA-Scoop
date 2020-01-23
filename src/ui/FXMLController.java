@@ -1,6 +1,6 @@
 package ui;
 
-import javafx.beans.value.ChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,20 +13,21 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import org.controlsfx.control.CheckComboBox;
 import parser.Parser;
 import parser.data.Exon;
 import parser.data.Gene;
 import parser.data.Isoform;
+import ui.util.Util;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.ResourceBundle;
-import java.util.TreeMap;
+import java.util.*;
 
 public class FXMLController implements Initializable {
-    private static final int CANVAS_MIN_WIDTH = 130;
+    private static final int CANVAS_MIN_WIDTH = 150;
     private static final int CANVAS_INIT_Y = 13;
-    private static final int CANVAS_INIT_X = 0;
+    private static final int GENE_ID_X_OFFSET = 0;
+    private static final int ISOFORM_X_OFFSET = 13;
     private static final int SPACING = 25;
     private static final int SCROLLBAR_WIDTH = 20;
     private static final int CANVAS_MARGIN = 15;
@@ -38,7 +39,7 @@ public class FXMLController implements Initializable {
     @FXML private Label console;
     @FXML private Canvas canvas;
     @FXML private ScrollPane scrollPane;
-    @FXML private ComboBox geneSelector;
+    @FXML private CheckComboBox geneSelector;
 
     private GraphicsContext gc;
     private int canvasCurrY;
@@ -79,9 +80,7 @@ public class FXMLController implements Initializable {
             double newCanvasWidth = newValue.doubleValue() - (2 * CANVAS_MARGIN + SCROLLBAR_WIDTH);
             if (newCanvasWidth >= CANVAS_MIN_WIDTH) {
                 canvas.setWidth(newValue.doubleValue() - (2 * CANVAS_MARGIN + SCROLLBAR_WIDTH));
-                String currGene = (String) geneSelector.getValue();
-                if (currGene != null)
-                    drawGene(Parser.getParsedGenes().get(currGene), currGene);
+                drawGenes();
             }
         });
     }
@@ -90,7 +89,7 @@ public class FXMLController implements Initializable {
      * Makes gene selector draw new gene each time user selects one
      */
     private void initializeGeneSelector() {
-        geneSelector.valueProperty().addListener((ChangeListener<String>) (ov, oldValue, newValue) -> drawGene(Parser.getParsedGenes().get(newValue), newValue));
+        geneSelector.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) c -> drawGenes());
     }
 
     private void addLoadedPaths() {
@@ -101,12 +100,23 @@ public class FXMLController implements Initializable {
     }
 
     private void addLoadedGenes() {
-        TreeMap<String, Gene> genes = Parser.getParsedGenes();
+        HashMap<String, Gene> genes = Parser.getParsedGenes();
         ObservableList<String> addedGenes= geneSelector.getItems();
         for(String gene : genes.keySet()) {
             if (!addedGenes.contains(gene))
                 addedGenes.add(gene);
         }
+        addedGenes.sort(String::compareTo);
+    }
+
+    /**
+     * Draws all genes selected in gene selector combo box
+     */
+    private void drawGenes() {
+        clearCanvas();
+        List<String> selectedGenes = geneSelector.getCheckModel().getCheckedItems();
+        for (String gene : selectedGenes)
+            drawGene(Parser.getParsedGenes().get(gene), gene);
     }
 
     /**
@@ -115,8 +125,7 @@ public class FXMLController implements Initializable {
      * @param geneID ID of gene to draw
      */
     private void drawGene(Gene gene, String geneID) {
-        clearCanvas();
-        setCanvasHeight(gene);
+        incrementCanvasHeight(gene);
         drawGeneID(geneID);
         drawAllIsoforms(gene);
     }
@@ -124,13 +133,14 @@ public class FXMLController implements Initializable {
     /**
      * Sets canvas height to height necessary to display given gene
      */
-    private void setCanvasHeight(Gene gene) {
+    private void incrementCanvasHeight(Gene gene) {
         int numIsoforms = gene.getIsoforms().size();
-        canvas.setHeight(numIsoforms * SPACING * 2 + SPACING);
+        canvas.setHeight(canvas.getHeight() + numIsoforms * SPACING * 2 + SPACING);
     }
 
     private void clearCanvas() {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        canvas.setHeight(0);
         canvasCurrY = CANVAS_INIT_Y;
     }
 
@@ -139,7 +149,7 @@ public class FXMLController implements Initializable {
      */
     private void drawGeneID(String geneID) {
         gc.setFont(GENE_FONT);
-        gc.fillText(geneID, CANVAS_INIT_X, canvasCurrY);
+        gc.fillText(geneID, GENE_ID_X_OFFSET, canvasCurrY);
         canvasCurrY += SPACING;
     }
 
@@ -150,9 +160,11 @@ public class FXMLController implements Initializable {
         gc.setFont(TRANSCRIPT_FONT);
         int geneStart = gene.getStartNucleotide();
         int geneEnd = gene.getEndNucleotide();
-        double pixelsPerNucleotide = canvas.getWidth()/(geneEnd- geneStart);
-        for(String transcriptID : gene.getIsoforms().keySet()) {
-            gc.fillText(transcriptID, CANVAS_INIT_X, canvasCurrY);
+        double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart);
+        Collection<String>  isoforms = gene.getIsoforms().keySet();
+        List<String> sortedIsoforms = Util.asSortedList(isoforms);
+        for(String transcriptID : sortedIsoforms) {
+            gc.fillText(transcriptID, ISOFORM_X_OFFSET, canvasCurrY);
             canvasCurrY += SPACING / 3;
             drawIsoform(gene.getIsoform(transcriptID), geneStart, pixelsPerNucleotide);
             canvasCurrY += SPACING * 5/3;
@@ -175,16 +187,16 @@ public class FXMLController implements Initializable {
     private void drawExon(int geneStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
         int exonStart = exons.get(i).getStartNucleotide();
         int exonEnd = exons.get(i).getEndNucleotide();
-        double startX = (exonStart - geneStart) * pixelsPerNucleotide;
-        double width = (exonEnd - exonStart) * pixelsPerNucleotide;
+        double startX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        double width = (exonEnd - exonStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         gc.fillRect(startX, canvasCurrY, width, EXON_HEIGHT);
     }
 
     private void drawIntron(int geneStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
         int exonStart = exons.get(i).getStartNucleotide();
         int prevExonEnd = exons.get(i - 1).getEndNucleotide();
-        double startX = (prevExonEnd - geneStart) * pixelsPerNucleotide;
-        double endX = (exonStart - geneStart) * pixelsPerNucleotide;
+        double startX = (prevExonEnd - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        double endX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         double y = canvasCurrY + (double) EXON_HEIGHT / 2;
         gc.strokeLine(startX, y, endX, y);
     }

@@ -8,7 +8,7 @@ import parser.data.Gene;
 import parser.data.Isoform;
 
 import java.util.ArrayList;
-import java.util.TreeMap;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,7 +36,7 @@ public class ParserTests {
                                                     {74022828, 74023408}, {74024857, 74024927},
                                                     {74033156, 74036393}};
 
-    private static TreeMap<String, Gene> genes;
+    private static HashMap<String, Gene> genes;
 
     @BeforeAll
     public static void setUp() {
@@ -89,7 +89,7 @@ public class ParserTests {
         for (String isoform : GENE_0_ISOFORMS) {
             assertTrue(gene.hasIsoform(isoform));
         }
-        TreeMap<String, Isoform> isoforms = gene.getIsoforms();
+        HashMap<String, Isoform> isoforms = gene.getIsoforms();
         assertEquals(GENE_0_ISOFORMS.length, countIsoforms(isoforms));
     }
 
@@ -99,7 +99,7 @@ public class ParserTests {
         for (String isoform : GENE_1_ISOFORMS) {
             assertTrue(gene.hasIsoform(isoform));
         }
-        TreeMap<String, Isoform> isoforms = gene.getIsoforms();
+        HashMap<String, Isoform> isoforms = gene.getIsoforms();
         assertEquals(GENE_1_ISOFORMS.length, countIsoforms(isoforms));
     }
 
@@ -146,7 +146,7 @@ public class ParserTests {
         assertEquals(ISOFORM_1_EXONS.length, timesRan);
     }
 
-    private int countIsoforms(TreeMap<String, Isoform> isoforms) {
+    private int countIsoforms(HashMap<String, Isoform> isoforms) {
         int num = 0;
         for (String key : isoforms.keySet())
             num++;

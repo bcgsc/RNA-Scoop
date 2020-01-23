@@ -6,6 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
+<?import org.controlsfx.control.CheckComboBox?>
 <BorderPane style="-fx-background-color: #d8d9e3;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal" fx:controller="ui.FXMLController">
     <top>
         <VBox>
@@ -46,7 +47,7 @@
                         <Insets top="7"/>
                     </HBox.margin>
                 </Text>
-                <ComboBox fx:id="geneSelector" prefWidth="300" promptText="No Gene Selected" />
+                <CheckComboBox fx:id="geneSelector" prefWidth="605"/>
             </HBox>
             <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585" style="-fx-background: #ffffff; -fx-border-color: #adadad;">
                 <VBox.margin>
