@@ -8,11 +8,11 @@ public class ConsoleController {
     @FXML private Label consoleMessage;
     @FXML private VBox console;
 
-    public VBox getConsole() {
-        return console;
+    public void setConsoleMessage(String message) {
+        consoleMessage.setText(message);
     }
 
-    public Label getConsoleMessage() {
-        return consoleMessage;
+    public VBox getConsole() {
+        return console;
     }
 }

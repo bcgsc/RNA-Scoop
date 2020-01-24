@@ -1,5 +1,7 @@
 package parser.data;
 
+import java.util.Objects;
+
 public class Exon implements Comparable<Exon>{
     int startNucleotide;
     int endNucleotide;
@@ -20,5 +22,19 @@ public class Exon implements Comparable<Exon>{
     @Override
     public int compareTo(Exon exon) {
         return getStartNucleotide() - exon.getStartNucleotide();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Exon exon = (Exon) o;
+        return startNucleotide == exon.startNucleotide &&
+                endNucleotide == exon.endNucleotide;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(startNucleotide, endNucleotide);
     }
 }

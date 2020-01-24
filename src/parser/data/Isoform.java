@@ -10,8 +10,10 @@ public class Isoform {
     }
 
     public void addExon(Exon exon) {
-        exons.add(exon);
-        exons.sort(Exon::compareTo);
+        if (!exons.contains(exon)) {
+            exons.add(exon);
+            exons.sort(Exon::compareTo);
+        }
     }
 
     public ArrayList<Exon> getExons() {

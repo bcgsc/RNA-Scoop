@@ -7,12 +7,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.controlsfx.control.CheckComboBox;
 import parser.Parser;
 import parser.data.Gene;
 
@@ -27,21 +24,17 @@ public class MainController {
     @FXML private MenuItem isoformPlotToggle;
     @FXML private MenuItem consoleToggle;
 
-    private VBox isoformPlot;
-    private VBox console;
-    private VBox tSNEPlot;
-    private Label consoleMessage;
-    private CheckComboBox geneSelector;
+    private IsoformPlotController isoformPlotController;
+    private ConsoleController consoleController;
+    private tSNEPlotController tSNEPlotController;
     private boolean tSNEPlotOpen;
     private boolean consoleOpen;
     private boolean isoformPlotOpen;
 
     public void initData(ConsoleController consoleController, IsoformPlotController isoformPlotController, tSNEPlotController tSNEPlotController) {
-        isoformPlot = isoformPlotController.getIsoformPlot();
-        console = consoleController.getConsole();
-        tSNEPlot = tSNEPlotController.getTSNEPlot();
-        consoleMessage = consoleController.getConsoleMessage();
-        geneSelector = isoformPlotController.getGeneSelector();
+        this.isoformPlotController = isoformPlotController;
+        this.consoleController = consoleController;
+        this.tSNEPlotController = tSNEPlotController;
         tSNEPlotOpen = true;
         consoleOpen = true;
         isoformPlotOpen = true;
@@ -58,8 +51,8 @@ public class MainController {
             stage.show();
         }
         catch (IOException e) {
-            consoleMessage.setText("An error occurred when loading the About window" +
-                                   "\nError message: " + e.getMessage());
+            consoleController.setConsoleMessage("An error occurred when loading the About window" +
+                                                "\nError message: " + e.getMessage());
         }
     }
 
@@ -73,7 +66,7 @@ public class MainController {
             tSNEToggle.setText("Open t-SNE Plot");
             tSNEPlotOpen = false;
         } else {
-            window.setRight(tSNEPlot);
+            window.setRight(tSNEPlotController.getTSNEPlot());
             tSNEToggle.setText("Close t-SNE Plot");
             tSNEPlotOpen = true;
         }
@@ -89,7 +82,7 @@ public class MainController {
             isoformPlotToggle.setText("Open Isoform Plot");
             isoformPlotOpen = false;
         } else {
-            window.setCenter(isoformPlot);
+            window.setCenter(isoformPlotController.getIsoformPlot());
             isoformPlotToggle.setText("Close Isoform Plot");
             isoformPlotOpen = true;
         }
@@ -105,7 +98,7 @@ public class MainController {
             consoleToggle.setText("Open Console");
             consoleOpen = false;
         } else {
-            window.setBottom(console);
+            window.setBottom(consoleController.getConsole());
             consoleToggle.setText("Close Console");
             consoleOpen = true;
         }
@@ -122,7 +115,9 @@ public class MainController {
         String consoleText = Parser.readFile((String) path.getValue());
         addLoadedPaths();
         addLoadedGenes();
-        consoleMessage.setText(consoleText);
+        consoleController.setConsoleMessage(consoleText);
+        isoformPlotController.clearCanvas();
+        isoformPlotController.clearCheckedGenes();
     }
 
     private void addLoadedPaths() {
@@ -134,11 +129,6 @@ public class MainController {
 
     private void addLoadedGenes() {
         HashMap<String, Gene> genes = Parser.getParsedGenes();
-        ObservableList<String> addedGenes= geneSelector.getItems();
-        for(String gene : genes.keySet()) {
-            if (!addedGenes.contains(gene))
-                addedGenes.add(gene);
-        }
-        addedGenes.sort(String::compareTo);
+        isoformPlotController.addGenes(genes);
     }
 }

@@ -14,7 +14,7 @@ public class Gene {
     int startNucleotide;
     int endNucleotide;
     int chromosome;
-    String strand;
+    boolean isPositiveSense;
 
     public Gene(int chromosome, String strand) {
         isoforms = new HashMap<>();
@@ -23,7 +23,10 @@ public class Gene {
         startNucleotide = Integer.MAX_VALUE;
         endNucleotide = 0;
         this.chromosome = chromosome;
-        this.strand = strand;
+        if(strand.equals("+"))
+            isPositiveSense = true;
+        else
+            isPositiveSense = false;
     }
 
     public void addIsoform(String transcriptID, Isoform isoform) {
@@ -62,8 +65,8 @@ public class Gene {
         return chromosome;
     }
 
-    public String getStrand() {
-        return strand;
+    public boolean isPositiveSense() {
+        return isPositiveSense;
     }
 
 }

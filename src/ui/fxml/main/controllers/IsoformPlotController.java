@@ -1,6 +1,7 @@
 package ui.fxml.main.controllers;
 
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
@@ -18,10 +19,7 @@ import parser.data.Isoform;
 import ui.util.Util;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class IsoformPlotController implements Initializable {
     private static final int CANVAS_MIN_WIDTH = 150;
@@ -53,14 +51,29 @@ public class IsoformPlotController implements Initializable {
         initializeGeneSelector();
     }
 
-    public CheckComboBox getGeneSelector() {
-        return geneSelector;
+    public void addGenes(Map<String, Gene> genes) {
+        ObservableList<String> addedGenes= geneSelector.getItems();
+        for(String gene : genes.keySet()) {
+            if (!addedGenes.contains(gene))
+                addedGenes.add(gene);
+        }
+        addedGenes.sort(String::compareTo);
+    }
+
+    public void clearCanvas() {
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        canvas.setHeight(0);
+        canvasCurrY = CANVAS_INIT_Y;
+    }
+
+    public void clearCheckedGenes() {
+        for(int i = 0; i < geneSelector.getItems().size(); i++)
+            geneSelector.getCheckModel().clearCheck(i);
     }
 
     public VBox getIsoformPlot() {
         return isoformPlot;
     }
-
 
     private void initializeGraphics() {
         gc = canvas.getGraphicsContext2D();
@@ -95,8 +108,9 @@ public class IsoformPlotController implements Initializable {
     private void drawGenes() {
         clearCanvas();
         List<String> selectedGenes = geneSelector.getCheckModel().getCheckedItems();
-        for (String gene : selectedGenes)
+        for (String gene : selectedGenes) {
             drawGene(Parser.getParsedGenes().get(gene), gene);
+        }
     }
 
     /**
@@ -106,7 +120,7 @@ public class IsoformPlotController implements Initializable {
      */
     private void drawGene(Gene gene, String geneID) {
         incrementCanvasHeight(gene);
-        drawGeneID(geneID);
+        drawGeneID(gene, geneID);
         drawAllIsoforms(gene);
     }
 
@@ -118,19 +132,16 @@ public class IsoformPlotController implements Initializable {
         canvas.setHeight(canvas.getHeight() + numIsoforms * SPACING * 2 + SPACING);
     }
 
-    private void clearCanvas() {
-        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        canvas.setHeight(0);
-        canvasCurrY = CANVAS_INIT_Y;
-    }
-
     /**
      * Draws label for gene
      */
-    private void drawGeneID(String geneID) {
+    private void drawGeneID(Gene gene, String geneID) {
         gc.setFill(FONT_COLOUR);
         gc.setFont(GENE_FONT);
-        gc.fillText(geneID, GENE_ID_X_OFFSET, canvasCurrY);
+        if(gene.isPositiveSense())
+            gc.fillText(geneID + " (+)", GENE_ID_X_OFFSET, canvasCurrY);
+        else
+            gc.fillText(geneID + " (-)", GENE_ID_X_OFFSET, canvasCurrY);
         canvasCurrY += SPACING;
     }
 
