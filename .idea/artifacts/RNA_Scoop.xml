@@ -3,7 +3,7 @@
     <output-path>$PROJECT_DIR$/out/artifacts/RNA_Scoop</output-path>
     <properties id="javafx-properties">
       <options>
-        <option name="appClass" value="ui.Main" />
+        <option name="appClass" value="production.RNA-Scoop.ui.Main" />
         <option name="description" value="" />
         <option name="htmlPlaceholderId" value="" />
         <option name="title" value="" />

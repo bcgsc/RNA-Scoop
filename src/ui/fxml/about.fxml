@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.*?>
+<ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.AboutController"
+            fx:id="scrollPane" prefHeight="350" prefWidth="600" style="-fx-background: #ffffff;">
+    <VBox fx:id="vbox" alignment="TOP_CENTER">
+        <ImageView>
+            <Image url="../../../out/production/RNA-Scoop/ui/icons/RNA-ScoopLogo.png" requestedHeight="200" requestedWidth="200"/>
+            <VBox.margin>
+                <Insets top="5" bottom="15"/>
+            </VBox.margin>
+        </ImageView>
+        <Line startX="100" endX="350">
+            <VBox.margin>
+                <Insets bottom="15"/>
+            </VBox.margin>
+        </Line>
+        <Text text="RNA-Scoop Version 1.0"/>
+        <HBox>
+            <VBox.margin>
+                <Insets top="20" left="15" right="15"/>
+            </VBox.margin>
+            <Text text="Java Version: " style="-fx-font-weight: bold"/>
+            <Text fx:id="javaVersion"/>
+        </HBox>
+        <HBox>
+            <VBox.margin>
+                <Insets top="10" left="15" right="15"/>
+            </VBox.margin>
+            <Text text="Operating System: " style="-fx-font-weight: bold"/>
+            <Text fx:id="os"/>
+        </HBox>
+    </VBox>
+</ScrollPane>

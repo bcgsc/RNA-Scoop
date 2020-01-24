@@ -4,7 +4,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.controllers.ConsoleController"
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.ConsoleController"
       fx:id="console" prefHeight="50" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
     <BorderPane.margin>
         <Insets top="10"/>

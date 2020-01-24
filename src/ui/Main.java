@@ -8,20 +8,19 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import ui.fxml.controllers.MainController;
+import ui.fxml.main.controllers.MainController;
 
 
 public class Main extends Application {
     private static final float SCALE_FACTOR = 0.7f;
-    private static final Image logo = new Image("ui/icons/RNA-Scoop_logo.jpg");
+    private static final Image logo = new Image("ui/icons/RNA-ScoopIcon.jpg");
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        FXMLLoader centerLoader = new FXMLLoader(getClass().getResource("fxml/isoformplot.fxml"));
-        FXMLLoader bottomLoader = new FXMLLoader(getClass().getResource("fxml/console.fxml"));
-        FXMLLoader rightLoader = new FXMLLoader(getClass().getResource("fxml/tsneplot.fxml"));
-        FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("fxml/main.fxml"));
-
+        FXMLLoader centerLoader = new FXMLLoader(getClass().getResource("fxml/main/isoformplot.fxml"));
+        FXMLLoader bottomLoader = new FXMLLoader(getClass().getResource("fxml/main/console.fxml"));
+        FXMLLoader rightLoader = new FXMLLoader(getClass().getResource("fxml/main/tsneplot.fxml"));
+        FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("fxml/main/main.fxml"));
         BorderPane root = mainLoader.load();
         root.setRight(rightLoader.load());
         root.setBottom(bottomLoader.load());

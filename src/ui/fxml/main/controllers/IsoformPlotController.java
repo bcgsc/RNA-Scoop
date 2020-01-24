@@ -1,4 +1,4 @@
-package ui.fxml.controllers;
+package ui.fxml.main.controllers;
 
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;

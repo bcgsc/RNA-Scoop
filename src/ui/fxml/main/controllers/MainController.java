@@ -1,17 +1,22 @@
-package ui.fxml.controllers;
+package ui.fxml.main.controllers;
 
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import org.controlsfx.control.CheckComboBox;
 import parser.Parser;
 import parser.data.Gene;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 public class MainController {
@@ -42,11 +47,27 @@ public class MainController {
         isoformPlotOpen = true;
     }
 
+    @FXML
+    protected void handleAboutButton() {
+        Parent root;
+        try {
+            root = FXMLLoader.load(getClass().getClassLoader().getResource("ui/fxml/about.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("About");
+            stage.setScene(new Scene(root, 600, 350));
+            stage.show();
+        }
+        catch (IOException e) {
+            consoleMessage.setText("An error occurred when loading the About window" +
+                                   "\nError message: " + e.getMessage());
+        }
+    }
+
     /**
      * When t-SNE toggle is pressed, toggles visibility of the t-SNE plot
      */
     @FXML
-    protected  void handleTSNEViewToggle(ActionEvent e) {
+    protected void handleTSNEViewToggle(ActionEvent e) {
         if (tSNEPlotOpen) {
             window.setRight(null);
             tSNEToggle.setText("Open t-SNE Plot");
@@ -62,7 +83,7 @@ public class MainController {
      * When isoform plot toggle is pressed, toggles visibility of the isoform plot
      */
     @FXML
-    protected  void handleIsoformViewToggle(ActionEvent e) {
+    protected void handleIsoformViewToggle(ActionEvent e) {
         if (isoformPlotOpen) {
             window.setCenter(null);
             isoformPlotToggle.setText("Open Isoform Plot");
@@ -78,7 +99,7 @@ public class MainController {
      * When console toggle is pressed, toggles visibility of the console
      */
     @FXML
-    protected  void handleConsoleViewToggle(ActionEvent e) {
+    protected void handleConsoleViewToggle(ActionEvent e) {
         if (consoleOpen) {
             window.setBottom(null);
             consoleToggle.setText("Open Console");
