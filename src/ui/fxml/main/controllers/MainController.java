@@ -105,6 +105,15 @@ public class MainController {
     }
 
     /**
+     * When reverse complement toggle is selected, (-) strands will be reverse complemented in
+     * the isoform plot; when it is unselected, they will not
+     */
+    @FXML
+    protected void handleRevComplementToggle(ActionEvent event) {
+        isoformPlotController.toggleReverseComplement();
+    }
+
+    /**
      * When load button is pressed, parses path to file and retrieves parsed genes
      * Adds parsed genes to gene selector's items
      * Adds file path to path's list of previous file paths

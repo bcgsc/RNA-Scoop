@@ -40,6 +40,7 @@ public class IsoformPlotController implements Initializable {
     @FXML private ScrollPane scrollPane;
     @FXML private CheckComboBox geneSelector;
     @FXML private VBox isoformPlot;
+    private boolean reverseComplement;
 
     private GraphicsContext gc;
     private int canvasCurrY;
@@ -60,6 +61,11 @@ public class IsoformPlotController implements Initializable {
         addedGenes.sort(String::compareTo);
     }
 
+    public void toggleReverseComplement() {
+        reverseComplement = !reverseComplement;
+        drawGenes();
+    }
+
     public void clearCanvas() {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         canvas.setHeight(0);
@@ -78,6 +84,18 @@ public class IsoformPlotController implements Initializable {
     private void initializeGraphics() {
         gc = canvas.getGraphicsContext2D();
         canvasCurrY = CANVAS_INIT_Y;
+        reverseComplement = false;
+    }
+
+    /**
+     * Draws all genes selected in gene selector combo box
+     */
+    private void drawGenes() {
+        clearCanvas();
+        List<String> selectedGenes = geneSelector.getCheckModel().getCheckedItems();
+        for (String gene : selectedGenes) {
+            drawGene(Parser.getParsedGenes().get(gene), gene);
+        }
     }
 
     /**
@@ -100,17 +118,6 @@ public class IsoformPlotController implements Initializable {
      */
     private void initializeGeneSelector() {
         geneSelector.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) c -> drawGenes());
-    }
-
-    /**
-     * Draws all genes selected in gene selector combo box
-     */
-    private void drawGenes() {
-        clearCanvas();
-        List<String> selectedGenes = geneSelector.getCheckModel().getCheckedItems();
-        for (String gene : selectedGenes) {
-            drawGene(Parser.getParsedGenes().get(gene), gene);
-        }
     }
 
     /**
@@ -159,13 +166,16 @@ public class IsoformPlotController implements Initializable {
             gc.setFill(FONT_COLOUR);
             gc.fillText(transcriptID, ISOFORM_X_OFFSET, canvasCurrY);
             canvasCurrY += SPACING / 3;
-            drawIsoform(gene.getIsoform(transcriptID), geneStart, pixelsPerNucleotide);
+            if(gene.isPositiveSense() || !reverseComplement)
+                drawIsoform(gene.getIsoform(transcriptID), geneStart, pixelsPerNucleotide);
+            else
+                drawIsoformReverseComplement(gene.getIsoform(transcriptID), geneEnd, pixelsPerNucleotide);
             canvasCurrY += SPACING * 5/3;
         }
     }
 
     /**
-     * Draws the exons and introns of the given isoform
+     * Draws the exons and introns of the given isoform, without reverse complementing
      */
     private void drawIsoform(Isoform isoform, int geneStart, double pixelsPerNucleotide) {
         ArrayList<Exon> exons = isoform.getExons();
@@ -177,22 +187,72 @@ public class IsoformPlotController implements Initializable {
         }
     }
 
+
+    /**
+     * Draws the exons and introns of the reverse complement of the given isoform
+     */
+    private void drawIsoformReverseComplement(Isoform isoform, int geneEnd, double pixelsPerNucleotide) {
+        ArrayList<Exon> exons = isoform.getExons();
+        for (int i = 0; i < exons.size(); ++i) {
+            drawExonReverseComplement(geneEnd, pixelsPerNucleotide, exons, i);
+            if (i != 0) {
+                drawIntronReverseComplement(geneEnd, pixelsPerNucleotide, exons, i);
+            }
+        }
+    }
+
+    /**
+     * Draws the given exon, without reverse complementing
+     */
     private void drawExon(int geneStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
         int exonStart = exons.get(i).getStartNucleotide();
         int exonEnd = exons.get(i).getEndNucleotide();
         double startX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         double width = (exonEnd - exonStart) * pixelsPerNucleotide;
+        drawExonGraphic(startX, width);
+    }
+
+    /**
+     * Draws the given intron, without reverse complementing
+     */
+    private void drawIntron(int geneStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
+        int exonStart = exons.get(i).getStartNucleotide();
+        int prevExonEnd = exons.get(i - 1).getEndNucleotide();
+        double startX = (prevExonEnd - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        double endX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        drawIntronGraphic(startX, endX);
+    }
+
+    /**
+     * Draws the reverse complement of the given exon
+     */
+    private void drawExonReverseComplement(int geneEnd, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
+        int exonStart = exons.get(i).getStartNucleotide();
+        int exonEnd = exons.get(i).getEndNucleotide();
+        double startX = (geneEnd - exonEnd) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        double width = (exonEnd - exonStart) * pixelsPerNucleotide;
+        drawExonGraphic(startX, width);
+    }
+
+    /**
+     * Draws the reverse complement of the given intron
+     */
+    private void drawIntronReverseComplement(int geneEnd, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
+        int exonStart = exons.get(i).getStartNucleotide();
+        int prevExonEnd= exons.get(i - 1).getEndNucleotide();
+        double startX = (geneEnd - exonStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        double endX = (geneEnd - prevExonEnd) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        drawIntronGraphic(startX, endX);
+    }
+
+    private void drawExonGraphic(double startX, double width) {
         gc.setFill(EXON_COLOUR);
         gc.fillRect(startX, canvasCurrY, width, EXON_HEIGHT);
         gc.setFill(OUTLINE_COLOUR);
         gc.strokeRect(startX, canvasCurrY, width, EXON_HEIGHT);
     }
 
-    private void drawIntron(int geneStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
-        int exonStart = exons.get(i).getStartNucleotide();
-        int prevExonEnd = exons.get(i - 1).getEndNucleotide();
-        double startX = (prevExonEnd - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
-        double endX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+    private void drawIntronGraphic(double startX, double endX) {
         double y = canvasCurrY + (double) EXON_HEIGHT / 2;
         gc.setFill(OUTLINE_COLOUR);
         gc.strokeLine(startX, y, endX, y);

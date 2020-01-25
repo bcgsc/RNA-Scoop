@@ -14,9 +14,16 @@
                 <Menu text="File"/>
                 <Menu text="Edit"/>
                 <Menu text="View">
-                    <MenuItem fx:id="tSNEToggle" onAction="#handleTSNEViewToggle" text="Close t-SNE Plot"/>
-                    <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close Isoform Plot"/>
-                    <MenuItem fx:id="consoleToggle" onAction="#handleConsoleViewToggle" text="Close Console"/>
+                    <Menu text="Isoform Plot">
+                        <CheckMenuItem onAction="#handleRevComplementToggle" text="Reverse Complement (-) Strand"/>
+                        <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close Isoform Plot"/>
+                    </Menu>
+                    <Menu text="t-SNE Plot">
+                        <MenuItem fx:id="tSNEToggle" onAction="#handleTSNEViewToggle" text="Close t-SNE Plot"/>
+                    </Menu>
+                    <Menu text="Console">
+                        <MenuItem fx:id="consoleToggle" onAction="#handleConsoleViewToggle" text="Close Console"/>
+                    </Menu>
                 </Menu>
                 <Menu>
                     <graphic>
