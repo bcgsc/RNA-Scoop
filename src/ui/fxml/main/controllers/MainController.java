@@ -53,6 +53,7 @@ public class MainController {
         catch (IOException e) {
             consoleController.setConsoleMessage("An error occurred when loading the About window" +
                                                 "\nError message: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
