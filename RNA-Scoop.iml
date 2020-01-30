@@ -32,5 +32,18 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$USER_HOME$/Downloads/smile-2.1.0/lib" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$USER_HOME$/Downloads/smile-2.1.0/lib" />
+        </SOURCES>
+        <jarDirectory url="file://$USER_HOME$/Downloads/smile-2.1.0/lib" recursive="false" />
+        <jarDirectory url="file://$USER_HOME$/Downloads/smile-2.1.0/lib" recursive="false" type="SOURCES" />
+      </library>
+    </orderEntry>
   </component>
 </module>

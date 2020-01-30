@@ -17,7 +17,7 @@
         </VBox.margin>
         <Text text="Gene: ">
             <HBox.margin>
-                <Insets top="7"/>
+                <Insets top="6"/>
             </HBox.margin>
         </Text>
         <CheckComboBox fx:id="geneSelector" prefWidth="605"/>

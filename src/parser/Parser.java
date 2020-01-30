@@ -5,8 +5,8 @@ import parser.data.Gene;
 import parser.data.Isoform;
 
 import java.io.File;
-import java.util.Scanner;
 import java.util.HashMap;
+import java.util.Scanner;
 
 public class Parser {
 

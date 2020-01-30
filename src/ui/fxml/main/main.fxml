@@ -32,7 +32,7 @@
                 </Menu>
             </MenuBar>
             <HBox alignment="CENTER">
-                <ComboBox fx:id="path" editable="true" prefWidth="1050" promptText="Insert path to file here"/>
+                <ComboBox fx:id="path" editable="true" prefWidth="600" promptText="Insert path to file here"/>
                 <Button onAction="#handleLoadButtonAction" text="Load">
                     <HBox.margin>
                         <Insets left="5"/>

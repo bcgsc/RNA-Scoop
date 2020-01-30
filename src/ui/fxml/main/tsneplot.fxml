@@ -1,12 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 
+<?import javafx.embed.swing.SwingNode?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.tSNEPlotController"
       fx:id="tSNEPlot" prefHeight="550" prefWidth="565" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
     <BorderPane.margin>
         <Insets right="10"/>
     </BorderPane.margin>
+    <VBox>
+        <HBox>
+            <VBox.margin>
+                <Insets top="10" left="10"/>
+            </VBox.margin>
+            <Button fx:id="drawTSNEButton" onAction="#drawTSNE" text="Draw tSNE"/>
+            <Text text="Perplexity: ">
+                <HBox.margin>
+                    <Insets top="6" left="10"/>
+                </HBox.margin>
+            </Text>
+            <TextField fx:id="perplexity" prefWidth="50"/>
+        </HBox>
+    </VBox>
+    <SwingNode fx:id="canvas"/>
 </VBox>
