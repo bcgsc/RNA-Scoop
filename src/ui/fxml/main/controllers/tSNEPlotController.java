@@ -3,6 +3,7 @@ package ui.fxml.main.controllers;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -18,14 +19,15 @@ import smile.projection.PCA;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import java.util.ResourceBundle;
 
-public class tSNEPlotController implements Runnable{
+public class tSNEPlotController implements Runnable, Initializable {
     @FXML private VBox tSNEPlot;
     @FXML private Button drawTSNEButton;
     @FXML private TextField perplexity;
     @FXML private SwingNode canvas;
 
-    private JPanel panel;
+    private JPanel pane;
     private double[][] data;
     private int[] labels;
     private char pointLegend = '@';
@@ -42,7 +44,6 @@ public class tSNEPlotController implements Runnable{
         try {
             CSVFormat format = CSVFormat.DEFAULT.withDelimiter(' ').withIgnoreSurroundingSpaces(true);
             URL url = getClass().getResource("../../../../sampledata/mnist2500_X.txt");
-            System.out.println(url);
             DataFrame dataset = Read.csv(java.nio.file.Paths.get(url.toURI()), format);
             this.data = dataset.toArray();
             URL url2 = getClass().getResource("../../../../sampledata/mnist2500_labels.txt");
@@ -68,9 +69,7 @@ public class tSNEPlotController implements Runnable{
         thread.start();
     }
 
-    public JComponent learn() {
-        JPanel pane = new JPanel(new GridLayout(1, 2));
-        pane.setPreferredSize(new Dimension(500, 500));
+    public PlotCanvas learn() {
         PCA pca = PCA.fit(this.data);
         pca.setProjection(50);
         double[][] X = pca.project(this.data);
@@ -83,10 +82,8 @@ public class tSNEPlotController implements Runnable{
         for(int i = 0; i < y.length; ++i) {
             plot.point(this.pointLegend, Palette.COLORS[this.labels[i]], y[i]);
         }
-
         plot.setTitle("t-SNE");
-        pane.add(plot);
-        return pane;
+        return plot;
     }
 
     public void run() {
@@ -94,9 +91,10 @@ public class tSNEPlotController implements Runnable{
         perplexity.setDisable(true);
 
         try {
-            JComponent plot = this.learn();
+            PlotCanvas plot = this.learn();
             if (plot != null) {
-                canvas.setContent(plot);
+                pane.add(plot);
+                pane.validate();
             }
         } catch (Exception var2) {
             System.err.println(var2.getMessage());
@@ -104,5 +102,14 @@ public class tSNEPlotController implements Runnable{
 
         drawTSNEButton.setDisable(false);
         perplexity.setDisable(false);
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        pane = new JPanel(new GridLayout(1, 2));
+        pane.setPreferredSize(new Dimension(5, 500));
+        canvas.setContent(pane);
+        pane.setBackground(Color.WHITE);
+        pane.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
     }
 }

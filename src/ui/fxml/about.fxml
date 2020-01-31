@@ -21,7 +21,7 @@
                 <Insets bottom="15"/>
             </VBox.margin>
         </Line>
-        <Text text="RNA-Scoop Version 1.0"/>
+        <Text text="RNA-Scoop Version 0.0.1"/>
         <HBox>
             <VBox.margin>
                 <Insets top="20" left="15" right="15"/>

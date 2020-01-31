@@ -23,8 +23,12 @@
                     <Insets top="6" left="10"/>
                 </HBox.margin>
             </Text>
-            <TextField fx:id="perplexity" prefWidth="50"/>
+            <TextField fx:id="perplexity" text="20" prefWidth="50"/>
         </HBox>
     </VBox>
-    <SwingNode fx:id="canvas"/>
+    <SwingNode fx:id="canvas">
+        <VBox.margin>
+            <Insets bottom="10" left="10" right="10" top="10"/>
+        </VBox.margin>
+    </SwingNode>
 </VBox>
