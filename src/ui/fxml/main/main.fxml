@@ -27,7 +27,7 @@
                 </Menu>
                 <Menu>
                     <graphic>
-                        <Label text="About" onMouseClicked="#handleAboutButton"/>
+                        <Label text="About" onMouseClicked="#handleAboutButtonAction"/>
                     </graphic>
                 </Menu>
             </MenuBar>

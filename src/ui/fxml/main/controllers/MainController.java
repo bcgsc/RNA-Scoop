@@ -41,7 +41,7 @@ public class MainController {
     }
 
     @FXML
-    protected void handleAboutButton() {
+    protected void handleAboutButtonAction() {
         Parent root;
         try {
             root = FXMLLoader.load(getClass().getClassLoader().getResource("ui/fxml/about.fxml"));
