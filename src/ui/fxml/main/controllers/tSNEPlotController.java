@@ -23,17 +23,15 @@ import org.jfree.chart.panel.selectionhandler.RegionSelectionHandler;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.item.IRSUtilities;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.chart.util.ObjectUtils;
 import org.jfree.data.extension.DatasetSelectionExtension;
 import org.jfree.data.extension.impl.DatasetExtensionManager;
 import org.jfree.data.extension.impl.XYCursor;
 import org.jfree.data.extension.impl.XYDatasetSelectionExtension;
 import org.jfree.data.general.Dataset;
 import org.jfree.data.general.Series;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import ui.resources.PointColours;
+import ui.resources.PointColor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,7 +40,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.List;
-import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 
@@ -60,7 +57,7 @@ public class tSNEPlotController implements Initializable {
     }
 
     /**
-     * When isoform plot toggle is pressed, toggles visibility of the isoform plot
+     * When "Draw t-SNE" button is pressed, draws t-SNE plot
      */
     @FXML
     protected void handleDrawTSNEButtonAction(ActionEvent e) {
@@ -86,43 +83,36 @@ public class tSNEPlotController implements Initializable {
         double perplexityValue = Double.parseDouble(perplexity.getText());
         double [][] X = MatrixUtils.simpleRead2DMatrix(new File("/home/mstephenson/Downloads/T-SNE-Java/tsne-demos/src/main/resources/datasets/mnist2500_X.txt"), "   ");
         System.out.println(MatrixOps.doubleArrayToPrintString(X, ", ", 50,10));
-        BarnesHutTSne tsne;
-        tsne = new BHTSne();
+        BarnesHutTSne tsne = new BHTSne();
         TSneConfiguration config = TSneUtils.buildConfig(X, 2, initial_dims, perplexityValue, 1000);
         return tsne.tsne(config);
     }
 
+    /**
+     * Plots given t-SNE matrix
+     */
     private void drawTsne(double[][] tSNEMatrix) {
         createDataSet(tSNEMatrix);
 
         DatasetSelectionExtension<XYCursor> datasetExtension
                 = new XYDatasetSelectionExtension(dataset);
 
-        JFreeChart chart = createChart(datasetExtension);
+        JFreeChart chart = createPlot(datasetExtension);
         ChartPanel panel = new ChartPanel(chart);
         panel.setMouseWheelEnabled(true);
 
         addSelectionHandler(panel);
         addSelectionManager(dataset, datasetExtension, panel);
 
+        pane.removeAll();
         pane.add(panel);
         pane.validate();
     }
 
-    private void addSelectionManager(XYSeriesCollection dataset, DatasetSelectionExtension<XYCursor> datasetExtension, ChartPanel panel) {
-        DatasetExtensionManager dExManager = new DatasetExtensionManager();
-        dExManager.registerDatasetExtension(datasetExtension);
-        panel.setSelectionManager(new EntitySelectionManager(panel,
-                new Dataset[] { dataset }, dExManager));
-    }
-
-    private void addSelectionHandler(ChartPanel panel) {
-        RegionSelectionHandler selectionHandler = new FreeRegionSelectionHandler();
-        panel.addMouseHandler(selectionHandler);
-        panel.addMouseHandler(new MouseClickSelectionHandler());
-        panel.removeMouseHandler(panel.getZoomHandler());
-    }
-
+    /**
+     * Given a t-SNE matrix, creates a collection of series of x, y coordinates that
+     * can be plotted. A new series is created for every label
+     */
     private void createDataSet(double[][] tSNEMatrix) {
         dataset = new XYSeriesCollection();
         File file = new File("/home/mstephenson/Downloads/T-SNE-Java/tsne-demos/src/main/resources/datasets/mnist2500_labels.txt");
@@ -148,6 +138,9 @@ public class tSNEPlotController implements Initializable {
         }
     }
 
+    /**
+     * @return true if dataset has a series with the same key, false otherwise
+     */
     private boolean dataSetHasSeries(Series series) {
         List<XYSeries> dataSetSeries = dataset.getSeries();
         for(Series otherSeries : dataSetSeries) {
@@ -158,8 +151,8 @@ public class tSNEPlotController implements Initializable {
         return false;
     }
 
-    private JFreeChart createChart(DatasetSelectionExtension<XYCursor> ext) {
-        JFreeChart chart = ChartFactory.createScatterPlot("t-SNE", "X", "Y", dataset);
+    private JFreeChart createPlot(DatasetSelectionExtension<XYCursor> ext) {
+        JFreeChart chart = ChartFactory.createScatterPlot("", " ", " ", dataset);
 
         XYPlot plot = (XYPlot) chart.getPlot();
         setPlotViewProperties(plot);
@@ -171,11 +164,31 @@ public class tSNEPlotController implements Initializable {
         return chart;
     }
 
+    private void addSelectionManager(XYSeriesCollection dataset, DatasetSelectionExtension<XYCursor> datasetExtension, ChartPanel panel) {
+        DatasetExtensionManager dExManager = new DatasetExtensionManager();
+        dExManager.registerDatasetExtension(datasetExtension);
+        panel.setSelectionManager(new EntitySelectionManager(panel,
+                new Dataset[] { dataset }, dExManager));
+    }
+
+    private void addSelectionHandler(ChartPanel panel) {
+        RegionSelectionHandler selectionHandler = new FreeRegionSelectionHandler();
+        panel.addMouseHandler(selectionHandler);
+        panel.addMouseHandler(new MouseClickSelectionHandler());
+        panel.removeMouseHandler(panel.getZoomHandler());
+    }
+
     private void setPlotViewProperties(XYPlot plot) {
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
         plot.setDomainCrosshairVisible(true);
         plot.setRangeCrosshairVisible(true);
+        plot.setDomainGridlinesVisible(false);
+        plot.setRangeGridlinesVisible(false);
+        plot.getDomainAxis().setTickMarksVisible(false);
+        plot.getDomainAxis().setTickLabelsVisible(false);
+        plot.getRangeAxis().setTickMarksVisible(false);
+        plot.getRangeAxis().setTickLabelsVisible(false);
     }
 
     private void adjustPlotPointRendering(DatasetSelectionExtension<XYCursor> ext, XYPlot plot) {
@@ -186,13 +199,12 @@ public class tSNEPlotController implements Initializable {
         Shape shape  = new Ellipse2D.Double(0,0,5,5);
         for(int i = 0; i < dataset.getSeriesCount(); i++) {
             r.setSeriesShape(i, shape);
-/*            Color seriesColour = PointColours.getNextColor();
-            r.setSeriesFillPaint(i, seriesColour);
-            r.setSeriesPaint(i, seriesColour);
-            r.setSeriesOutlinePaint(i, seriesColour);*/
+            Color seriesColor = PointColor.getColor();
+            r.setSeriesFillPaint(i, seriesColor);
+            r.setSeriesPaint(i, seriesColor);
+            r.setSeriesOutlinePaint(i, seriesColor);
         }
         //add selection specific rendering
         IRSUtilities.setSelectedItemFillPaint(r, ext, Color.white);
     }
-
 }

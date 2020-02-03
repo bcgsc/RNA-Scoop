@@ -16,7 +16,7 @@ import parser.Parser;
 import parser.data.Exon;
 import parser.data.Gene;
 import parser.data.Isoform;
-import ui.util.Util;
+import ui.resources.Util;
 
 import java.net.URL;
 import java.util.*;
@@ -52,6 +52,9 @@ public class IsoformPlotController implements Initializable {
         initializeGeneSelector();
     }
 
+    /**
+     * Adds given genes to gene selector (if not already added)
+     */
     public void addGenes(Map<String, Gene> genes) {
         ObservableList<String> addedGenes= geneSelector.getItems();
         for(String gene : genes.keySet()) {
@@ -61,6 +64,10 @@ public class IsoformPlotController implements Initializable {
         addedGenes.sort(String::compareTo);
     }
 
+    /**
+     * Changes whether genes on the (-) strand should be reverse complemented or not,
+     * and redraws genes
+     */
     public void toggleReverseComplement() {
         reverseComplement = !reverseComplement;
         drawGenes();
@@ -72,6 +79,9 @@ public class IsoformPlotController implements Initializable {
         canvasCurrY = CANVAS_INIT_Y;
     }
 
+    /**
+     * Deselects all gene selector's genes
+     */
     public void clearCheckedGenes() {
         for(int i = 0; i < geneSelector.getItems().size(); i++)
             geneSelector.getCheckModel().clearCheck(i);

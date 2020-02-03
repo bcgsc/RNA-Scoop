@@ -1,4 +1,4 @@
-package ui.util;
+package ui.resources;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -17,7 +17,7 @@
             <VBox.margin>
                 <Insets top="10" left="10"/>
             </VBox.margin>
-            <Button fx:id="drawTSNEButton" onAction="#handleDrawTSNEButtonAction" text="Draw tSNE"/>
+            <Button fx:id="drawTSNEButton" onAction="#handleDrawTSNEButtonAction" text="Draw t-SNE"/>
             <Text text="Perplexity: ">
                 <HBox.margin>
                     <Insets top="6" left="10"/>
