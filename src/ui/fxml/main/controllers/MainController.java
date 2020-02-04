@@ -1,5 +1,8 @@
 package ui.fxml.main.controllers;
 
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,6 +22,7 @@ import java.util.HashMap;
 
 public class MainController {
 
+    @FXML private BorderPane window;
     @FXML private ComboBox path;
     @FXML private MenuItem tSNEToggle;
     @FXML private MenuItem isoformPlotToggle;
@@ -33,20 +37,9 @@ public class MainController {
     private boolean consoleOpen;
     private boolean isoformPlotOpen;
 
-    public void initData(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader) {
-        try {
-            horizontalSplitPane.getItems().add(isoformPlotLoader.load());
-            horizontalSplitPane.getItems().add(tSNEPlotLoader.load());
-            verticalSplitPane.getItems().add(consoleLoader.load());
-            this.isoformPlotController = isoformPlotLoader.getController();
-            this.consoleController = consoleLoader.getController();
-            this.tSNEPlotController = tSNEPlotLoader.getController();
-            tSNEPlotOpen = true;
-            consoleOpen = true;
-            isoformPlotOpen = true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void initializeMain(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader) {
+        addPanels(consoleLoader, isoformPlotLoader, tSNEPlotLoader);
+        setUpPath();
     }
 
     @FXML
@@ -138,6 +131,35 @@ public class MainController {
         consoleController.setConsoleMessage(consoleText);
         isoformPlotController.clearCanvas();
         isoformPlotController.clearCheckedGenes();
+    }
+
+    /**
+     * Add's the console, isoform plot and t-sne plot panels to the main
+     * window.
+     */
+    private void addPanels(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader) {
+        try {
+            horizontalSplitPane.getItems().add(isoformPlotLoader.load());
+            horizontalSplitPane.getItems().add(tSNEPlotLoader.load());
+            verticalSplitPane.getItems().add(consoleLoader.load());
+            this.isoformPlotController = isoformPlotLoader.getController();
+            this.consoleController = consoleLoader.getController();
+            this.tSNEPlotController = tSNEPlotLoader.getController();
+            tSNEPlotOpen = true;
+            consoleOpen = true;
+            isoformPlotOpen = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Automatically resizes path combo box when window is resized; removes
+     * initial focus from path combo box
+     */
+    private void setUpPath() {
+        window.widthProperty().addListener((observable, oldValue, newValue) -> path.setPrefWidth(window.getWidth() - 85));
+        Platform.runLater(() -> window.requestFocus());
     }
 
     private void addLoadedPaths() {

@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.TSNEPlotController"
-      fx:id="tSNEPlot" prefHeight="550" prefWidth="565" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
+      fx:id="tSNEPlot" prefHeight="550" prefWidth="565" style="-fx-background-color: #fafafa;">
     <VBox>
         <HBox>
             <VBox.margin>

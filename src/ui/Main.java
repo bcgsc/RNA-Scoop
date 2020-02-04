@@ -22,21 +22,18 @@ public class Main extends Application {
         FXMLLoader rightLoader = new FXMLLoader(getClass().getResource("fxml/main/tsneplot.fxml"));
         FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("fxml/main/main.fxml"));
         BorderPane root = mainLoader.load();
-/*        root.setRight(rightLoader.load());
-        root.setBottom(bottomLoader.load());
-        root.setCenter(centerLoader.load());*/
 
-        setUpControllers(mainLoader, bottomLoader, centerLoader, rightLoader);
-        setUpWindow(primaryStage, root);
+        setUpMainWindow(mainLoader, bottomLoader, centerLoader, rightLoader);
+        setUpStage(primaryStage, root);
     }
 
 
-    private void setUpControllers(FXMLLoader mainLoader, FXMLLoader bottomLoader, FXMLLoader centerLoader, FXMLLoader rightLoader) {
+    private void setUpMainWindow(FXMLLoader mainLoader, FXMLLoader bottomLoader, FXMLLoader centerLoader, FXMLLoader rightLoader) {
         MainController mainController = mainLoader.getController();
-        mainController.initData(bottomLoader, centerLoader, rightLoader);
+        mainController.initializeMain(bottomLoader, centerLoader, rightLoader);
     }
 
-    private void setUpWindow(Stage primaryStage, BorderPane root) {
+    private void setUpStage(Stage primaryStage, BorderPane root) {
         primaryStage.setTitle("RNA-Scoop");
         primaryStage.getIcons().add(logo);
         Rectangle2D screen = Screen.getPrimary().getBounds();
