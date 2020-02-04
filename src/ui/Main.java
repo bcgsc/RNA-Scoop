@@ -9,6 +9,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import ui.fxml.main.controllers.MainController;
+import ui.fxml.main.controllers.TSNEPlotController;
 
 
 public class Main extends Application {
@@ -17,20 +18,24 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        FXMLLoader centerLoader = new FXMLLoader(getClass().getResource("fxml/main/isoformplot.fxml"));
-        FXMLLoader bottomLoader = new FXMLLoader(getClass().getResource("fxml/main/console.fxml"));
-        FXMLLoader rightLoader = new FXMLLoader(getClass().getResource("fxml/main/tsneplot.fxml"));
         FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("fxml/main/main.fxml"));
+        FXMLLoader consoleLoader = new FXMLLoader(getClass().getResource("fxml/main/console.fxml"));
+        FXMLLoader isoformPlotLoader = new FXMLLoader(getClass().getResource("fxml/main/isoformplot.fxml"));
+        FXMLLoader tSNEPlotLoader = new FXMLLoader(getClass().getResource("fxml/main/tsneplot.fxml"));
         BorderPane root = mainLoader.load();
 
-        setUpMainWindow(mainLoader, bottomLoader, centerLoader, rightLoader);
+        setUpMainWindow(mainLoader, consoleLoader, isoformPlotLoader, tSNEPlotLoader);
         setUpStage(primaryStage, root);
     }
 
-
-    private void setUpMainWindow(FXMLLoader mainLoader, FXMLLoader bottomLoader, FXMLLoader centerLoader, FXMLLoader rightLoader) {
+    /**
+     * Set up panels (isoform plot, t-SNE plot, console), controllers and main controller data
+     */
+    private void setUpMainWindow(FXMLLoader mainLoader, FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader) {
         MainController mainController = mainLoader.getController();
-        mainController.initializeMain(bottomLoader, centerLoader, rightLoader);
+        mainController.initializeMain(consoleLoader, isoformPlotLoader, tSNEPlotLoader);
+        TSNEPlotController tsnePlotController = tSNEPlotLoader.getController();
+        tsnePlotController.initConsoleController(consoleLoader.getController());
     }
 
     private void setUpStage(Stage primaryStage, BorderPane root) {

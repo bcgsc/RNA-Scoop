@@ -49,6 +49,7 @@ public class TSNEPlotController implements Initializable {
     @FXML private TextField perplexity;
     @FXML private SwingNode canvas;
 
+    private ConsoleController consoleController;
     private JPanel pane;
     private XYSeriesCollection dataset;
 
@@ -59,6 +60,10 @@ public class TSNEPlotController implements Initializable {
         canvas.setContent(pane);
         pane.setBackground(Color.WHITE);
         pane.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
+    }
+
+    public void initConsoleController(ConsoleController consoleController) {
+        this.consoleController = consoleController;
     }
 
     public VBox getTSNEPlot() {
@@ -78,12 +83,14 @@ public class TSNEPlotController implements Initializable {
 
         @Override
         public void run() {
+            consoleController.addConsoleMessage("Drawing t-SNE plot...");
             perplexity.setDisable(true);
             drawTSNEButton.setDisable(true);
             double[][] tSNEMatrix = generateTSNEMatrix();
             drawTsne(tSNEMatrix);
             perplexity.setDisable(false);
             drawTSNEButton.setDisable(false);
+            consoleController.addConsoleMessage("Finished drawing t-SNE plot");
         }
 
         private double [][] generateTSNEMatrix() {
@@ -91,7 +98,6 @@ public class TSNEPlotController implements Initializable {
             double perplexityValue = Double.parseDouble(perplexity.getText());
             URL path = getClass().getResource("../../../../test/mnist2500_X.txt");
             double [][] X = MatrixUtils.simpleRead2DMatrix(new File(path.getPath()), "   ");
-            System.out.println(MatrixOps.doubleArrayToPrintString(X, ", ", 50,10));
             BarnesHutTSne tsne = new BHTSne();
             TSneConfiguration config = TSneUtils.buildConfig(X, 2, initial_dims, perplexityValue, 1000);
             return tsne.tsne(config);

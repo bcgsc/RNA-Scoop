@@ -52,8 +52,7 @@ public class MainController {
             stage.show();
         }
         catch (IOException e) {
-            consoleController.addConsoleMessage("An error occurred when loading the About window" +
-                                                "\nError message: " + e.getMessage());
+            consoleController.addConsoleMessage("An error occurred when loading the About window");
             e.printStackTrace();
         }
     }
