@@ -22,7 +22,7 @@ import java.net.URL;
 import java.util.*;
 
 public class IsoformPlotController implements Initializable {
-    private static final int CANVAS_MIN_WIDTH = 150;
+    private static final int CANVAS_MIN_WIDTH = 200;
     private static final int CANVAS_INIT_Y = 13;
     private static final int GENE_ID_X_OFFSET = 0;
     private static final int ISOFORM_X_OFFSET = 13;

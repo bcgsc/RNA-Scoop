@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import parser.Parser;
@@ -18,26 +19,34 @@ import java.util.HashMap;
 
 public class MainController {
 
-    @FXML private BorderPane window;
     @FXML private ComboBox path;
     @FXML private MenuItem tSNEToggle;
     @FXML private MenuItem isoformPlotToggle;
     @FXML private MenuItem consoleToggle;
+    @FXML private SplitPane verticalSplitPane;
+    @FXML private SplitPane horizontalSplitPane;
 
     private IsoformPlotController isoformPlotController;
     private ConsoleController consoleController;
-    private tSNEPlotController tSNEPlotController;
+    private TSNEPlotController tSNEPlotController;
     private boolean tSNEPlotOpen;
     private boolean consoleOpen;
     private boolean isoformPlotOpen;
 
-    public void initData(ConsoleController consoleController, IsoformPlotController isoformPlotController, tSNEPlotController tSNEPlotController) {
-        this.isoformPlotController = isoformPlotController;
-        this.consoleController = consoleController;
-        this.tSNEPlotController = tSNEPlotController;
-        tSNEPlotOpen = true;
-        consoleOpen = true;
-        isoformPlotOpen = true;
+    public void initData(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader) {
+        try {
+            horizontalSplitPane.getItems().add(isoformPlotLoader.load());
+            horizontalSplitPane.getItems().add(tSNEPlotLoader.load());
+            verticalSplitPane.getItems().add(consoleLoader.load());
+            this.isoformPlotController = isoformPlotLoader.getController();
+            this.consoleController = consoleLoader.getController();
+            this.tSNEPlotController = tSNEPlotLoader.getController();
+            tSNEPlotOpen = true;
+            consoleOpen = true;
+            isoformPlotOpen = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -63,11 +72,11 @@ public class MainController {
     @FXML
     protected void handleTSNEViewToggle(ActionEvent e) {
         if (tSNEPlotOpen) {
-            window.setRight(null);
+            horizontalSplitPane.getItems().remove(tSNEPlotController.getTSNEPlot());
             tSNEToggle.setText("Open t-SNE Plot");
             tSNEPlotOpen = false;
         } else {
-            window.setRight(tSNEPlotController.getTSNEPlot());
+            horizontalSplitPane.getItems().add(tSNEPlotController.getTSNEPlot());
             tSNEToggle.setText("Close t-SNE Plot");
             tSNEPlotOpen = true;
         }
@@ -79,11 +88,11 @@ public class MainController {
     @FXML
     protected void handleIsoformViewToggle(ActionEvent e) {
         if (isoformPlotOpen) {
-            window.setCenter(null);
+            horizontalSplitPane.getItems().remove(isoformPlotController.getIsoformPlot());
             isoformPlotToggle.setText("Open Isoform Plot");
             isoformPlotOpen = false;
         } else {
-            window.setCenter(isoformPlotController.getIsoformPlot());
+            horizontalSplitPane.getItems().add(0, isoformPlotController.getIsoformPlot());
             isoformPlotToggle.setText("Close Isoform Plot");
             isoformPlotOpen = true;
         }
@@ -95,11 +104,12 @@ public class MainController {
     @FXML
     protected void handleConsoleViewToggle(ActionEvent e) {
         if (consoleOpen) {
-            window.setBottom(null);
+            verticalSplitPane.getItems().remove(consoleController.getConsole());
             consoleToggle.setText("Open Console");
             consoleOpen = false;
         } else {
-            window.setBottom(consoleController.getConsole());
+            verticalSplitPane.getItems().add(1, consoleController.getConsole());
+            verticalSplitPane.setDividerPosition(0, 0.9);
             consoleToggle.setText("Close Console");
             consoleOpen = true;
         }

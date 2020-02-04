@@ -7,11 +7,8 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.tSNEPlotController"
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.TSNEPlotController"
       fx:id="tSNEPlot" prefHeight="550" prefWidth="565" style="-fx-background-color: #fafafa; -fx-border-color: #adadad;">
-    <BorderPane.margin>
-        <Insets right="10"/>
-    </BorderPane.margin>
     <VBox>
         <HBox>
             <VBox.margin>

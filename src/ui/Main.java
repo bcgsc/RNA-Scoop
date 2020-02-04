@@ -22,9 +22,9 @@ public class Main extends Application {
         FXMLLoader rightLoader = new FXMLLoader(getClass().getResource("fxml/main/tsneplot.fxml"));
         FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("fxml/main/main.fxml"));
         BorderPane root = mainLoader.load();
-        root.setRight(rightLoader.load());
+/*        root.setRight(rightLoader.load());
         root.setBottom(bottomLoader.load());
-        root.setCenter(centerLoader.load());
+        root.setCenter(centerLoader.load());*/
 
         setUpControllers(mainLoader, bottomLoader, centerLoader, rightLoader);
         setUpWindow(primaryStage, root);
@@ -33,7 +33,7 @@ public class Main extends Application {
 
     private void setUpControllers(FXMLLoader mainLoader, FXMLLoader bottomLoader, FXMLLoader centerLoader, FXMLLoader rightLoader) {
         MainController mainController = mainLoader.getController();
-        mainController.initData(bottomLoader.getController(), centerLoader.getController(), rightLoader.getController());
+        mainController.initData(bottomLoader, centerLoader, rightLoader);
     }
 
     private void setUpWindow(Stage primaryStage, BorderPane root) {
