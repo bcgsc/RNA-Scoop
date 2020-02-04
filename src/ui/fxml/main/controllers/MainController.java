@@ -1,8 +1,6 @@
 package ui.fxml.main.controllers;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,6 +15,7 @@ import javafx.stage.Stage;
 import parser.Parser;
 import parser.data.Gene;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -53,7 +52,7 @@ public class MainController {
             stage.show();
         }
         catch (IOException e) {
-            consoleController.setConsoleMessage("An error occurred when loading the About window" +
+            consoleController.addConsoleMessage("An error occurred when loading the About window" +
                                                 "\nError message: " + e.getMessage());
             e.printStackTrace();
         }
@@ -125,10 +124,16 @@ public class MainController {
      */
     @FXML
     protected void handleLoadButtonAction(ActionEvent event) {
-        String consoleText = Parser.readFile((String) path.getValue());
+        try {
+            Parser.readFile((String) path.getValue());
+            consoleController.addConsoleMessage("Successfully loaded file from path: " + path.getValue());
+        } catch (FileNotFoundException e) {
+            consoleController.addConsoleMessage("Could not find file at path: " + path.getValue());
+        } catch (Exception e) {
+            consoleController.addConsoleMessage("An error occurred when reading file from path: " + path.getValue());
+        }
         addLoadedPaths();
         addLoadedGenes();
-        consoleController.setConsoleMessage(consoleText);
         isoformPlotController.clearCanvas();
         isoformPlotController.clearCheckedGenes();
     }

@@ -40,7 +40,11 @@ public class ParserTests {
 
     @BeforeAll
     public static void setUp() {
-        Parser.readFile(FILE_PATH);
+        try {
+            Parser.readFile(FILE_PATH);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         genes = Parser.getParsedGenes();
     }
 

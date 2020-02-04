@@ -5,6 +5,7 @@ import parser.data.Gene;
 import parser.data.Isoform;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -20,22 +21,16 @@ public class Parser {
      * Reads in file at given path and parses each line
      * @param path path to the file
      */
-    public static String readFile(String path) {
-        try {
-            File myObject = new File(path);
-            Scanner myReader = new Scanner(myObject);
-            myReader.nextLine();
-            while (myReader.hasNextLine()) {
-                String exonDataString = myReader.nextLine();
-                String[] exonData = exonDataString.split("\t");
-                parse(exonData);
-            }
-            myReader.close();
-            return "Successfully loaded file: " + path;
-        } catch (Exception e) {
-            return "An error occurred while loading file from path: " + path +
-                    "\nError message: " + e.getMessage();
+    public static void readFile(String path) throws Exception {
+        File file = new File(path);
+        Scanner scanner = new Scanner(file);
+        scanner.nextLine();
+        while (scanner.hasNextLine()) {
+            String exonDataString = scanner.nextLine();
+            String[] exonData = exonDataString.split("\t");
+            parse(exonData);
         }
+        scanner.close();
     }
 
     /**

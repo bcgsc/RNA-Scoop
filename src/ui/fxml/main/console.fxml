@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.ConsoleController"
-      fx:id="console" prefHeight="50" style="-fx-background-color: #fafafa;">
-    <Label fx:id="consoleMessage" text="Welcome to RNA-Scoop!">
-        <VBox.margin>
-            <Insets top="5" left="5" right="5"/>
-        </VBox.margin>
-    </Label>
-</VBox>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.text.Text?>
+<ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.ConsoleController"
+            fx:id="console" prefHeight="50" style="-fx-background: #ffffff;">
+    <VBox>
+        <Text fx:id="consoleMessage" text="Welcome to RNA-Scoop!">
+            <VBox.margin>
+                <Insets top="5" left="5" right="5"/>
+            </VBox.margin>
+        </Text>
+    </VBox>
+</ScrollPane>
