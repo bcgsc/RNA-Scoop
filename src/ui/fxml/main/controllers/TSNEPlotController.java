@@ -89,7 +89,8 @@ public class TSNEPlotController implements Initializable {
         private double [][] generateTSNEMatrix() {
             int initial_dims = 55;
             double perplexityValue = Double.parseDouble(perplexity.getText());
-            double [][] X = MatrixUtils.simpleRead2DMatrix(new File("/home/mstephenson/Downloads/T-SNE-Java/tsne-demos/src/main/resources/datasets/mnist2500_X.txt"), "   ");
+            URL path = getClass().getResource("../../../../test/mnist2500_X.txt");
+            double [][] X = MatrixUtils.simpleRead2DMatrix(new File(path.getPath()), "   ");
             System.out.println(MatrixOps.doubleArrayToPrintString(X, ", ", 50,10));
             BarnesHutTSne tsne = new BHTSne();
             TSneConfiguration config = TSneUtils.buildConfig(X, 2, initial_dims, perplexityValue, 1000);
@@ -123,7 +124,8 @@ public class TSNEPlotController implements Initializable {
          */
         private void createDataSet(double[][] tSNEMatrix) {
             dataset = new XYSeriesCollection();
-            File file = new File("/home/mstephenson/Downloads/T-SNE-Java/tsne-demos/src/main/resources/datasets/mnist2500_labels.txt");
+            URL path = getClass().getResource("../../../../test/mnist2500_labels_int.txt");
+            File file = new File(path.getPath());
             try {
                 Scanner scanner = new Scanner(file);
                 int cellIndex = 0;

@@ -30,7 +30,7 @@ public class IsoformPlotController implements Initializable {
     private static final int SCROLLBAR_WIDTH = 20;
     private static final int CANVAS_MARGIN = 15;
     private static final Color FONT_COLOUR = Color.BLACK;
-    private static final Color EXON_COLOUR = Color.color(0.457, 0.816, 0.555);
+    private static final Color EXON_COLOUR = Color.color(0.600, 0.851, 1);
     private static final Color OUTLINE_COLOUR = Color.BLACK;
     private static final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
     private static final Font TRANSCRIPT_FONT = Font.font("Verdana",12);
@@ -155,10 +155,12 @@ public class IsoformPlotController implements Initializable {
     private void drawGeneID(Gene gene, String geneID) {
         gc.setFill(FONT_COLOUR);
         gc.setFont(GENE_FONT);
-        if(gene.isPositiveSense())
+        if(gene.isPositiveSense() && reverseComplement)
             gc.fillText(geneID + " (+)", GENE_ID_X_OFFSET, canvasCurrY);
-        else
+        else if(reverseComplement)
             gc.fillText(geneID + " (-)", GENE_ID_X_OFFSET, canvasCurrY);
+        else
+            gc.fillText(geneID, GENE_ID_X_OFFSET, canvasCurrY);
         canvasCurrY += SPACING;
     }
 
