@@ -15,6 +15,9 @@ public class AboutController implements Initializable {
     @FXML Text javaVersion;
     @FXML Text os;
 
+    /**
+     * Sets up About window
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         scrollPane.widthProperty().addListener((ov, oldValue, newValue) -> vbox.setPrefWidth(scrollPane.getWidth() - 10)

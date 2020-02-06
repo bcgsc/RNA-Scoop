@@ -52,7 +52,7 @@ public class MainController {
             stage.show();
         }
         catch (IOException e) {
-            consoleController.addConsoleMessage("An error occurred when loading the About window");
+            consoleController.addConsoleErrorMessage("Could not load about window");
             e.printStackTrace();
         }
     }
@@ -127,9 +127,9 @@ public class MainController {
             Parser.readFile((String) path.getValue());
             consoleController.addConsoleMessage("Successfully loaded file from path: " + path.getValue());
         } catch (FileNotFoundException e) {
-            consoleController.addConsoleMessage("Could not find file at path: " + path.getValue());
+            consoleController.addConsoleErrorMessage("Could not find file at path: " + path.getValue());
         } catch (Exception e) {
-            consoleController.addConsoleMessage("An error occurred when reading file from path: " + path.getValue());
+            consoleController.addConsoleErrorMessage("Could not read file from path: " + path.getValue());
         }
         addLoadedPaths();
         addLoadedGenes();

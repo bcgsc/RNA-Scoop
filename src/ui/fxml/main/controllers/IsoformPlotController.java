@@ -16,7 +16,6 @@ import parser.Parser;
 import parser.data.Exon;
 import parser.data.Gene;
 import parser.data.Isoform;
-import ui.resources.Util;
 
 import java.net.URL;
 import java.util.*;
@@ -173,7 +172,7 @@ public class IsoformPlotController implements Initializable {
         int geneEnd = gene.getEndNucleotide();
         double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart);
         Collection<String> isoforms = gene.getIsoforms().keySet();
-        List<String> sortedIsoforms = Util.asSortedList(isoforms);
+        List<String> sortedIsoforms = asSortedList(isoforms);
         for(String transcriptID : sortedIsoforms) {
             gc.setFill(FONT_COLOUR);
             gc.fillText(transcriptID, ISOFORM_X_OFFSET, canvasCurrY);
@@ -184,6 +183,15 @@ public class IsoformPlotController implements Initializable {
                 drawIsoformReverseComplement(gene.getIsoform(transcriptID), geneEnd, pixelsPerNucleotide);
             canvasCurrY += SPACING * 5/3;
         }
+    }
+
+    /**
+     * Puts given collection into list and sorts
+     */
+    private <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
+        List<T> list = new ArrayList<>(c);
+        java.util.Collections.sort(list);
+        return list;
     }
 
     /**
@@ -269,4 +277,5 @@ public class IsoformPlotController implements Initializable {
         gc.setFill(OUTLINE_COLOUR);
         gc.strokeLine(startX, y, endX, y);
     }
+
 }

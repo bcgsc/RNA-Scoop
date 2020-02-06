@@ -3,6 +3,8 @@
     <output-path>$PROJECT_DIR$/out/artifacts/RNA_Scoop_jar</output-path>
     <root id="archive" name="RNA-Scoop.jar">
       <element id="module-output" name="RNA-Scoop" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../Downloads/tsne-2.5.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../Downloads/jfreechart-fse/target/jfreechart2-2.0-pre1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../Downloads/controlsfx-8.40.16.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/junit/jupiter/junit-jupiter/5.4.2/junit-jupiter-5.4.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/junit/jupiter/junit-jupiter-api/5.4.2/junit-jupiter-api-5.4.2.jar" path-in-jar="/" />
