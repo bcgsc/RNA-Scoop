@@ -43,7 +43,7 @@
         </VBox>
     </top>
     <center>
-        <SplitPane fx:id="verticalSplitPane" orientation="VERTICAL" dividerPositions="0.9" style="-fx-border-color: #c2c2c2;">
+        <SplitPane fx:id="verticalSplitPane" orientation="VERTICAL" dividerPositions="1" style="-fx-border-color: #c2c2c2;">
             <BorderPane.margin>
                 <Insets bottom="10" right="10" left="10"/>
             </BorderPane.margin>

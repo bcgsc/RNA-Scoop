@@ -3,8 +3,8 @@ package parser.data;
 import java.util.Objects;
 
 public class Exon implements Comparable<Exon>{
-    int startNucleotide;
-    int endNucleotide;
+    private int startNucleotide;
+    private int endNucleotide;
 
     public Exon(int startNucleotide, int endNucleotide) {
         this.startNucleotide = startNucleotide;

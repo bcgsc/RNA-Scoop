@@ -55,7 +55,7 @@ public class TSNEPlotController implements Initializable {
 
     private ConsoleController consoleController;
     private JPanel pane;
-    private XYSeriesCollection dataset;
+    private XYSeriesCollection dataSet;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -84,25 +84,41 @@ public class TSNEPlotController implements Initializable {
     }
 
     private class TSNEPlotMaker implements Runnable {
-
+        private File dataFile;
+        private File labelsFile;
         @Override
         public void run() {
             Platform.runLater(new TogglePlotButtonsThread(true));
-            Platform.runLater(new WriteToConsoleThread("Drawing t-SNE plot..."));
+            Platform.runLater(new WriteToConsoleThread("Drawing t-SNE plot...", false));
             try {
+                loadFiles();
                 double[][] tSNEMatrix = generateTSNEMatrix();
                 drawTsne(tSNEMatrix);
-                Platform.runLater(new WriteToConsoleThread("Finished drawing t-SNE plot..."));
+                Platform.runLater(new WriteToConsoleThread("Finished drawing t-SNE plot", false));
             } catch(TSNEPlotException e) {
-                Platform.runLater(new WriteToConsoleThread(e.getMessage()));
+                Platform.runLater(new WriteToConsoleThread(e.getMessage(), true));
             } catch (Exception e) {
-                Platform.runLater(new WriteToConsoleThread("An unexpected error occurred"));
+                Platform.runLater(new WriteToConsoleThread("An unexpected error occurred", true));
             } finally {
                 Platform.runLater(new TogglePlotButtonsThread(false));
             }
         }
 
-        private double [][] generateTSNEMatrix() throws InvalidPerplexityException, TSNeDataFileNotFoundException {
+        /**
+         * Load t-SNE data and labels files
+         */
+        private void loadFiles() throws TSNeDataFileNotFoundException, TSNELabelsFileNotFoundException {
+            URL urlToDataFile = getClass().getResource("/ui/resources/mnist2500_X.txt");
+            URL urlToLabelsFile = getClass().getResource("/ui/resources/mnist2500_labels_int.txt");
+            if(urlToDataFile == null)
+                throw new TSNeDataFileNotFoundException();
+            if (urlToLabelsFile == null)
+                throw new TSNELabelsFileNotFoundException();
+            dataFile = new File(urlToDataFile.getFile());
+            labelsFile = new File(urlToLabelsFile.getFile());
+        }
+
+        private double [][] generateTSNEMatrix() throws InvalidPerplexityException {
             double perplexityValue;
             try {
                 perplexityValue = Double.parseDouble(perplexity.getText());
@@ -112,12 +128,8 @@ public class TSNEPlotController implements Initializable {
             if(perplexityValue < 0)
                 throw new InvalidPerplexityException();
 
-            URL path = getClass().getResource("/resources/mnist2500_X.txt");
-            if(path == null)
-                throw new TSNeDataFileNotFoundException();
-
             int initial_dims = 55;
-            double [][] X = MatrixUtils.simpleRead2DMatrix(new File(path.getFile()), "   ");
+            double [][] X = MatrixUtils.simpleRead2DMatrix(dataFile, "   ");
             BarnesHutTSne tsne = new BHTSne();
             TSneConfiguration config = TSneUtils.buildConfig(X, 2, initial_dims, perplexityValue, 1000);
             return tsne.tsne(config);
@@ -126,18 +138,18 @@ public class TSNEPlotController implements Initializable {
         /**
          * Plots given t-SNE matrix
          */
-        private void drawTsne(double[][] tSNEMatrix) throws FileNotFoundException, TSNELabelsFileNotFoundException {
+        private void drawTsne(double[][] tSNEMatrix) throws FileNotFoundException {
             createDataSet(tSNEMatrix);
 
             DatasetSelectionExtension<XYCursor> datasetExtension
-                    = new XYDatasetSelectionExtension(dataset);
+                    = new XYDatasetSelectionExtension(dataSet);
 
             JFreeChart chart = createPlot(datasetExtension);
             ChartPanel panel = new ChartPanel(chart);
             panel.setMouseWheelEnabled(true);
 
             addSelectionHandler(panel);
-            addSelectionManager(dataset, datasetExtension, panel);
+            addSelectionManager(dataSet, datasetExtension, panel);
 
             pane.removeAll();
             pane.add(panel);
@@ -147,22 +159,21 @@ public class TSNEPlotController implements Initializable {
         /**
          * Given a t-SNE matrix, creates a collection of series of x, y coordinates that
          * can be plotted. A new series is created for every label
+         *
+         * NOTE: if labels file does not have a label on a separate line for every cell,
+         * cells will be left out of the data set!
          */
-        private void createDataSet(double[][] tSNEMatrix) throws FileNotFoundException, TSNELabelsFileNotFoundException {
-            URL path = getClass().getResource("/ui/resources/mnist2500_labels_int.txt");
-            if (path == null)
-                throw new TSNELabelsFileNotFoundException();
-            dataset = new XYSeriesCollection();
-            File file = new File(path.getFile());
-            Scanner scanner = new Scanner(file);
+        private void createDataSet(double[][] tSNEMatrix) throws FileNotFoundException {
+            dataSet = new XYSeriesCollection();
+            Scanner scanner = new Scanner(labelsFile);
             int cellIndex = 0;
             while (scanner.hasNextLine()) {
                 String label = scanner.nextLine();
                 XYSeries series = new XYSeries(label);
                 if (!dataSetHasSeries(series)) {
-                    dataset.addSeries(series);
+                    dataSet.addSeries(series);
                 } else {
-                    series = dataset.getSeries(label);
+                    series = dataSet.getSeries(label);
                 }
                 double cellX = tSNEMatrix[cellIndex][0];
                 double cellY = tSNEMatrix[cellIndex][1];
@@ -176,7 +187,7 @@ public class TSNEPlotController implements Initializable {
          * @return true if dataset has a series with the same key, false otherwise
          */
         private boolean dataSetHasSeries(Series series) {
-            List<XYSeries> dataSetSeries = dataset.getSeries();
+            List<XYSeries> dataSetSeries = dataSet.getSeries();
             for(Series otherSeries : dataSetSeries) {
                 if (otherSeries.getKey().equals(series.getKey())) {
                     return true;
@@ -186,7 +197,7 @@ public class TSNEPlotController implements Initializable {
         }
 
         private JFreeChart createPlot(DatasetSelectionExtension<XYCursor> ext) {
-            JFreeChart chart = ChartFactory.createScatterPlot("", " ", " ", dataset);
+            JFreeChart chart = ChartFactory.createScatterPlot("", " ", " ", dataSet);
 
             XYPlot plot = (XYPlot) chart.getPlot();
             setPlotViewProperties(plot);
@@ -231,7 +242,7 @@ public class TSNEPlotController implements Initializable {
             r.setBaseShapesFilled(true);
             r.setUseFillPaint(true);
             Shape shape  = new Ellipse2D.Double(0,0,5,5);
-            for(int i = 0; i < dataset.getSeriesCount(); i++) {
+            for(int i = 0; i < dataSet.getSeriesCount(); i++) {
                 r.setSeriesShape(i, shape);
                 Color seriesColor = PointColor.getColor();
                 r.setSeriesFillPaint(i, seriesColor);
@@ -242,30 +253,41 @@ public class TSNEPlotController implements Initializable {
             IRSUtilities.setSelectedItemFillPaint(r, ext, Color.white);
         }
 
+        /**
+         * Thread which disables/enables the "Draw t-SNE" button and the Perplexity field
+         */
         private class TogglePlotButtonsThread implements Runnable {
-            private boolean disable;
+            private boolean disableState;
 
-            private TogglePlotButtonsThread(boolean disable) {
-                this.disable = disable;
+            private TogglePlotButtonsThread(boolean disableState) {
+                this.disableState = disableState;
             }
 
             @Override
             public void run() {
-                perplexity.setDisable(disable);
-                drawTSNEButton.setDisable(disable);
+                perplexity.setDisable(disableState);
+                drawTSNEButton.setDisable(disableState);
             }
         }
 
+        /**
+         * Thread which writes messages to the console
+         */
         private class WriteToConsoleThread implements Runnable {
             private String message;
+            private boolean messageIsError;
 
-            private WriteToConsoleThread(String message) {
+            private WriteToConsoleThread(String message, boolean messageIsError) {
                 this.message = message;
+                this.messageIsError = messageIsError;
             }
 
             @Override
             public void run() {
-                consoleController.addConsoleMessage(message);
+                if(messageIsError)
+                    consoleController.addConsoleErrorMessage(message);
+                else
+                    consoleController.addConsoleMessage(message);
             }
         }
 

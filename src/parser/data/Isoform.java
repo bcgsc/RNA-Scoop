@@ -3,7 +3,7 @@ package parser.data;
 import java.util.ArrayList;
 
 public class Isoform {
-    ArrayList<Exon> exons;
+    private ArrayList<Exon> exons;
 
     public Isoform() {
         exons = new ArrayList<>();

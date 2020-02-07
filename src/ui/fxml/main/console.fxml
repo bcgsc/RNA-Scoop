@@ -3,14 +3,14 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
 <ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.ConsoleController"
             fx:id="console" prefHeight="50" style="-fx-background: #ffffff;">
     <VBox>
-        <Text fx:id="consoleMessage" text="Welcome to RNA-Scoop">
+        <TextFlow fx:id="consoleMessage">
             <VBox.margin>
-                <Insets top="5" left="5" right="5"/>
+                <Insets top="10" left="10" right="10" bottom="10"/>
             </VBox.margin>
-        </Text>
+        </TextFlow>
     </VBox>
 </ScrollPane>

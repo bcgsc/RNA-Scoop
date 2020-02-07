@@ -21,7 +21,7 @@ public class Parser {
      * Reads in file at given path and parses each line
      * @param path path to the file
      */
-    public static void readFile(String path) throws Exception {
+    public static void readFile(String path) throws FileNotFoundException {
         File file = new File(path);
         Scanner scanner = new Scanner(file);
         scanner.nextLine();

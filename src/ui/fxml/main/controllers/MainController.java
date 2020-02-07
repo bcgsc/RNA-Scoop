@@ -38,7 +38,7 @@ public class MainController {
 
     public void initializeMain(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader) {
         addPanels(consoleLoader, isoformPlotLoader, tSNEPlotLoader);
-        setUpPath();
+        setUpPathComboBox();
     }
 
     @FXML
@@ -53,7 +53,6 @@ public class MainController {
         }
         catch (IOException e) {
             consoleController.addConsoleErrorMessage("Could not load about window");
-            e.printStackTrace();
         }
     }
 
@@ -100,7 +99,7 @@ public class MainController {
             consoleOpen = false;
         } else {
             verticalSplitPane.getItems().add(1, consoleController.getConsole());
-            verticalSplitPane.setDividerPosition(0, 0.9);
+            verticalSplitPane.setDividerPosition(0, 1);
             consoleToggle.setText("Close Console");
             consoleOpen = true;
         }
@@ -129,7 +128,7 @@ public class MainController {
         } catch (FileNotFoundException e) {
             consoleController.addConsoleErrorMessage("Could not find file at path: " + path.getValue());
         } catch (Exception e) {
-            consoleController.addConsoleErrorMessage("Could not read file from path: " + path.getValue());
+            consoleController.addConsoleErrorMessage("An unexpected error occurred while reading file from path: " + path.getValue());
         }
         addLoadedPaths();
         addLoadedGenes();
@@ -153,7 +152,8 @@ public class MainController {
             consoleOpen = true;
             isoformPlotOpen = true;
         } catch (IOException e) {
-            e.printStackTrace();
+            consoleController.addConsoleErrorMessage("An unexpected error occurred while setting up the isoform plot, " +
+                                                     "t-SNE plot, and console panels");
         }
     }
 
@@ -161,7 +161,7 @@ public class MainController {
      * Automatically resizes path combo box when window is resized; removes
      * initial focus from path combo box
      */
-    private void setUpPath() {
+    private void setUpPathComboBox() {
         window.widthProperty().addListener((observable, oldValue, newValue) -> path.setPrefWidth(window.getWidth() - 85));
         Platform.runLater(() -> window.requestFocus());
     }

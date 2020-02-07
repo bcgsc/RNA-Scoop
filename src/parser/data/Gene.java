@@ -9,12 +9,12 @@ public class Gene {
      * Map of all isoforms of this gene
      * Key is transcript ID, value is the isoform
      */
-    HashMap<String, Isoform> isoforms;
+    private HashMap<String, Isoform> isoforms;
 
-    int startNucleotide;
-    int endNucleotide;
-    int chromosome;
-    boolean isPositiveSense;
+    private int startNucleotide;
+    private int endNucleotide;
+    private int chromosome;
+    private boolean isPositiveSense;
 
     public Gene(int chromosome, String strand) {
         isoforms = new HashMap<>();
@@ -23,10 +23,7 @@ public class Gene {
         startNucleotide = Integer.MAX_VALUE;
         endNucleotide = 0;
         this.chromosome = chromosome;
-        if(strand.equals("+"))
-            isPositiveSense = true;
-        else
-            isPositiveSense = false;
+        isPositiveSense = strand.equals("+");
     }
 
     public void addIsoform(String transcriptID, Isoform isoform) {
