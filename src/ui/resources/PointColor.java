@@ -6,15 +6,16 @@ import java.awt.*;
  * All the colors a point in the t-SNE plot can be
  */
 public final class PointColor {
-    public final static Color[] COLORS = {new Color(0.894f, 0.102f, 0.120f), new Color(0.216f, 0.494f, 0.722f),
-                                          new Color(0.302f, 0.686f, 0.290f), new Color(0.596f, 0.306f, 0.639f),
-                                          new Color(1.000f, 0.498f, 0.000f), new Color(1.000f, 1.000f, 0.200f),
-                                          new Color(0.651f, 0.337f, 0.157f), new Color(0.969f, 0.506f, 0.749f),
-                                          new Color(0.600f, 0.600f, 0.600f), new Color(0.553f, 0.867f, 0.780f),
-                                          new Color(0.745f, 0.729f, 0.855f), new Color(0.984f, 0.502f, 0.447f),
-                                          new Color(0.502f, 0.694f, 0.827f), new Color(0.992f, 0.706f, 0.384f),
-                                          new Color(0.702f, 0.871f, 0.412f), new Color(0.988f, 0.804f, 0.898f),
-                                          new Color(0.851f, 0.851f, 0.851f)};
+    public final static Color[] COLORS = {new Color(0.204f, 0.471f, 0.635f), new Color(0.886f, 0.518f, 0.224f),
+                                          new Color(0.239f, 0.592f, 0.286f), new Color(0.753f, 0.278f, 0.282f),
+                                          new Color(0.545f, 0.451f, 0.702f), new Color(0.478f, 0.337f, 0.318f),
+                                          new Color(0.800f, 0.510f, 0.718f), new Color(0.576f, 0.584f, 0.596f),
+                                          new Color(0.631f, 0.659f, 0.271f), new Color(0.169f, 0.690f, 0.722f),
+                                          new Color(0.659f, 0.753f, 0.859f), new Color(0.925f, 0.710f, 0.522f),
+                                          new Color(0.576f, 0.812f, 0.596f), new Color(0.957f, 0.627f, 0.616f),
+                                          new Color(0.725f, 0.675f, 0.784f), new Color(0.706f, 0.592f, 0.576f),
+                                          new Color(0.933f, 0.714f, 0.800f), new Color(0.804f, 0.808f, 0.817f),
+                                          new Color(0.784f, 0.804f, 0.584f), new Color(0.596f, 0.820f, 0.847f)};
     private static int currIndex = 0;
 
     /**
