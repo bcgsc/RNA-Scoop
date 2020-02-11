@@ -3,7 +3,11 @@ package ui.fxml.main.controllers;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollPane;
@@ -11,16 +15,23 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
 import org.controlsfx.control.CheckComboBox;
 import parser.Parser;
 import parser.data.Exon;
 import parser.data.Gene;
 import parser.data.Isoform;
+import ui.fxml.GeneSelectorController;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
 public class IsoformPlotController implements Initializable {
+
+    private static final float GENE_SELECTOR_SCALE_FACTOR = 0.33f;
+
     private static final int CANVAS_MIN_WIDTH = 200;
     private static final int CANVAS_INIT_Y = 13;
     private static final int GENE_ID_X_OFFSET = 0;
@@ -37,30 +48,23 @@ public class IsoformPlotController implements Initializable {
 
     @FXML private Canvas canvas;
     @FXML private ScrollPane scrollPane;
-    @FXML private CheckComboBox geneSelector;
     @FXML private VBox isoformPlot;
     private boolean reverseComplement;
 
     private GraphicsContext gc;
+    private static List<String> genesViewing;
+    private ConsoleController consoleController;
     private int canvasCurrY;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        genesViewing = new ArrayList<>();
         initializeGraphics();
         initializeScrollPane();
-        initializeGeneSelector();
     }
 
-    /**
-     * Adds given genes to gene selector (if not already added)
-     */
-    public void addGenes(Map<String, Gene> genes) {
-        ObservableList<String> selectorGenes= geneSelector.getItems();
-        selectorGenes.removeAll();
-        for(String gene : genes.keySet()) {
-            selectorGenes.add(gene);
-        }
-        //selectorGenes.sort(String::compareTo);
+    public void initConsoleController(ConsoleController consoleController) {
+        this.consoleController = consoleController;
     }
 
     /**
@@ -78,16 +82,37 @@ public class IsoformPlotController implements Initializable {
         canvasCurrY = CANVAS_INIT_Y;
     }
 
-    /**
-     * Deselects all gene selector's genes
-     */
-    public void clearCheckedGenes() {
-        for(int i = 0; i < geneSelector.getItems().size(); i++)
-            geneSelector.getCheckModel().clearCheck(i);
+    public void setGenesViewing(List<String> genesViewing) {
+        this.genesViewing = genesViewing;
+        drawGenes();
     }
 
     public VBox getIsoformPlot() {
         return isoformPlot;
+    }
+
+    public static List<String> getGenesViewing() {
+        return genesViewing;
+    }
+
+    @FXML
+    protected void handleAddRemoveGenesButtonAction() {
+        Parent root;
+        try {
+            FXMLLoader geneSelectorLoader = new FXMLLoader(getClass().getResource("/ui/fxml/geneselector.fxml"));
+            root = geneSelectorLoader.load();
+            GeneSelectorController geneSelectorController = geneSelectorLoader.getController();
+            geneSelectorController.initIsoformPlotController(this);
+            Stage stage = new Stage();
+            stage.setTitle("Gene Selector");
+            Rectangle2D screen = Screen.getPrimary().getBounds();
+            stage.setScene(new Scene(root, screen.getWidth() * GENE_SELECTOR_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_SCALE_FACTOR));
+            stage.show();
+        }
+        catch (IOException e) {
+            consoleController.addConsoleErrorMessage("Could not load gene selector window");
+            e.printStackTrace();
+        }
     }
 
     private void initializeGraphics() {
@@ -112,20 +137,13 @@ public class IsoformPlotController implements Initializable {
     }
 
     /**
-     * Makes gene selector draw new gene each time user selects one
-     */
-    private void initializeGeneSelector() {
-        geneSelector.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) c -> drawGenes());
-    }
-
-    /**
      * Draws all genes selected in gene selector combo box
      */
-    private void drawGenes() {
+    public void drawGenes() {
         clearCanvas();
-        List<String> selectedGenes = geneSelector.getCheckModel().getCheckedItems();
-        for (String gene : selectedGenes) {
-            drawGene(Parser.getParsedGenes().get(gene), gene);
+        HashMap<String, Gene> parsedGenes = Parser.getParsedGenes();
+        for (String geneID : genesViewing) {
+            drawGene(parsedGenes.get(geneID), geneID);
         }
     }
 

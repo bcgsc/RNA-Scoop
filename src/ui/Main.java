@@ -8,6 +8,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import ui.fxml.main.controllers.IsoformPlotController;
 import ui.fxml.main.controllers.MainController;
 import ui.fxml.main.controllers.TSNEPlotController;
 
@@ -34,7 +35,9 @@ public class Main extends Application {
         MainController mainController = mainLoader.getController();
         mainController.initializeMain(consoleLoader, isoformPlotLoader, tSNEPlotLoader);
         TSNEPlotController tsnePlotController = tSNEPlotLoader.getController();
+        IsoformPlotController isoformPlotController = isoformPlotLoader.getController();
         tsnePlotController.initConsoleController(consoleLoader.getController());
+        isoformPlotController.initConsoleController(consoleLoader.getController());
     }
 
     private void setUpStage(Stage primaryStage, BorderPane root) {

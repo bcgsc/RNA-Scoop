@@ -1,0 +1,39 @@
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.GeneSelectorController"
+          fx:id="gridPane" style="-fx-background-color: #fcfcfc;">
+        <VBox alignment="CENTER" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <GridPane.margin>
+                <Insets topRightBottomLeft="10"/>
+            </GridPane.margin>
+            <Text text="Genes">
+                <VBox.margin>
+                    <Insets bottom="5"/>
+                </VBox.margin>
+            </Text>
+            <ListView fx:id="genes" VBox.vgrow="ALWAYS" style="-fx-border-color: #adadad; -fx-background: #ffffff;"/>
+        </VBox>
+        <VBox alignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <GridPane.margin>
+                <Insets topRightBottomLeft="10"/>
+            </GridPane.margin>
+            <Text text="Genes Viewing">
+                <VBox.margin>
+                    <Insets bottom="5"/>
+                </VBox.margin>
+            </Text>
+            <ListView fx:id="genesViewing" VBox.vgrow="ALWAYS" style="-fx-border-color: #adadad; -fx-background: #ffffff;"/>
+        </VBox>
+    <HBox alignment="CENTER" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"
+          style="-fx-border-color: #adadad #fafafa #fafafa #fafafa; -fx-background-color: #fafafa;">
+        <Button text="Add Selected" onAction="#handleAddSelectedButtonAction">
+            <HBox.margin>
+                <Insets right="10"/>
+            </HBox.margin>
+        </Button>
+        <Button text="Remove Selected" onAction="#handleRemoveSelectedButtonAction"/>
+    </HBox>
+</GridPane>

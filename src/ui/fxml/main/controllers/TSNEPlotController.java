@@ -78,7 +78,7 @@ public class TSNEPlotController implements Initializable {
      * When "Draw t-SNE" button is pressed, draws t-SNE plot
      */
     @FXML
-    protected void handleDrawTSNEButtonAction(ActionEvent e) {
+    protected void handleDrawTSNEButtonAction() {
         Thread plotTSNE = new Thread(new TSNEPlotMaker());
         plotTSNE.start();
     }

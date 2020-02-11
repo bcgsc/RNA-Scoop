@@ -3,24 +3,25 @@ package ui.fxml.main.controllers;
 import exceptions.RNAScoopException;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import parser.Parser;
-import parser.data.Gene;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
 
 public class MainController {
+
+    private static final float ABOUT_SCALE_FACTOR = 0.33f;
 
     @FXML private BorderPane window;
     @FXML private ComboBox path;
@@ -49,7 +50,8 @@ public class MainController {
             root = FXMLLoader.load(getClass().getClassLoader().getResource("ui/fxml/about.fxml"));
             Stage stage = new Stage();
             stage.setTitle("About");
-            stage.setScene(new Scene(root, 600, 350));
+            Rectangle2D screen = Screen.getPrimary().getBounds();
+            stage.setScene(new Scene(root, screen.getWidth() * ABOUT_SCALE_FACTOR, screen.getHeight() * ABOUT_SCALE_FACTOR));
             stage.show();
         }
         catch (IOException e) {
@@ -61,7 +63,7 @@ public class MainController {
      * When t-SNE toggle is pressed, toggles visibility of the t-SNE plot
      */
     @FXML
-    protected void handleTSNEViewToggle(ActionEvent e) {
+    protected void handleTSNEViewToggle() {
         if (tSNEPlotOpen) {
             horizontalSplitPane.getItems().remove(tSNEPlotController.getTSNEPlot());
             tSNEToggle.setText("Open t-SNE Plot");
@@ -77,7 +79,7 @@ public class MainController {
      * When isoform plot toggle is pressed, toggles visibility of the isoform plot
      */
     @FXML
-    protected void handleIsoformViewToggle(ActionEvent e) {
+    protected void handleIsoformViewToggle() {
         if (isoformPlotOpen) {
             horizontalSplitPane.getItems().remove(isoformPlotController.getIsoformPlot());
             isoformPlotToggle.setText("Open Isoform Plot");
@@ -93,7 +95,7 @@ public class MainController {
      * When console toggle is pressed, toggles visibility of the console
      */
     @FXML
-    protected void handleConsoleViewToggle(ActionEvent e) {
+    protected void handleConsoleViewToggle() {
         if (consoleOpen) {
             verticalSplitPane.getItems().remove(consoleController.getConsole());
             consoleToggle.setText("Open Console");
@@ -111,7 +113,7 @@ public class MainController {
      * the isoform plot; when it is unselected, they will not
      */
     @FXML
-    protected void handleRevComplementToggle(ActionEvent event) {
+    protected void handleRevComplementToggle() {
         isoformPlotController.toggleReverseComplement();
     }
 
@@ -122,12 +124,11 @@ public class MainController {
      * Displays error (and successful completion) messages in console
      */
     @FXML
-    protected void handleLoadButtonAction(ActionEvent event) {
+    protected void handleLoadButtonAction() {
         try {
             Parser.readFile((String) path.getValue());
             consoleController.addConsoleMessage("Successfully loaded file from path: " + path.getValue());
             addLoadedPaths();
-            addLoadedGenes();
         } catch (RNAScoopException e){
             Parser.removeParsedGenes();
             consoleController.addConsoleErrorMessage(e.getMessage());
@@ -138,7 +139,6 @@ public class MainController {
             consoleController.addConsoleErrorMessage("An unexpected error occurred while reading file from path: " + path.getValue());
         }
         isoformPlotController.clearCanvas();
-        isoformPlotController.clearCheckedGenes();
     }
 
     /**
@@ -176,10 +176,5 @@ public class MainController {
         if (!addedPaths.contains(path.getValue())) {
             addedPaths.add((String) path.getValue());
         }
-    }
-
-    private void addLoadedGenes() {
-        HashMap<String, Gene> genes = Parser.getParsedGenes();
-        isoformPlotController.addGenes(genes);
     }
 }

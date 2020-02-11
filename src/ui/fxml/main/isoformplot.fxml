@@ -4,30 +4,24 @@
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Text?>
-<?import org.controlsfx.control.CheckComboBox?>
+<?import javafx.scene.control.Button?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.IsoformPlotController"
       fx:id="isoformPlot" style="-fx-background-color: #fafafa;">
     <HBox>
         <VBox.margin>
             <Insets left="10" right="10" top="10"/>
         </VBox.margin>
-        <Text text="Gene: ">
-            <HBox.margin>
-                <Insets top="6"/>
-            </HBox.margin>
-        </Text>
-        <CheckComboBox fx:id="geneSelector" prefWidth="605"/>
+        <Button text="Add / Remove Genes" onAction="#handleAddRemoveGenesButtonAction"/>
     </HBox>
     <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585"
                 style="-fx-background: #ffffff; -fx-border-color: #adadad;">
         <VBox.margin>
-            <Insets bottom="10" left="10" right="10" top="10"/>
+            <Insets topRightBottomLeft="10"/>
         </VBox.margin>
         <VBox alignment="CENTER">
             <Canvas fx:id="canvas">
                 <VBox.margin>
-                    <Insets bottom="15" left="15" right="15" top="15"/>
+                    <Insets topRightBottomLeft="10"/>
                 </VBox.margin>
             </Canvas>
         </VBox>
