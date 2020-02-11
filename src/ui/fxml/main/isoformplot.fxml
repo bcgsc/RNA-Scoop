@@ -7,7 +7,7 @@
 <?import javafx.scene.text.Text?>
 <?import org.controlsfx.control.CheckComboBox?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.IsoformPlotController"
-      fx:id="isoformPlot" prefHeight="550" prefWidth="605" style="-fx-background-color: #fafafa;">
+      fx:id="isoformPlot" style="-fx-background-color: #fafafa;">
     <HBox>
         <VBox.margin>
             <Insets left="10" right="10" top="10"/>

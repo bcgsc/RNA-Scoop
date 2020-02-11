@@ -5,9 +5,9 @@ import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.tsne.barneshut.BarnesHutTSne;
 import com.jujutsu.utils.MatrixUtils;
 import com.jujutsu.utils.TSneUtils;
-import exceptions.InvalidPerplexityException;
+import exceptions.TSNEInvalidPerplexityException;
 import exceptions.TSNELabelsFileNotFoundException;
-import exceptions.TSNEPlotException;
+import exceptions.RNAScoopException;
 import exceptions.TSNeDataFileNotFoundException;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
@@ -95,7 +95,7 @@ public class TSNEPlotController implements Initializable {
                 double[][] tSNEMatrix = generateTSNEMatrix();
                 drawTsne(tSNEMatrix);
                 Platform.runLater(new WriteToConsoleThread("Finished drawing t-SNE plot", false));
-            } catch(TSNEPlotException e) {
+            } catch(RNAScoopException e) {
                 Platform.runLater(new WriteToConsoleThread(e.getMessage(), true));
             } catch (Exception e) {
                 Platform.runLater(new WriteToConsoleThread("An unexpected error occurred", true));
@@ -118,15 +118,15 @@ public class TSNEPlotController implements Initializable {
             labelsFile = new File(urlToLabelsFile.getFile());
         }
 
-        private double [][] generateTSNEMatrix() throws InvalidPerplexityException {
+        private double [][] generateTSNEMatrix() throws TSNEInvalidPerplexityException {
             double perplexityValue;
             try {
                 perplexityValue = Double.parseDouble(perplexity.getText());
             } catch (NumberFormatException e) {
-                throw new InvalidPerplexityException();
+                throw new TSNEInvalidPerplexityException();
             }
             if(perplexityValue < 0)
-                throw new InvalidPerplexityException();
+                throw new TSNEInvalidPerplexityException();
 
             int initial_dims = 55;
             double [][] X = MatrixUtils.simpleRead2DMatrix(dataFile, "   ");

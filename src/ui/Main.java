@@ -23,7 +23,6 @@ public class Main extends Application {
         FXMLLoader isoformPlotLoader = new FXMLLoader(getClass().getResource("fxml/main/isoformplot.fxml"));
         FXMLLoader tSNEPlotLoader = new FXMLLoader(getClass().getResource("fxml/main/tsneplot.fxml"));
         BorderPane root = mainLoader.load();
-
         setUpMainWindow(mainLoader, consoleLoader, isoformPlotLoader, tSNEPlotLoader);
         setUpStage(primaryStage, root);
     }

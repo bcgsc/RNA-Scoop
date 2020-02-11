@@ -55,12 +55,12 @@ public class IsoformPlotController implements Initializable {
      * Adds given genes to gene selector (if not already added)
      */
     public void addGenes(Map<String, Gene> genes) {
-        ObservableList<String> addedGenes= geneSelector.getItems();
+        ObservableList<String> selectorGenes= geneSelector.getItems();
+        selectorGenes.removeAll();
         for(String gene : genes.keySet()) {
-            if (!addedGenes.contains(gene))
-                addedGenes.add(gene);
+            selectorGenes.add(gene);
         }
-        addedGenes.sort(String::compareTo);
+        //selectorGenes.sort(String::compareTo);
     }
 
     /**
@@ -97,17 +97,6 @@ public class IsoformPlotController implements Initializable {
     }
 
     /**
-     * Draws all genes selected in gene selector combo box
-     */
-    private void drawGenes() {
-        clearCanvas();
-        List<String> selectedGenes = geneSelector.getCheckModel().getCheckedItems();
-        for (String gene : selectedGenes) {
-            drawGene(Parser.getParsedGenes().get(gene), gene);
-        }
-    }
-
-    /**
      * Adds listener to resize canvas width when scroll pane width changes
      * (unless scroll pane width < MIN_CANVAS_WIDTH)
      * Redraws canvas when resize occurs and gene is being displayed
@@ -127,6 +116,17 @@ public class IsoformPlotController implements Initializable {
      */
     private void initializeGeneSelector() {
         geneSelector.getCheckModel().getCheckedItems().addListener((ListChangeListener<String>) c -> drawGenes());
+    }
+
+    /**
+     * Draws all genes selected in gene selector combo box
+     */
+    private void drawGenes() {
+        clearCanvas();
+        List<String> selectedGenes = geneSelector.getCheckModel().getCheckedItems();
+        for (String gene : selectedGenes) {
+            drawGene(Parser.getParsedGenes().get(gene), gene);
+        }
     }
 
     /**
@@ -170,7 +170,7 @@ public class IsoformPlotController implements Initializable {
         gc.setFont(TRANSCRIPT_FONT);
         int geneStart = gene.getStartNucleotide();
         int geneEnd = gene.getEndNucleotide();
-        double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart);
+        double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart + 1);
         Collection<String> isoforms = gene.getIsoforms().keySet();
         List<String> sortedIsoforms = asSortedList(isoforms);
         for(String transcriptID : sortedIsoforms) {
@@ -228,7 +228,7 @@ public class IsoformPlotController implements Initializable {
         int exonStart = exons.get(i).getStartNucleotide();
         int exonEnd = exons.get(i).getEndNucleotide();
         double startX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
-        double width = (exonEnd - exonStart) * pixelsPerNucleotide;
+        double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
         drawExonGraphic(startX, width);
     }
 
@@ -238,7 +238,7 @@ public class IsoformPlotController implements Initializable {
     private void drawIntron(int geneStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
         int exonStart = exons.get(i).getStartNucleotide();
         int prevExonEnd = exons.get(i - 1).getEndNucleotide();
-        double startX = (prevExonEnd - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        double startX = (prevExonEnd - geneStart + 1) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         double endX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         drawIntronGraphic(startX, endX);
     }
@@ -250,7 +250,7 @@ public class IsoformPlotController implements Initializable {
         int exonStart = exons.get(i).getStartNucleotide();
         int exonEnd = exons.get(i).getEndNucleotide();
         double startX = (geneEnd - exonEnd) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
-        double width = (exonEnd - exonStart) * pixelsPerNucleotide;
+        double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
         drawExonGraphic(startX, width);
     }
 
@@ -260,7 +260,7 @@ public class IsoformPlotController implements Initializable {
     private void drawIntronReverseComplement(int geneEnd, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
         int exonStart = exons.get(i).getStartNucleotide();
         int prevExonEnd= exons.get(i - 1).getEndNucleotide();
-        double startX = (geneEnd - exonStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
+        double startX = (geneEnd - exonStart + 1) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         double endX = (geneEnd - prevExonEnd) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         drawIntronGraphic(startX, endX);
     }

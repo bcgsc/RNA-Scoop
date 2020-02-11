@@ -5,7 +5,7 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.text.TextFlow?>
 <ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.main.controllers.ConsoleController"
-            fx:id="console" prefHeight="50" style="-fx-background: #ffffff;">
+            fx:id="console" style="-fx-background: #ffffff;">
     <VBox>
         <TextFlow fx:id="consoleMessage">
             <VBox.margin>

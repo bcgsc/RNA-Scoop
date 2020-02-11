@@ -1,5 +1,6 @@
 package ui.fxml.main.controllers;
 
+import exceptions.RNAScoopException;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -125,13 +126,17 @@ public class MainController {
         try {
             Parser.readFile((String) path.getValue());
             consoleController.addConsoleMessage("Successfully loaded file from path: " + path.getValue());
+            addLoadedPaths();
+            addLoadedGenes();
+        } catch (RNAScoopException e){
+            Parser.removeParsedGenes();
+            consoleController.addConsoleErrorMessage(e.getMessage());
         } catch (FileNotFoundException e) {
             consoleController.addConsoleErrorMessage("Could not find file at path: " + path.getValue());
         } catch (Exception e) {
+            Parser.removeParsedGenes();
             consoleController.addConsoleErrorMessage("An unexpected error occurred while reading file from path: " + path.getValue());
         }
-        addLoadedPaths();
-        addLoadedGenes();
         isoformPlotController.clearCanvas();
         isoformPlotController.clearCheckedGenes();
     }

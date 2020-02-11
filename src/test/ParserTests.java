@@ -59,19 +59,19 @@ public class ParserTests {
             Gene gene = genes.get(key);
             switch(key) {
                 case GENE_0:
-                    assertEquals(5, gene.getChromosome());
+                    assertEquals("5", gene.getChromosome());
                     assertTrue(gene.isPositiveSense());
                     assertEquals(171387116, gene.getStartNucleotide());
                     assertEquals(171411137, gene.getEndNucleotide());
                     parsedGene0 = true;
                     break;
                 case GENE_1:
-                    assertEquals(12, gene.getChromosome());
+                    assertEquals("12", gene.getChromosome());
                     assertTrue(gene.isPositiveSense());
                     parsedGene1 = true;
                     break;
                 case GENE_2:
-                    assertEquals(15, gene.getChromosome());
+                    assertEquals("15", gene.getChromosome());
                     assertTrue(gene.isPositiveSense());
                     parsedGene2 = true;
                     assertEquals(73994673, gene.getStartNucleotide());

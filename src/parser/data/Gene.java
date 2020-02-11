@@ -13,10 +13,10 @@ public class Gene {
 
     private int startNucleotide;
     private int endNucleotide;
-    private int chromosome;
+    private String chromosome;
     private boolean isPositiveSense;
 
-    public Gene(int chromosome, String strand) {
+    public Gene(String chromosome, String strand) {
         isoforms = new HashMap<>();
         // initializes startNucleotide to MAX_VALUE and endNucleotide to 0 in order for
         // parser to correctly set the right values
@@ -58,7 +58,7 @@ public class Gene {
         return endNucleotide;
     }
 
-    public int getChromosome() {
+    public String getChromosome() {
         return chromosome;
     }
 
