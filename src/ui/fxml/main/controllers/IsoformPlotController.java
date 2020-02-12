@@ -145,10 +145,25 @@ public class IsoformPlotController implements Initializable {
      */
     public void drawGenes() {
         clearCanvas();
+        incrementCanvasHeight();
         HashMap<String, Gene> parsedGenes = Parser.getParsedGenes();
         for (String geneID : shownGenes) {
             drawGene(parsedGenes.get(geneID), geneID);
         }
+    }
+
+    /**
+     * Sets canvas height to height necessary to display given gene
+     */
+    private void incrementCanvasHeight() {
+        double newHeight = canvas.getHeight();
+        HashMap<String, Gene> parsedGenes = Parser.getParsedGenes();
+        for (String geneID : shownGenes) {
+            Gene gene = parsedGenes.get(geneID);
+            int numIsoforms = gene.getIsoforms().size();
+            newHeight += numIsoforms * SPACING * 2 + SPACING;
+        }
+        canvas.setHeight(newHeight);
     }
 
     /**
@@ -157,17 +172,8 @@ public class IsoformPlotController implements Initializable {
      * @param geneID ID of gene to draw
      */
     private void drawGene(Gene gene, String geneID) {
-        incrementCanvasHeight(gene);
         drawGeneID(gene, geneID);
         drawAllIsoforms(gene);
-    }
-
-    /**
-     * Sets canvas height to height necessary to display given gene
-     */
-    private void incrementCanvasHeight(Gene gene) {
-        int numIsoforms = gene.getIsoforms().size();
-        canvas.setHeight(canvas.getHeight() + numIsoforms * SPACING * 2 + SPACING);
     }
 
     /**

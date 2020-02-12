@@ -51,6 +51,7 @@ public class GeneSelectorController implements Initializable {
             if (!genesToBeShown.contains(gene))
                 genesToBeShown.add(gene);
         }
+        genesToBeShown.sort(String::compareTo);
         isoformPlotController.setShownGenes(genesToBeShown);
     }
 
@@ -77,17 +78,16 @@ public class GeneSelectorController implements Initializable {
     }
 
     /**
-     * Adds all genes to shown genes list view
+     * Adds all genes to shown genes list view, and tells the isoform plot controller
+     * about the changes
      */
     @FXML
     protected void handleAddAllButtonAction() {
-        double start = System.nanoTime();
         ObservableList<String> genesToAdd = genes.getItems();
         ObservableList<String> genesToShow = shownGenes.getItems();
         genesToShow.clear();
         genesToShow.addAll(genesToAdd);
         isoformPlotController.setShownGenes(genesToShow);
-        System.out.println((System.nanoTime() - start)/1000000000f);
     }
 
     /**
