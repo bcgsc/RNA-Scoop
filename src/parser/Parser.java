@@ -6,7 +6,6 @@ import parser.data.Gene;
 import parser.data.Isoform;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,6 +48,14 @@ public class Parser {
     }
 
     /**
+     * Remove all characters following "#" (GTF comment symbol)
+     */
+    private static String removeComments(String exonDataString) {
+        return exonDataString.split("#")[0];
+    }
+
+
+    /**
      * Returns true if feature field (in the line of the GTF file data represents) is "exon"
      * @param data represents a line in a GTF file, each element is the element of a column
      */
@@ -56,16 +63,9 @@ public class Parser {
         return data[2].equals("exon");
     }
 
-    /**
-     * Remove all characters following "#" (GTF comment symbol)
-     */
-    private static String removeComments(String exonDataString) {
-        return exonDataString.split("#")[0];
-    }
-
     private static class ExonDataParser {
 
-        private static Pattern p = Pattern.compile("\\s*(\\S+)\\s*\"(\\S+)\"\\s*;\\s*");
+        private static Pattern attributePattern = Pattern.compile("\\s*(\\S+)\\s*\"(\\S+)\"\\s*;\\s*");
 
         private static String[] exonData;
         private static int lineNumber;
@@ -97,13 +97,49 @@ public class Parser {
             ExonDataParser.lineNumber = lineNumber;
 
             setChromosome();
-            setEndNucleotide();
             setStartNucleotide();
+            setEndNucleotide();
             setStrand();
             setAttributeValues();
 
             storeExonInformation();
             clearData();
+        }
+
+        private static void setChromosome() {
+            chromosome = exonData[0];
+        }
+
+        private static void setStartNucleotide() throws GTFInvalidStartNucleotideException {
+            try {
+                startNucleotide = Integer.parseInt(exonData[3]);
+            } catch (NumberFormatException e) {
+                throw new GTFInvalidStartNucleotideException(lineNumber);
+            }
+        }
+
+        private static void setEndNucleotide() throws GTFInvalidEndNucleotideException {
+            try {
+                endNucleotide = Integer.parseInt(exonData[4]);
+            } catch (NumberFormatException e) {
+                throw new GTFInvalidEndNucleotideException(lineNumber);
+            }
+        }
+
+        private static void setStrand() {
+            strand = exonData[6];
+        }
+
+        private static void setAttributeValues() throws GTFMissingInfoException {
+            Matcher m = attributePattern.matcher(exonData[8]);
+            while(m.find()) {
+                if (m.group(1).equals("gene_id"))
+                    geneID = m.group(2);
+                else if (m.group(1).equals("transcript_id"))
+                    transcriptID = m.group(2);
+            }
+            if (geneID == null || transcriptID == null)
+                throw new GTFMissingInfoException(lineNumber);
         }
 
         private static void storeExonInformation() {
@@ -129,44 +165,6 @@ public class Parser {
                 gene.setStartNucleotide(exon.getStartNucleotide());
             if (gene.getEndNucleotide() < exon.getEndNucleotide())
                 gene.setEndNucleotide(exon.getEndNucleotide());
-        }
-
-        private static void setAttributeValues() throws GTFMissingInfoException {
-            Matcher m = p.matcher(exonData[8]);
-            while(m.find()) {
-                if (m.group(1).equals("gene_id"))
-                    geneID = m.group(2);
-                else if (m.group(1).equals("transcript_id"))
-                    transcriptID = m.group(2);
-            }
-            if (geneID == null || transcriptID == null)
-                throw new GTFMissingInfoException(lineNumber);
-        }
-
-        private static void setStrand() {
-            strand = exonData[6];
-        }
-
-        private static void setChromosome() {
-            chromosome = exonData[0];
-        }
-
-        private static void setStartNucleotide() throws GTFInvalidStartNucleotideException {
-            try {
-                startNucleotide = Integer.parseInt(exonData[3]);
-            } catch (NumberFormatException e) {
-                removeParsedGenes();
-                throw new GTFInvalidStartNucleotideException(lineNumber);
-            }
-        }
-
-        private static void setEndNucleotide() throws GTFInvalidEndNucleotideException {
-            try {
-                endNucleotide = Integer.parseInt(exonData[4]);
-            } catch (NumberFormatException e) {
-                removeParsedGenes();
-                throw new GTFInvalidEndNucleotideException(lineNumber);
-            }
         }
     }
 

@@ -1,7 +1,5 @@
 package ui.fxml.main.controllers;
 
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -17,12 +15,12 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import org.controlsfx.control.CheckComboBox;
 import parser.Parser;
 import parser.data.Exon;
 import parser.data.Gene;
 import parser.data.Isoform;
 import ui.fxml.GeneSelectorController;
+import ui.resources.Util;
 
 import java.io.IOException;
 import java.net.URL;
@@ -30,9 +28,9 @@ import java.util.*;
 
 public class IsoformPlotController implements Initializable {
 
-    private static final float GENE_SELECTOR_SCALE_FACTOR = 0.33f;
+    private static final float GENE_SELECTOR_SCALE_FACTOR = 0.35f;
 
-    private static final int CANVAS_MIN_WIDTH = 200;
+    private static final int CANVAS_MIN_WIDTH = 250;
     private static final int CANVAS_INIT_Y = 13;
     private static final int GENE_ID_X_OFFSET = 0;
     private static final int ISOFORM_X_OFFSET = 13;
@@ -52,13 +50,13 @@ public class IsoformPlotController implements Initializable {
     private boolean reverseComplement;
 
     private GraphicsContext gc;
-    private static List<String> genesViewing;
+    private static List<String> shownGenes;
     private ConsoleController consoleController;
     private int canvasCurrY;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        genesViewing = new ArrayList<>();
+        shownGenes = new ArrayList<>();
         initializeGraphics();
         initializeScrollPane();
     }
@@ -82,8 +80,11 @@ public class IsoformPlotController implements Initializable {
         canvasCurrY = CANVAS_INIT_Y;
     }
 
-    public void setGenesViewing(List<String> genesViewing) {
-        this.genesViewing = genesViewing;
+    /**
+     * Sets shownGenes and redraws all genes
+     */
+    public void setShownGenes(List<String> shownGenes) {
+        IsoformPlotController.shownGenes = shownGenes;
         drawGenes();
     }
 
@@ -91,12 +92,15 @@ public class IsoformPlotController implements Initializable {
         return isoformPlot;
     }
 
-    public static List<String> getGenesViewing() {
-        return genesViewing;
+    public static List<String> getShownGenes() {
+        return shownGenes;
     }
 
+    /**
+     * Opens up gene selector window
+     */
     @FXML
-    protected void handleAddRemoveGenesButtonAction() {
+    protected void handleSelectGenesButtonAction() {
         Parent root;
         try {
             FXMLLoader geneSelectorLoader = new FXMLLoader(getClass().getResource("/ui/fxml/geneselector.fxml"));
@@ -104,7 +108,7 @@ public class IsoformPlotController implements Initializable {
             GeneSelectorController geneSelectorController = geneSelectorLoader.getController();
             geneSelectorController.initIsoformPlotController(this);
             Stage stage = new Stage();
-            stage.setTitle("Gene Selector");
+            stage.setTitle("RNA-Scoop - Gene Selector");
             Rectangle2D screen = Screen.getPrimary().getBounds();
             stage.setScene(new Scene(root, screen.getWidth() * GENE_SELECTOR_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_SCALE_FACTOR));
             stage.show();
@@ -142,7 +146,7 @@ public class IsoformPlotController implements Initializable {
     public void drawGenes() {
         clearCanvas();
         HashMap<String, Gene> parsedGenes = Parser.getParsedGenes();
-        for (String geneID : genesViewing) {
+        for (String geneID : shownGenes) {
             drawGene(parsedGenes.get(geneID), geneID);
         }
     }
@@ -190,7 +194,7 @@ public class IsoformPlotController implements Initializable {
         int geneEnd = gene.getEndNucleotide();
         double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart + 1);
         Collection<String> isoforms = gene.getIsoforms().keySet();
-        List<String> sortedIsoforms = asSortedList(isoforms);
+        List<String> sortedIsoforms = Util.asSortedList(isoforms);
         for(String transcriptID : sortedIsoforms) {
             gc.setFill(FONT_COLOUR);
             gc.fillText(transcriptID, ISOFORM_X_OFFSET, canvasCurrY);
@@ -201,15 +205,6 @@ public class IsoformPlotController implements Initializable {
                 drawIsoformReverseComplement(gene.getIsoform(transcriptID), geneEnd, pixelsPerNucleotide);
             canvasCurrY += SPACING * 5/3;
         }
-    }
-
-    /**
-     * Puts given collection into list and sorts
-     */
-    private <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
-        List<T> list = new ArrayList<>(c);
-        java.util.Collections.sort(list);
-        return list;
     }
 
     /**
