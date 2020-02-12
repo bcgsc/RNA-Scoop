@@ -1,5 +1,6 @@
 package ui.fxml.main.controllers;
 
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -15,6 +16,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import parser.Parser;
 import parser.data.Exon;
 import parser.data.Gene;
@@ -27,9 +29,6 @@ import java.net.URL;
 import java.util.*;
 
 public class IsoformPlotController implements Initializable {
-
-    private static final float GENE_SELECTOR_SCALE_FACTOR = 0.35f;
-
     private static final int CANVAS_MIN_WIDTH = 250;
     private static final int CANVAS_INIT_Y = 13;
     private static final int GENE_ID_X_OFFSET = 0;
@@ -47,12 +46,14 @@ public class IsoformPlotController implements Initializable {
     @FXML private Canvas canvas;
     @FXML private ScrollPane scrollPane;
     @FXML private VBox isoformPlot;
-    private boolean reverseComplement;
 
     private GraphicsContext gc;
-    private static List<String> shownGenes;
-    private ConsoleController consoleController;
+    private List<String> shownGenes;
+    private boolean reverseComplement;
     private int canvasCurrY;
+
+    private ConsoleController consoleController;
+    private GeneSelectorController geneSelectorController;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -61,8 +62,9 @@ public class IsoformPlotController implements Initializable {
         initializeScrollPane();
     }
 
-    public void initConsoleController(ConsoleController consoleController) {
+    public void initControllers(ConsoleController consoleController, GeneSelectorController geneSelectorController) {
         this.consoleController = consoleController;
+        this.geneSelectorController = geneSelectorController;
     }
 
     /**
@@ -84,7 +86,7 @@ public class IsoformPlotController implements Initializable {
      * Sets shownGenes and redraws all genes
      */
     public void setShownGenes(List<String> shownGenes) {
-        IsoformPlotController.shownGenes = shownGenes;
+        this.shownGenes = shownGenes;
         drawGenes();
     }
 
@@ -92,31 +94,12 @@ public class IsoformPlotController implements Initializable {
         return isoformPlot;
     }
 
-    public static List<String> getShownGenes() {
-        return shownGenes;
-    }
-
     /**
      * Opens up gene selector window
      */
     @FXML
     protected void handleSelectGenesButtonAction() {
-        Parent root;
-        try {
-            FXMLLoader geneSelectorLoader = new FXMLLoader(getClass().getResource("/ui/fxml/geneselector.fxml"));
-            root = geneSelectorLoader.load();
-            GeneSelectorController geneSelectorController = geneSelectorLoader.getController();
-            geneSelectorController.initIsoformPlotController(this);
-            Stage stage = new Stage();
-            stage.setTitle("RNA-Scoop - Gene Selector");
-            Rectangle2D screen = Screen.getPrimary().getBounds();
-            stage.setScene(new Scene(root, screen.getWidth() * GENE_SELECTOR_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_SCALE_FACTOR));
-            stage.show();
-        }
-        catch (IOException e) {
-            consoleController.addConsoleErrorMessage("Could not load gene selector window");
-            e.printStackTrace();
-        }
+        geneSelectorController.display();
     }
 
     private void initializeGraphics() {
@@ -141,9 +124,9 @@ public class IsoformPlotController implements Initializable {
     }
 
     /**
-     * Draws all genes selected in gene selector combo box
+     * Draws all genes meant to be shown
      */
-    public void drawGenes() {
+    private void drawGenes() {
         clearCanvas();
         incrementCanvasHeight();
         HashMap<String, Gene> parsedGenes = Parser.getParsedGenes();
@@ -153,7 +136,7 @@ public class IsoformPlotController implements Initializable {
     }
 
     /**
-     * Sets canvas height to height necessary to display given gene
+     * Sets canvas height to height necessary to display genes
      */
     private void incrementCanvasHeight() {
         double newHeight = canvas.getHeight();

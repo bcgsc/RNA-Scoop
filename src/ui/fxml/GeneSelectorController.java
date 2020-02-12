@@ -11,6 +11,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
+import javafx.stage.Stage;
 import parser.Parser;
 import parser.data.Gene;
 import ui.fxml.main.controllers.IsoformPlotController;
@@ -21,22 +22,58 @@ import java.util.*;
 
 public class GeneSelectorController implements Initializable {
 
-    @FXML GridPane gridPane;
-    @FXML ListView genes;
-    @FXML ListView shownGenes;
+    @FXML private GridPane gridPane;
+    @FXML private ListView genes;
+    @FXML private ListView shownGenes;
 
+    private Stage window;
     private IsoformPlotController isoformPlotController;
 
+    /**
+     * Sets up grid pane, users to select multiple genes in both list views
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpGridPane();
-        setUpGenesListView();
-        setUpShownGenesListView();
-        Platform.runLater(() -> gridPane.requestFocus());
+        genes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        shownGenes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+    }
+
+    public void initWindow(Stage window) {
+        this.window = window;
     }
 
     public void initIsoformPlotController(IsoformPlotController isoformPlotController) {
         this.isoformPlotController = isoformPlotController;
+    }
+
+    /**
+     * Displays the gene selector window
+     */
+    public void display() {
+        window.hide();
+        window.show();
+    }
+
+    /**
+     * Clears all genes in shown genes list view, and tells the isoform plot controller
+     * about the changes
+     */
+    public void clearShownGenes() {
+        shownGenes.getItems().clear();
+        isoformPlotController.setShownGenes(shownGenes.getItems());
+    }
+
+    /**
+     * Retrieves parsed genes and sets as genes in genes list view
+     */
+    public void updateGenes() {
+        ObservableList<String> genesItems = genes.getItems();
+        genesItems.clear();
+        HashMap<String, Gene> parsedGenes = Parser.getParsedGenes();
+        if (parsedGenes != null)
+            genesItems.addAll(parsedGenes.keySet());
+        genesItems.sort(String::compareTo);
     }
 
     /**
@@ -67,14 +104,9 @@ public class GeneSelectorController implements Initializable {
         isoformPlotController.setShownGenes(genesToBeShown);
     }
 
-    /**
-     * Clears all genes in shown genes list view, and tells the isoform plot controller
-     * about the changes
-     */
     @FXML
     protected void handleClearAllButtonAction() {
-        shownGenes.getItems().clear();
-        isoformPlotController.setShownGenes(shownGenes.getItems());
+        clearShownGenes();
     }
 
     /**
@@ -104,25 +136,5 @@ public class GeneSelectorController implements Initializable {
         RowConstraints row1 = new RowConstraints();
         row1.setPercentHeight(100);
         gridPane.getRowConstraints().add(row1);
-    }
-
-    /**
-     * Adds sorted parsed genes to genes list view, allows user to select multiple genes
-     * at once
-     */
-    private void setUpGenesListView() {
-        HashMap<String, Gene> parsedGenes = Parser.getParsedGenes();
-        if (parsedGenes != null)
-            genes.getItems().addAll(Util.asSortedList(parsedGenes.keySet()));
-        genes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-    }
-
-    /**
-     * Adds currently drawn genes to shown genes list, allows user to select multiple genes
-     * at once
-     */
-    private void setUpShownGenesListView() {
-        shownGenes.getItems().addAll(IsoformPlotController.getShownGenes());
-        shownGenes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     }
 }

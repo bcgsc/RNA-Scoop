@@ -15,6 +15,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import parser.Parser;
+import ui.fxml.GeneSelectorController;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -34,12 +35,15 @@ public class MainController {
     private IsoformPlotController isoformPlotController;
     private ConsoleController consoleController;
     private TSNEPlotController tSNEPlotController;
+    private GeneSelectorController geneSelectorController;
     private boolean tSNEPlotOpen;
     private boolean consoleOpen;
     private boolean isoformPlotOpen;
 
-    public void initializeMain(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader) {
+    public void initializeMain(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader,
+                               FXMLLoader tSNEPlotLoader, FXMLLoader geneSelectorLoader) throws IOException {
         addPanels(consoleLoader, isoformPlotLoader, tSNEPlotLoader);
+        setUpControllers(consoleLoader, isoformPlotLoader, tSNEPlotLoader, geneSelectorLoader);
         setUpPathComboBox();
     }
 
@@ -139,27 +143,32 @@ public class MainController {
             consoleController.addConsoleErrorMessage("An unexpected error occurred while reading file from path: " + path.getValue());
         }
         isoformPlotController.clearCanvas();
+        geneSelectorController.clearShownGenes();
+        geneSelectorController.updateGenes();
     }
 
     /**
      * Add's the console, isoform plot and t-sne plot panels to the main
      * window.
      */
-    private void addPanels(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader) {
-        try {
-            horizontalSplitPane.getItems().add(isoformPlotLoader.load());
-            horizontalSplitPane.getItems().add(tSNEPlotLoader.load());
-            verticalSplitPane.getItems().add(consoleLoader.load());
-            this.isoformPlotController = isoformPlotLoader.getController();
-            this.consoleController = consoleLoader.getController();
-            this.tSNEPlotController = tSNEPlotLoader.getController();
-            tSNEPlotOpen = true;
-            consoleOpen = true;
-            isoformPlotOpen = true;
-        } catch (IOException e) {
-            consoleController.addConsoleErrorMessage("An unexpected error occurred while setting up the isoform plot, " +
-                                                     "t-SNE plot, and console panels");
-        }
+    private void addPanels(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader) throws IOException {
+        horizontalSplitPane.getItems().add(isoformPlotLoader.load());
+        horizontalSplitPane.getItems().add(tSNEPlotLoader.load());
+        verticalSplitPane.getItems().add(consoleLoader.load());
+        tSNEPlotOpen = true;
+        consoleOpen = true;
+        isoformPlotOpen = true;
+    }
+
+    private void setUpControllers(FXMLLoader consoleLoader, FXMLLoader isoformPlotLoader, FXMLLoader tSNEPlotLoader, FXMLLoader geneSelectorLoader) {
+        isoformPlotController = isoformPlotLoader.getController();
+        consoleController = consoleLoader.getController();
+        tSNEPlotController = tSNEPlotLoader.getController();
+        geneSelectorController = geneSelectorLoader.getController();
+
+        tSNEPlotController.initConsoleController(consoleController);
+        isoformPlotController.initControllers(consoleController, geneSelectorController);
+        geneSelectorController.initIsoformPlotController(isoformPlotController);
     }
 
     /**
