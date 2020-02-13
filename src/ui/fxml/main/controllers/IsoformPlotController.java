@@ -1,5 +1,6 @@
 package ui.fxml.main.controllers;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -9,6 +10,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -46,6 +48,7 @@ public class IsoformPlotController implements Initializable {
     @FXML private Canvas canvas;
     @FXML private ScrollPane scrollPane;
     @FXML private VBox isoformPlot;
+    @FXML private Button selectGenesButton;
 
     private GraphicsContext gc;
     private List<String> shownGenes;
@@ -74,6 +77,14 @@ public class IsoformPlotController implements Initializable {
     public void toggleReverseComplement() {
         reverseComplement = !reverseComplement;
         drawGenes();
+    }
+
+    public void disable() {
+        selectGenesButton.setDisable(true);
+    }
+
+    public void enable() {
+        selectGenesButton.setDisable(false);
     }
 
     public void clearCanvas() {

@@ -8,9 +8,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SplitPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -26,6 +24,8 @@ public class MainController {
 
     @FXML private BorderPane window;
     @FXML private ComboBox path;
+    @FXML private Button loadButton;
+    @FXML private Menu viewMenu;
     @FXML private MenuItem tSNEToggle;
     @FXML private MenuItem isoformPlotToggle;
     @FXML private MenuItem consoleToggle;
@@ -45,6 +45,16 @@ public class MainController {
         addPanels(consoleLoader, isoformPlotLoader, tSNEPlotLoader);
         setUpControllers(consoleLoader, isoformPlotLoader, tSNEPlotLoader, geneSelectorLoader);
         setUpPathComboBox();
+    }
+
+    public void disable() {
+        loadButton.setDisable(true);
+        viewMenu.setDisable(true);
+    }
+
+    public void enable() {
+        loadButton.setDisable(false);
+        viewMenu.setDisable(false);
     }
 
     @FXML
@@ -123,28 +133,26 @@ public class MainController {
 
     /**
      * When load button is pressed, parses path to file and retrieves parsed genes
-     * Adds parsed genes to gene selector's items
+     * Clears isoform plot and shown genes in genes selector
+     * Updates genes selectors genes
      * Adds file path to path's list of previous file paths
      * Displays error (and successful completion) messages in console
      */
     @FXML
     protected void handleLoadButtonAction() {
-        try {
-            Parser.readFile((String) path.getValue());
-            consoleController.addConsoleMessage("Successfully loaded file from path: " + path.getValue());
-            addLoadedPaths();
-        } catch (RNAScoopException e){
-            Parser.removeParsedGenes();
-            consoleController.addConsoleErrorMessage(e.getMessage());
-        } catch (FileNotFoundException e) {
-            consoleController.addConsoleErrorMessage("Could not find file at path: " + path.getValue());
-        } catch (Exception e) {
-            Parser.removeParsedGenes();
-            consoleController.addConsoleErrorMessage("An unexpected error occurred while reading file from path: " + path.getValue());
-        }
         isoformPlotController.clearCanvas();
         geneSelectorController.clearShownGenes();
-        geneSelectorController.updateGenes();
+        disable();
+        isoformPlotController.disable();
+        tSNEPlotController.disable();
+        geneSelectorController.disable();
+        try {
+            Thread fileLoaderThread = new Thread(new FileLoaderThread());
+            fileLoaderThread.start();
+        } catch (Exception e) {
+            enableAssociatedFunctionality();
+            consoleController.addConsoleErrorMessage("An unexpected error occurred while reading file from path: " + path.getValue());
+        }
     }
 
     /**
@@ -166,9 +174,16 @@ public class MainController {
         tSNEPlotController = tSNEPlotLoader.getController();
         geneSelectorController = geneSelectorLoader.getController();
 
-        tSNEPlotController.initConsoleController(consoleController);
+        tSNEPlotController.initControllers(consoleController, geneSelectorController, isoformPlotController,this);
         isoformPlotController.initControllers(consoleController, geneSelectorController);
-        geneSelectorController.initIsoformPlotController(isoformPlotController);
+        geneSelectorController.initControllers(isoformPlotController, tSNEPlotController, consoleController, this);
+    }
+
+    private void enableAssociatedFunctionality() {
+        Platform.runLater(() -> enable());
+        Platform.runLater(() -> isoformPlotController.enable());
+        Platform.runLater(() -> tSNEPlotController.enable());
+        Platform.runLater(() -> geneSelectorController.enable());
     }
 
     /**
@@ -184,6 +199,33 @@ public class MainController {
         ObservableList<String> addedPaths = path.getItems();
         if (!addedPaths.contains(path.getValue())) {
             addedPaths.add((String) path.getValue());
+        }
+    }
+
+    /**
+     * Thread that loads files from paths in path combo box
+     */
+    private class FileLoaderThread implements Runnable {
+
+        @Override
+        public void run() {
+            try {
+                Platform.runLater(() -> consoleController.addConsoleMessage("Loading file from path: " + path.getValue()));
+                Parser.readFile((String) path.getValue());
+                Platform.runLater(() -> consoleController.addConsoleMessage("Successfully loaded file from path: " + path.getValue()));
+                Platform.runLater(() -> addLoadedPaths());
+            } catch (RNAScoopException e){
+                Parser.removeParsedGenes();
+                Platform.runLater(() -> consoleController.addConsoleErrorMessage(e.getMessage()));
+            } catch (FileNotFoundException e) {
+                Platform.runLater(() -> consoleController.addConsoleErrorMessage("Could not find file at path: " + path.getValue()));
+            } catch (Exception e) {
+                Parser.removeParsedGenes();
+                Platform.runLater(() -> consoleController.addConsoleErrorMessage("An unexpected error occurred while reading file from path: " + path.getValue()));
+            } finally {
+                Platform.runLater(() -> geneSelectorController.updateGenes());
+                enableAssociatedFunctionality();
+            }
         }
     }
 }

@@ -11,7 +11,7 @@
         <VBox.margin>
             <Insets left="10" right="10" top="10"/>
         </VBox.margin>
-        <Button text="Select Genes" onAction="#handleSelectGenesButtonAction"/>
+        <Button fx:id="selectGenesButton" text="Select Genes" onAction="#handleSelectGenesButtonAction"/>
     </HBox>
     <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585"
                 style="-fx-background: #ffffff; -fx-border-color: #adadad;">

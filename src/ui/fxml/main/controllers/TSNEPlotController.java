@@ -35,6 +35,8 @@ import org.jfree.data.general.Dataset;
 import org.jfree.data.general.Series;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import parser.data.Isoform;
+import ui.fxml.GeneSelectorController;
 import ui.resources.PointColor;
 
 import javax.swing.*;
@@ -54,6 +56,9 @@ public class TSNEPlotController implements Initializable {
     @FXML private SwingNode canvas;
 
     private ConsoleController consoleController;
+    private GeneSelectorController geneSelectorController;
+    private IsoformPlotController isoformPlotController;
+    private MainController mainController;
     private JPanel pane;
     private XYSeriesCollection dataSet;
 
@@ -66,12 +71,28 @@ public class TSNEPlotController implements Initializable {
         pane.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
     }
 
-    public void initConsoleController(ConsoleController consoleController) {
+    public void initControllers(ConsoleController consoleController, GeneSelectorController geneSelectorController, IsoformPlotController isoformPlotController, MainController mainController) {
         this.consoleController = consoleController;
+        this.geneSelectorController = geneSelectorController;
+        this.isoformPlotController = isoformPlotController;
+        this.mainController = mainController;
+
     }
 
     public VBox getTSNEPlot() {
         return tSNEPlot;
+    }
+
+    public void disable() {
+        drawTSNEButton.setDisable(true);
+        perplexity.setDisable(true);
+        pane.removeAll();
+        pane.validate();
+    }
+
+    public void enable() {
+        drawTSNEButton.setDisable(false);
+        perplexity.setDisable(false);
     }
 
     /**
@@ -79,8 +100,24 @@ public class TSNEPlotController implements Initializable {
      */
     @FXML
     protected void handleDrawTSNEButtonAction() {
-        Thread plotTSNE = new Thread(new TSNEPlotMaker());
-        plotTSNE.start();
+        disable();
+        mainController.disable();
+        geneSelectorController.disable();
+        isoformPlotController.disable();
+        try {
+            Thread tSNEPlotMaker = new Thread(new TSNEPlotMaker());
+            tSNEPlotMaker.start();
+        } catch (Exception e) {
+            enableAssociatedFunctionality();
+            consoleController.addConsoleErrorMessage("An unexpected error occurred while drawing the t-SNE plot");
+        }
+    }
+
+    private void enableAssociatedFunctionality() {
+        Platform.runLater(() -> enable());
+        Platform.runLater(() -> mainController.enable());
+        Platform.runLater(() -> geneSelectorController.enable());
+        Platform.runLater(() -> isoformPlotController.enable());
     }
 
     private class TSNEPlotMaker implements Runnable {
@@ -88,19 +125,18 @@ public class TSNEPlotController implements Initializable {
         private File labelsFile;
         @Override
         public void run() {
-            Platform.runLater(new TogglePlotButtonsThread(true));
-            Platform.runLater(new WriteToConsoleThread("Drawing t-SNE plot...", false));
+            Platform.runLater(() -> consoleController.addConsoleMessage("Drawing t-SNE plot..."));
             try {
                 loadFiles();
                 double[][] tSNEMatrix = generateTSNEMatrix();
                 drawTsne(tSNEMatrix);
-                Platform.runLater(new WriteToConsoleThread("Finished drawing t-SNE plot", false));
+                Platform.runLater(() -> consoleController.addConsoleMessage("Finished drawing t-SNE plot"));
             } catch(RNAScoopException e) {
-                Platform.runLater(new WriteToConsoleThread(e.getMessage(), true));
+                Platform.runLater(() -> consoleController.addConsoleErrorMessage(e.getMessage()));
             } catch (Exception e) {
-                Platform.runLater(new WriteToConsoleThread("An unexpected error occurred", true));
+                Platform.runLater(() -> consoleController.addConsoleErrorMessage("An unexpected error occurred while drawing the t-SNE plot"));
             } finally {
-                Platform.runLater(new TogglePlotButtonsThread(false));
+                enableAssociatedFunctionality();
             }
         }
 
@@ -151,7 +187,6 @@ public class TSNEPlotController implements Initializable {
             addSelectionHandler(panel);
             addSelectionManager(dataSet, datasetExtension, panel);
 
-            pane.removeAll();
             pane.add(panel);
             pane.validate();
         }
@@ -252,44 +287,5 @@ public class TSNEPlotController implements Initializable {
             //add selection specific rendering
             IRSUtilities.setSelectedItemFillPaint(r, ext, Color.white);
         }
-
-        /**
-         * Thread which disables/enables the "Draw t-SNE" button and the Perplexity field
-         */
-        private class TogglePlotButtonsThread implements Runnable {
-            private boolean disableState;
-
-            private TogglePlotButtonsThread(boolean disableState) {
-                this.disableState = disableState;
-            }
-
-            @Override
-            public void run() {
-                perplexity.setDisable(disableState);
-                drawTSNEButton.setDisable(disableState);
-            }
-        }
-
-        /**
-         * Thread which writes messages to the console
-         */
-        private class WriteToConsoleThread implements Runnable {
-            private String message;
-            private boolean messageIsError;
-
-            private WriteToConsoleThread(String message, boolean messageIsError) {
-                this.message = message;
-                this.messageIsError = messageIsError;
-            }
-
-            @Override
-            public void run() {
-                if(messageIsError)
-                    consoleController.addConsoleErrorMessage(message);
-                else
-                    consoleController.addConsoleMessage(message);
-            }
-        }
-
     }
 }

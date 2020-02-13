@@ -11,7 +11,7 @@
                 <Insets bottom="10"/>
             </BorderPane.margin>
             <MenuBar>
-                <Menu text="View">
+                <Menu text="View" fx:id="viewMenu">
                     <Menu text="Isoform Plot">
                         <CheckMenuItem onAction="#handleRevComplementToggle" text="Reverse Complement (-) Strand"/>
                         <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close Isoform Plot"/>
@@ -34,7 +34,7 @@
                     <Insets top="10" left="10"/>
                 </VBox.margin>
                 <ComboBox fx:id="path" editable="true" prefWidth="1200" promptText="Insert path to file here"/>
-                <Button onAction="#handleLoadButtonAction" prefWidth="60" text="Load">
+                <Button fx:id="loadButton" onAction="#handleLoadButtonAction" prefWidth="60" text="Load">
                     <HBox.margin>
                         <Insets left="5"/>
                     </HBox.margin>
