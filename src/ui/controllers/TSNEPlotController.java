@@ -1,4 +1,4 @@
-package ui.fxml.main.controllers;
+package ui.controllers;
 
 import com.jujutsu.tsne.TSneConfiguration;
 import com.jujutsu.tsne.barneshut.BHTSne;
@@ -11,9 +11,9 @@ import exceptions.RNAScoopException;
 import exceptions.TSNeDataFileNotFoundException;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -35,8 +35,7 @@ import org.jfree.data.general.Dataset;
 import org.jfree.data.general.Series;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import parser.data.Isoform;
-import ui.fxml.GeneSelectorController;
+import ui.mediator.ControllerMediator;
 import ui.resources.PointColor;
 
 import javax.swing.*;
@@ -49,19 +48,20 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 
-public class TSNEPlotController implements Initializable {
+import static javafx.application.Platform.*;
+
+public class TSNEPlotController implements Initializable, InteractiveElementController {
     @FXML private VBox tSNEPlot;
     @FXML private Button drawTSNEButton;
     @FXML private TextField perplexity;
     @FXML private SwingNode canvas;
 
-    private ConsoleController consoleController;
-    private GeneSelectorController geneSelectorController;
-    private IsoformPlotController isoformPlotController;
-    private MainController mainController;
     private JPanel pane;
     private XYSeriesCollection dataSet;
 
+    /**
+     * Sets up pane in which t-SNE plot is displayed
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         pane = new JPanel(new GridLayout(1, 2));
@@ -71,23 +71,13 @@ public class TSNEPlotController implements Initializable {
         pane.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
     }
 
-    public void initControllers(ConsoleController consoleController, GeneSelectorController geneSelectorController, IsoformPlotController isoformPlotController, MainController mainController) {
-        this.consoleController = consoleController;
-        this.geneSelectorController = geneSelectorController;
-        this.isoformPlotController = isoformPlotController;
-        this.mainController = mainController;
-
-    }
-
-    public VBox getTSNEPlot() {
+    public Node getTSNEPlot() {
         return tSNEPlot;
     }
 
     public void disable() {
         drawTSNEButton.setDisable(true);
         perplexity.setDisable(true);
-        pane.removeAll();
-        pane.validate();
     }
 
     public void enable() {
@@ -95,29 +85,40 @@ public class TSNEPlotController implements Initializable {
         perplexity.setDisable(false);
     }
 
+    public void clearTSNEPlot() {
+        pane.removeAll();
+        pane.validate();
+        pane.repaint();
+    }
+
     /**
      * When "Draw t-SNE" button is pressed, draws t-SNE plot
      */
     @FXML
     protected void handleDrawTSNEButtonAction() {
-        disable();
-        mainController.disable();
-        geneSelectorController.disable();
-        isoformPlotController.disable();
+        disableAssociatedFunctionality();
         try {
             Thread tSNEPlotMaker = new Thread(new TSNEPlotMaker());
             tSNEPlotMaker.start();
         } catch (Exception e) {
             enableAssociatedFunctionality();
-            consoleController.addConsoleErrorMessage("An unexpected error occurred while drawing the t-SNE plot");
+            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the t-SNE plot");
         }
     }
 
+    private void disableAssociatedFunctionality() {
+        disable();
+        clearTSNEPlot();
+        ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableIsoformPlot();
+        ControllerMediator.getInstance().disableGeneSelector();
+    }
+
     private void enableAssociatedFunctionality() {
-        Platform.runLater(() -> enable());
-        Platform.runLater(() -> mainController.enable());
-        Platform.runLater(() -> geneSelectorController.enable());
-        Platform.runLater(() -> isoformPlotController.enable());
+        enable();
+        ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableIsoformPlot();
+        ControllerMediator.getInstance().enableGeneSelector();
     }
 
     private class TSNEPlotMaker implements Runnable {
@@ -125,18 +126,18 @@ public class TSNEPlotController implements Initializable {
         private File labelsFile;
         @Override
         public void run() {
-            Platform.runLater(() -> consoleController.addConsoleMessage("Drawing t-SNE plot..."));
+            runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing t-SNE plot..."));
             try {
                 loadFiles();
                 double[][] tSNEMatrix = generateTSNEMatrix();
                 drawTsne(tSNEMatrix);
-                Platform.runLater(() -> consoleController.addConsoleMessage("Finished drawing t-SNE plot"));
+                runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot"));
             } catch(RNAScoopException e) {
-                Platform.runLater(() -> consoleController.addConsoleErrorMessage(e.getMessage()));
+                runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
             } catch (Exception e) {
-                Platform.runLater(() -> consoleController.addConsoleErrorMessage("An unexpected error occurred while drawing the t-SNE plot"));
+                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the t-SNE plot"));
             } finally {
-                enableAssociatedFunctionality();
+                runLater(TSNEPlotController.this::enableAssociatedFunctionality);
             }
         }
 

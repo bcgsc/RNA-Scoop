@@ -1,13 +1,8 @@
-package ui.fxml.main.controllers;
+package ui.controllers;
 
-import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
@@ -16,21 +11,17 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import parser.Parser;
 import parser.data.Exon;
 import parser.data.Gene;
 import parser.data.Isoform;
-import ui.fxml.GeneSelectorController;
+import ui.mediator.ControllerMediator;
 import ui.resources.Util;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-public class IsoformPlotController implements Initializable {
+public class IsoformPlotController implements Initializable, InteractiveElementController {
     private static final int CANVAS_MIN_WIDTH = 250;
     private static final int CANVAS_INIT_Y = 13;
     private static final int GENE_ID_X_OFFSET = 0;
@@ -55,19 +46,11 @@ public class IsoformPlotController implements Initializable {
     private boolean reverseComplement;
     private int canvasCurrY;
 
-    private ConsoleController consoleController;
-    private GeneSelectorController geneSelectorController;
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         shownGenes = new ArrayList<>();
         initializeGraphics();
         initializeScrollPane();
-    }
-
-    public void initControllers(ConsoleController consoleController, GeneSelectorController geneSelectorController) {
-        this.consoleController = consoleController;
-        this.geneSelectorController = geneSelectorController;
     }
 
     /**
@@ -101,7 +84,7 @@ public class IsoformPlotController implements Initializable {
         drawGenes();
     }
 
-    public VBox getIsoformPlot() {
+    public Node getIsoformPlot() {
         return isoformPlot;
     }
 
@@ -110,7 +93,7 @@ public class IsoformPlotController implements Initializable {
      */
     @FXML
     protected void handleSelectGenesButtonAction() {
-        geneSelectorController.display();
+        ControllerMediator.getInstance().displayGeneSelector();
     }
 
     private void initializeGraphics() {

@@ -6,8 +6,8 @@
 <?import javafx.scene.text.*?>
 
 <VBox xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="ui.fxml.GeneSelectorController"
-      style="-fx-background-color: #fcfcfc;">
+      fx:controller="ui.controllers.GeneSelectorController"
+      fx:id="geneSelector" style="-fx-background-color: #fcfcfc;">
     <GridPane fx:id="gridPane" style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
         <VBox.margin>
             <Insets topRightBottomLeft="10"/>

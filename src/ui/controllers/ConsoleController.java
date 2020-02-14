@@ -1,7 +1,8 @@
-package ui.fxml.main.controllers;
+package ui.controllers;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -34,17 +35,23 @@ public class ConsoleController implements Initializable{
     }
 
     public void addConsoleErrorMessage(String message) {
-        removeFirstMessageIndicator();
-        Text errorIndicator = new Text(ERROR_INDICATOR);
-        errorIndicator.setStyle("-fx-fill: " + ERROR_INDICATOR_COLOR + ";");
-        consoleMessage.getChildren().add(new Text("\n" + FIRST_MESSAGE_INDICATOR));
-        consoleMessage.getChildren().add(errorIndicator);
+        addErrorMessageIndicator();
         consoleMessage.getChildren().add(new Text(message));
-        lastMessageIsError = true;
         scrollToBottom();
     }
 
-    public ScrollPane getConsole() {
+    /**
+     * Adds an error message to the console which telling the user an
+     * unexpected error occurred when doing some action
+     * @param action the action the program was doing when the error occurred
+     */
+    public void addConsoleUnexpectedErrorMessage(String action) {
+        addErrorMessageIndicator();
+        consoleMessage.getChildren().add(new Text("An unexpected error occurred while " + action));
+        scrollToBottom();
+    }
+
+    public Node getConsole() {
         return console;
     }
 
@@ -60,6 +67,19 @@ public class ConsoleController implements Initializable{
             firstMessage = (Text) consoleMessage.getChildren().get(numMessages - 1);
         firstMessage.setText(firstMessage.getText().replaceFirst(FIRST_MESSAGE_INDICATOR, ""));
     }
+
+    /**
+     * Adds error message indicator to console, indicates that last message is an error
+     */
+    private void addErrorMessageIndicator() {
+        removeFirstMessageIndicator();
+        Text errorIndicator = new Text(ERROR_INDICATOR);
+        errorIndicator.setStyle("-fx-fill: " + ERROR_INDICATOR_COLOR + ";");
+        consoleMessage.getChildren().add(new Text("\n" + FIRST_MESSAGE_INDICATOR));
+        consoleMessage.getChildren().add(errorIndicator);
+        lastMessageIsError = true;
+    }
+
 
     /**
      * Scroll to bottom of console

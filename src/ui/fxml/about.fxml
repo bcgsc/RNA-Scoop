@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.*?>
-<ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.fxml.AboutController"
+<ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.controllers.AboutController"
             fx:id="scrollPane" prefHeight="350" prefWidth="600" style="-fx-background: #ffffff;">
     <VBox fx:id="vbox" alignment="TOP_CENTER">
         <ImageView>

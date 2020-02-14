@@ -1,30 +1,28 @@
-package ui.fxml;
+package ui.controllers;
 
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.*;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import parser.Parser;
 import parser.data.Gene;
-import ui.fxml.main.controllers.ConsoleController;
-import ui.fxml.main.controllers.IsoformPlotController;
-import ui.fxml.main.controllers.MainController;
-import ui.fxml.main.controllers.TSNEPlotController;
-import ui.resources.Util;
+import ui.mediator.ControllerMediator;
 
 import java.net.URL;
 import java.util.*;
 
-public class GeneSelectorController implements Initializable {
+public class GeneSelectorController implements Initializable, InteractiveElementController {
 
+    private static final float GENE_SELECTOR_SCALE_FACTOR = 0.35f;
+
+    @FXML private VBox geneSelector;
     @FXML private GridPane gridPane;
     @FXML private ListView genes;
     @FXML private ListView shownGenes;
@@ -34,32 +32,21 @@ public class GeneSelectorController implements Initializable {
     @FXML private Button clearAllButton;
 
     private Stage window;
-    private ConsoleController consoleController;
-    private IsoformPlotController isoformPlotController;
-    private TSNEPlotController tsnePlotController;
-    private MainController mainController;
 
     /**
-     * Sets up grid pane, users to select multiple genes in both list views
+     * Sets up grid pane, window, allows users to select multiple genes in both list views
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpGridPane();
         genes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         shownGenes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        setUpWindow();
     }
 
-    public void initWindow(Stage window) {
-        this.window = window;
-    }
-
-    public void initControllers(IsoformPlotController isoformPlotController, TSNEPlotController tsnePlotController, ConsoleController consoleController, MainController mainController) {
-        this.isoformPlotController = isoformPlotController;
-        this.tsnePlotController = tsnePlotController;
-        this.mainController = mainController;
-        this.consoleController = consoleController;
-    }
-
+    /**
+     * Disables all functionality
+     */
     public void disable() {
         genes.setDisable(true);
         shownGenes.setDisable(true);
@@ -69,6 +56,9 @@ public class GeneSelectorController implements Initializable {
         clearAllButton.setDisable(true);
     }
 
+    /**
+     * Enables all functionality
+     */
     public void enable() {
         genes.setDisable(false);
         shownGenes.setDisable(false);
@@ -88,12 +78,12 @@ public class GeneSelectorController implements Initializable {
     }
 
     /**
-     * Clears all genes in shown genes list view, and tells the isoform plot controller
+     * Clears all genes in shown genes list view, and tells the isoform plot
      * about the changes
      */
     public void clearShownGenes() {
         shownGenes.getItems().clear();
-        isoformPlotController.setShownGenes(shownGenes.getItems());
+        ControllerMediator.getInstance().setIsoformPlotShownGenes(shownGenes.getItems());
     }
 
     /**
@@ -110,7 +100,7 @@ public class GeneSelectorController implements Initializable {
 
     /**
      * Adds genes selected in genes list view to shown genes list view, and tells the isoform plot
-     * controller about the changes
+     * about the changes
      */
     @FXML
     protected void handleAddSelectedButtonAction() {
@@ -123,9 +113,9 @@ public class GeneSelectorController implements Initializable {
                     genesToBeShown.add(gene);
             }
             genesToBeShown.sort(String::compareTo);
-            isoformPlotController.setShownGenes(genesToBeShown);
+            ControllerMediator.getInstance().setIsoformPlotShownGenes(genesToBeShown);
         } catch (Exception e) {
-            consoleController.addConsoleErrorMessage("An unexpected error occurred while adding selected genes");
+            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding selected genes");
         } finally {
             enableAssociatedFunctionality();
         }
@@ -133,7 +123,7 @@ public class GeneSelectorController implements Initializable {
 
     /**
      * Removes genes selected in shown genes list view from shown genes list view,
-     * and tells the isoform plot controller about the changes
+     * and tells the isoform plot about the changes
      */
     @FXML
     protected void handleRemoveSelectedButtonAction() {
@@ -142,28 +132,32 @@ public class GeneSelectorController implements Initializable {
             ObservableList<String> genesToRemove = shownGenes.getSelectionModel().getSelectedItems();
             ObservableList<String> genesToBeShown = shownGenes.getItems();
             genesToBeShown.removeAll(genesToRemove);
-            isoformPlotController.setShownGenes(genesToBeShown);
+            ControllerMediator.getInstance().setIsoformPlotShownGenes(genesToBeShown);
         } catch (Exception e) {
-            consoleController.addConsoleErrorMessage("An unexpected error occurred while removing selected genes");
-        } finally {
-            enableAssociatedFunctionality();
-        }
-    }
-
-    @FXML
-    protected void handleClearAllButtonAction() {
-        disableAssociatedFunctionality();
-        try {
-            clearShownGenes();
-        } catch (Exception e) {
-            consoleController.addConsoleErrorMessage("An unexpected error occurred while clearing shown genes");
+            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("removing selected genes");
         } finally {
             enableAssociatedFunctionality();
         }
     }
 
     /**
-     * Adds all genes to shown genes list view, and tells the isoform plot controller
+     * Removes all genes in shown genes list view from shown genes list view,
+     * and tells the isoform plot about the changes
+     */
+    @FXML
+    protected void handleClearAllButtonAction() {
+        disableAssociatedFunctionality();
+        try {
+            clearShownGenes();
+        } catch (Exception e) {
+            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("clearing shown genes");
+        } finally {
+            enableAssociatedFunctionality();
+        }
+    }
+
+    /**
+     * Adds all genes to shown genes list view, and tells the isoform plot
      * about the changes
      */
     @FXML
@@ -174,9 +168,9 @@ public class GeneSelectorController implements Initializable {
             ObservableList<String> genesToShow = shownGenes.getItems();
             genesToShow.clear();
             genesToShow.addAll(genesToAdd);
-            isoformPlotController.setShownGenes(genesToShow);
+            ControllerMediator.getInstance().setIsoformPlotShownGenes(genesToShow);
         } catch (Exception e) {
-            consoleController.addConsoleErrorMessage("An unexpected error occurred while adding all genes");
+            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding all genes");
         } finally {
             enableAssociatedFunctionality();
         }
@@ -198,17 +192,32 @@ public class GeneSelectorController implements Initializable {
         gridPane.getRowConstraints().add(row1);
     }
 
+    /**
+     * Sets up gene selector window
+     * Makes it so window is hidden when X button is pressed
+     */
+    private void setUpWindow() {
+        window = new Stage();
+        window.setTitle("RNA-Scoop - Gene Selector");
+        Rectangle2D screen = Screen.getPrimary().getBounds();
+        window.setScene(new Scene(geneSelector, screen.getWidth() * GENE_SELECTOR_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_SCALE_FACTOR));
+        window.setOnCloseRequest(event -> {
+            event.consume();
+            window.hide();
+        });
+    }
+
     private void disableAssociatedFunctionality() {
         disable();
-        tsnePlotController.disable();
-        mainController.disable();
-        isoformPlotController.disable();
+        ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableIsoformPlot();
+        ControllerMediator.getInstance().disableTSNEPlot();
     }
 
     private void enableAssociatedFunctionality() {
         enable();
-        tsnePlotController.enable();
-        mainController.enable();
-        isoformPlotController.enable();
+        ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableIsoformPlot();
+        ControllerMediator.getInstance().enableTSNEPlot();
     }
 }
