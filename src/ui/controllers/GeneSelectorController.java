@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -21,6 +22,7 @@ import java.util.*;
 public class GeneSelectorController implements Initializable, InteractiveElementController {
 
     private static final float GENE_SELECTOR_SCALE_FACTOR = 0.35f;
+    private static final Image logo = new Image("ui/resources/icons/RNA-ScoopIcon2.png");
 
     @FXML private VBox geneSelector;
     @FXML private GridPane gridPane;
@@ -201,6 +203,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         window.setTitle("RNA-Scoop - Gene Selector");
         Rectangle2D screen = Screen.getPrimary().getBounds();
         window.setScene(new Scene(geneSelector, screen.getWidth() * GENE_SELECTOR_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_SCALE_FACTOR));
+        window.getIcons().add(logo);
         window.setOnCloseRequest(event -> {
             event.consume();
             window.hide();

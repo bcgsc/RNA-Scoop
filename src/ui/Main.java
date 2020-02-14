@@ -12,12 +12,10 @@ import javafx.stage.Stage;
 import ui.controllers.*;
 import ui.mediator.ControllerMediator;
 
-import java.io.IOException;
-
 
 public class Main extends Application {
     private static final float SCALE_FACTOR = 0.7f;
-    private static final Image logo = new Image("ui/icons/RNA-ScoopIcon.jpg");
+    private static final Image logo = new Image("ui/resources/icons/RNA-ScoopIcon3.png");
 
     @Override
     public void start(Stage primaryStage) throws Exception{

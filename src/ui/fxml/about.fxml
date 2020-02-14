@@ -11,7 +11,7 @@
             fx:id="scrollPane" prefHeight="350" prefWidth="600" style="-fx-background: #ffffff;">
     <VBox fx:id="vbox" alignment="TOP_CENTER">
         <ImageView>
-            <Image url="/ui/icons/RNA-ScoopLogo.png" requestedHeight="200" requestedWidth="200"/>
+            <Image url="/ui/resources/icons/RNA-ScoopLogo.png" requestedHeight="200" requestedWidth="200"/>
             <VBox.margin>
                 <Insets top="5" bottom="15"/>
             </VBox.margin>

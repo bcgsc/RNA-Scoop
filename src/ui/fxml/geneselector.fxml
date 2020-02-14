@@ -30,13 +30,13 @@
                 </VBox.margin>
             </Button>
             <Button fx:id="addSelectedButton" onAction="#handleAddSelectedButtonAction" text="Add Selected" textAlignment="CENTER"
-                    contentDisplay="TOP" wrapText="true" style="-fx-graphic: url('/ui/icons/addSelected.png')">
+                    contentDisplay="TOP" wrapText="true" style="-fx-graphic: url('/ui/resources/icons/addSelected.png')">
                 <VBox.margin>
                     <Insets bottom="10"/>
                 </VBox.margin>
             </Button>
             <Button fx:id="removeSelectedButton" onAction="#handleRemoveSelectedButtonAction" text="Remove Selected" textAlignment="CENTER"
-                    contentDisplay="TOP" wrapText="true" style="-fx-graphic: url('/ui/icons/removeSelected.png')">
+                    contentDisplay="TOP" wrapText="true" style="-fx-graphic: url('/ui/resources/icons/removeSelected.png')">
                 <VBox.margin>
                     <Insets bottom="10"/>
                 </VBox.margin>
