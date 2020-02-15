@@ -42,7 +42,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     @FXML private Button selectGenesButton;
 
     private GraphicsContext gc;
-    private List<String> shownGenes;
+    private List<Gene> shownGenes;
     private boolean reverseComplement;
     private int canvasCurrY;
 
@@ -79,7 +79,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Sets shownGenes and redraws all genes
      */
-    public void setShownGenes(List<String> shownGenes) {
+    public void setShownGenes(List<Gene> shownGenes) {
         this.shownGenes = shownGenes;
         drawGenes();
     }
@@ -123,9 +123,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     private void drawGenes() {
         clearCanvas();
         incrementCanvasHeight();
-        HashMap<String, Gene> parsedGenes = Parser.getParsedGenes();
-        for (String geneID : shownGenes) {
-            drawGene(parsedGenes.get(geneID), geneID);
+        for (Gene gene : shownGenes) {
+            drawGene(gene);
         }
     }
 
@@ -134,9 +133,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     private void incrementCanvasHeight() {
         double newHeight = canvas.getHeight();
-        HashMap<String, Gene> parsedGenes = Parser.getParsedGenes();
-        for (String geneID : shownGenes) {
-            Gene gene = parsedGenes.get(geneID);
+        for (Gene gene : shownGenes) {
             int numIsoforms = gene.getIsoforms().size();
             newHeight += numIsoforms * SPACING * 2 + SPACING;
         }
@@ -146,25 +143,32 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Clears canvas, draws and labels all isoforms of the given gene
      * @param gene gene to draw
-     * @param geneID ID of gene to draw
      */
-    private void drawGene(Gene gene, String geneID) {
-        drawGeneID(gene, geneID);
+    private void drawGene(Gene gene) {
+        drawGeneLabel(gene);
         drawAllIsoforms(gene);
     }
 
     /**
-     * Draws label for gene
+     * Draws label for gene - gene name if exists, else gene ID
      */
-    private void drawGeneID(Gene gene, String geneID) {
+    private void drawGeneLabel(Gene gene) {
         gc.setFill(FONT_COLOUR);
         gc.setFont(GENE_FONT);
-        if(gene.isPositiveSense() && reverseComplement)
-            gc.fillText(geneID + " (+)", GENE_ID_X_OFFSET, canvasCurrY);
-        else if(reverseComplement)
-            gc.fillText(geneID + " (-)", GENE_ID_X_OFFSET, canvasCurrY);
+
+        String label;
+        String name = gene.getName();
+        if (name != null)
+            label = name;
         else
-            gc.fillText(geneID, GENE_ID_X_OFFSET, canvasCurrY);
+            label = gene.getId();
+
+        if (gene.isPositiveSense() && reverseComplement)
+            gc.fillText(label + " (+)", GENE_ID_X_OFFSET, canvasCurrY);
+        else if (reverseComplement)
+            gc.fillText(label + " (-)", GENE_ID_X_OFFSET, canvasCurrY);
+        else
+            gc.fillText(label, GENE_ID_X_OFFSET, canvasCurrY);
         canvasCurrY += SPACING;
     }
 
@@ -172,22 +176,36 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * Labels and draws each isoform of given gene
      */
     private void drawAllIsoforms(Gene gene) {
-        gc.setFont(TRANSCRIPT_FONT);
         int geneStart = gene.getStartNucleotide();
         int geneEnd = gene.getEndNucleotide();
         double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart + 1);
-        Collection<String> isoforms = gene.getIsoforms().keySet();
-        List<String> sortedIsoforms = Util.asSortedList(isoforms);
-        for(String transcriptID : sortedIsoforms) {
-            gc.setFill(FONT_COLOUR);
-            gc.fillText(transcriptID, ISOFORM_X_OFFSET, canvasCurrY);
+        Collection<String> isoformsID = gene.getIsoforms().keySet();
+        List<String> sortedIsoformsIDs = Util.asSortedList(isoformsID);
+        for (String isoformID : sortedIsoformsIDs) {
+            Isoform isoform = gene.getIsoform(isoformID);
+            drawIsoformLabel(isoform, isoformID);
             canvasCurrY += SPACING / 3;
             if(gene.isPositiveSense() || !reverseComplement)
-                drawIsoform(gene.getIsoform(transcriptID), geneStart, pixelsPerNucleotide);
+                drawIsoform(isoform, geneStart, pixelsPerNucleotide);
             else
-                drawIsoformReverseComplement(gene.getIsoform(transcriptID), geneEnd, pixelsPerNucleotide);
+                drawIsoformReverseComplement(isoform, geneEnd, pixelsPerNucleotide);
             canvasCurrY += SPACING * 5/3;
         }
+    }
+
+    /**
+     * Draws label for isoform - isoform name if exists, else isoform ID
+     */
+    private void drawIsoformLabel(Isoform isoform, String isoformID) {
+        String label;
+        String name = isoform.getName();
+        if (name != null)
+            label = name;
+        else
+            label = isoformID;
+        gc.setFont(TRANSCRIPT_FONT);
+        gc.setFill(FONT_COLOUR);
+        gc.fillText(label, ISOFORM_X_OFFSET, canvasCurrY);
     }
 
     /**

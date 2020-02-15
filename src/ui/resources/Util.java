@@ -1,5 +1,7 @@
 package ui.resources;
 
+import parser.data.Gene;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

@@ -10,10 +10,12 @@ public class Isoform {
      */
     private HashMap<String, Integer> expressionPerCellMap;
     private ArrayList<Exon> exons;
+    private String name;
 
     public Isoform() {
         expressionPerCellMap = new HashMap<>();
         exons = new ArrayList<>();
+        name = null;
     }
 
     public void addExon(Exon exon) {
@@ -21,6 +23,14 @@ public class Isoform {
             exons.add(exon);
             exons.sort(Exon::compareTo);
         }
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public ArrayList<Exon> getExons() {

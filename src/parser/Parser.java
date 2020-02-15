@@ -76,6 +76,8 @@ public class Parser {
         // attribute values
         private static String geneID;
         private static String transcriptID;
+        private static String geneName;
+        private static String transcriptName;
 
         private static void clearData() {
             exonData = null;
@@ -85,6 +87,8 @@ public class Parser {
             strand = null;
             geneID = null;
             transcriptID = null;
+            geneName = null;
+            transcriptName = null;
         }
 
         /**
@@ -137,6 +141,10 @@ public class Parser {
                     geneID = m.group(2);
                 else if (m.group(1).equals("transcript_id"))
                     transcriptID = m.group(2);
+                else if (m.group(1).equals("gene_name"))
+                    geneName = m.group(2);
+                else if (m.group(1).equals("transcript_name"))
+                    transcriptName = m.group(2);
             }
             if (geneID == null || transcriptID == null)
                 throw new GTFMissingInfoException(lineNumber);
@@ -149,7 +157,7 @@ public class Parser {
             if(parsedGenes.containsKey(geneID)) {
                 gene = parsedGenes.get(geneID);
             } else {
-                gene = new Gene(chromosome, strand);
+                gene = new Gene(geneID, chromosome, strand);
                 parsedGenes.put(geneID, gene);
             }
             if(gene.hasIsoform(transcriptID)) {
@@ -161,6 +169,10 @@ public class Parser {
             exon = new Exon(startNucleotide, endNucleotide);
             isoform.addExon(exon);
 
+            if (geneName != null && gene.getName() == null)
+                gene.setName(geneName);
+            if (transcriptName != null && isoform.getName() == null)
+                isoform.setName(transcriptName);
             if (gene.getStartNucleotide() > exon.getStartNucleotide())
                 gene.setStartNucleotide(exon.getStartNucleotide());
             if (gene.getEndNucleotide() < exon.getEndNucleotide())

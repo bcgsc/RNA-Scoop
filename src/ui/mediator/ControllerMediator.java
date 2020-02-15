@@ -2,6 +2,7 @@ package ui.mediator;
 
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import parser.data.Gene;
 import ui.controllers.GeneSelectorController;
 import ui.controllers.ConsoleController;
 import ui.controllers.IsoformPlotController;
@@ -73,7 +74,7 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.clearShownGenes();
     }
 
-    public void setIsoformPlotShownGenes(List<String> shownGenes) {
+    public void setIsoformPlotShownGenes(List<Gene> shownGenes) {
         isoformPlotController.setShownGenes(shownGenes);
     }
 
