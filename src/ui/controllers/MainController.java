@@ -170,7 +170,9 @@ public class MainController implements InteractiveElementController {
         public void run() {
             try {
                 runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + path.getValue()));
+                float start = System.nanoTime();
                 Parser.readFile((String) path.getValue());
+                System.out.println((System.nanoTime() - start)/1000000000f);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + path.getValue()));
                 runLater(MainController.this::addLoadedPaths);
             } catch (RNAScoopException e){

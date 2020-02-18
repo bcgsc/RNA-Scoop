@@ -17,7 +17,6 @@ public class Parser {
      * Key is the gene's ID, value is the gene
      */
     private static HashMap<String, Gene> parsedGenes;
-    private static Pattern commentPattern = Pattern.compile("(.*)#?.*");
 
     /**
      * Reads in file at given path and parses each line
@@ -52,11 +51,6 @@ public class Parser {
      * Remove all characters following "#" (GTF comment symbol)
      */
     private static String removeComments(String exonDataString) {
-        /*Matcher m = commentPattern.matcher(exonDataString);
-        if (m.lookingAt())
-            return m.group(1);
-        else
-            throw new GTFFileMissingColumnsException(0);*/
         return exonDataString.split("#")[0];
     }
 
@@ -71,7 +65,7 @@ public class Parser {
 
     private static class ExonDataParser {
 
-        private static Pattern attributePattern = Pattern.compile("\\s*(\\S+)\\s*\"(\\S+)\"\\s*;\\s*");
+        private static Pattern attributePattern = Pattern.compile("\\s*(\\S+)\\s*\"(\\S+)\"\\s*");
 
         private static String[] exonData;
         private static int lineNumber;
@@ -141,41 +135,25 @@ public class Parser {
         }
 
         private static void setAttributeValues() throws GTFMissingAttributesInfoException {
-/*            Matcher m = attributePattern.matcher(exonData[8]);
-            while (m.find()) {
-                String attributeName = m.group(1);
-                String attributeValue = m.group(2);
-                if (attributeName.equals("gene_id"))
-                    geneID = attributeValue;
-                else if (attributeName.equals("transcript_id"))
-                    transcriptID = attributeValue;
-                else if (attributeName.equals("gene_name"))
-                    geneName = attributeValue;
-                else if (attributeName.equals("transcript_name"))
-                    transcriptName = attributeValue;
-            }*/
-            String[] attributes = exonData[8].split(";");
-            for(String attribute : attributes) {
-                attribute = attribute.trim();
-                attribute = attribute.replace("\\s\\s+", " ");
-                String[] attributePair = attribute.split(" ");
-                if (attributePair.length != 2)
-                    throw new GTFMissingAttributesInfoException(lineNumber);
-                String attributeName = attributePair[0];
-                String attributeValue = attributePair[1];
-                switch (attributeName) {
-                    case "gene_id":
-                        geneID = attributeValue.replace('\"', Character.MIN_VALUE);
-                        break;
-                    case "transcript_id":
-                        transcriptID = attributeValue.replace('\"', Character.MIN_VALUE);
-                        break;
-                    case "gene_name":
-                        geneName = attributeValue.replace('\"', Character.MIN_VALUE);
-                        break;
-                    case "transcript_name":
-                        transcriptName = attributeValue.replace('\"', Character.MIN_VALUE);
-                        break;
+            for (String p : exonData[8].split(";")) {
+                Matcher m = attributePattern.matcher(p);
+                if (m.matches()) {
+                    String attributeName = m.group(1);
+                    String attributeValue = m.group(2);
+                    switch (attributeName) {
+                        case "gene_id":
+                            geneID = attributeValue;
+                            break;
+                        case "transcript_id":
+                            transcriptID = attributeValue;
+                            break;
+                        case "gene_name":
+                            geneName = attributeValue;
+                            break;
+                        case "transcript_name":
+                            transcriptName = attributeValue;
+                            break;
+                    }
                 }
             }
             if (geneID == null || transcriptID == null)
