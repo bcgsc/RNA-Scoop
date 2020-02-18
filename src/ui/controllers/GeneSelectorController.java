@@ -110,7 +110,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             ObservableList<Gene> genesToAdd = genesTable.getSelectionModel().getSelectedItems();
             for (Gene gene : genesToAdd) {
                 if (!selectedGenes.contains(gene))
-                   selectedGenes.add(gene);
+                    selectedGenes.add(gene);
             }
             selectedGenes.sort(Gene::compareTo);
             ControllerMediator.getInstance().setIsoformPlotShownGenes(selectedGenes);

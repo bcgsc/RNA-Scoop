@@ -169,12 +169,10 @@ public class MainController implements InteractiveElementController {
         @Override
         public void run() {
             try {
-                long start = System.nanoTime();
                 runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + path.getValue()));
                 Parser.readFile((String) path.getValue());
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + path.getValue()));
                 runLater(MainController.this::addLoadedPaths);
-                System.out.println((System.nanoTime() - start)/1000000000f);
             } catch (RNAScoopException e){
                 Parser.removeParsedGenes();
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
@@ -182,6 +180,7 @@ public class MainController implements InteractiveElementController {
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage("Could not find file at path: " + path.getValue()));
             } catch (Exception e) {
                 Parser.removeParsedGenes();
+                e.printStackTrace();
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("reading file from path: " + path.getValue()));
             } finally {
                 runLater(() -> ControllerMediator.getInstance().updateGenes());

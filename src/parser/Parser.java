@@ -17,6 +17,7 @@ public class Parser {
      * Key is the gene's ID, value is the gene
      */
     private static HashMap<String, Gene> parsedGenes;
+    private static Pattern commentPattern = Pattern.compile("(.*)#?.*");
 
     /**
      * Reads in file at given path and parses each line
@@ -32,7 +33,7 @@ public class Parser {
             String dataString = removeComments(currentLine);
             String[] data = dataString.split("\t");
             if (data.length < 9)
-                throw new GTFFileMissingColumnsException();
+                throw new GTFFileMissingColumnsException(lineNumber);
             if (isExonData(data)) {
                 ExonDataParser.parse(data, lineNumber);
             }
@@ -51,6 +52,11 @@ public class Parser {
      * Remove all characters following "#" (GTF comment symbol)
      */
     private static String removeComments(String exonDataString) {
+        /*Matcher m = commentPattern.matcher(exonDataString);
+        if (m.lookingAt())
+            return m.group(1);
+        else
+            throw new GTFFileMissingColumnsException(0);*/
         return exonDataString.split("#")[0];
     }
 
@@ -134,20 +140,46 @@ public class Parser {
             strand = exonData[6];
         }
 
-        private static void setAttributeValues() throws GTFMissingInfoException {
-            Matcher m = attributePattern.matcher(exonData[8]);
-            while(m.find()) {
-                if (m.group(1).equals("gene_id"))
-                    geneID = m.group(2);
-                else if (m.group(1).equals("transcript_id"))
-                    transcriptID = m.group(2);
-                else if (m.group(1).equals("gene_name"))
-                    geneName = m.group(2);
-                else if (m.group(1).equals("transcript_name"))
-                    transcriptName = m.group(2);
+        private static void setAttributeValues() throws GTFMissingAttributesInfoException {
+/*            Matcher m = attributePattern.matcher(exonData[8]);
+            while (m.find()) {
+                String attributeName = m.group(1);
+                String attributeValue = m.group(2);
+                if (attributeName.equals("gene_id"))
+                    geneID = attributeValue;
+                else if (attributeName.equals("transcript_id"))
+                    transcriptID = attributeValue;
+                else if (attributeName.equals("gene_name"))
+                    geneName = attributeValue;
+                else if (attributeName.equals("transcript_name"))
+                    transcriptName = attributeValue;
+            }*/
+            String[] attributes = exonData[8].split(";");
+            for(String attribute : attributes) {
+                attribute = attribute.trim();
+                attribute = attribute.replace("\\s\\s+", " ");
+                String[] attributePair = attribute.split(" ");
+                if (attributePair.length != 2)
+                    throw new GTFMissingAttributesInfoException(lineNumber);
+                String attributeName = attributePair[0];
+                String attributeValue = attributePair[1];
+                switch (attributeName) {
+                    case "gene_id":
+                        geneID = attributeValue.replace('\"', Character.MIN_VALUE);
+                        break;
+                    case "transcript_id":
+                        transcriptID = attributeValue.replace('\"', Character.MIN_VALUE);
+                        break;
+                    case "gene_name":
+                        geneName = attributeValue.replace('\"', Character.MIN_VALUE);
+                        break;
+                    case "transcript_name":
+                        transcriptName = attributeValue.replace('\"', Character.MIN_VALUE);
+                        break;
+                }
             }
             if (geneID == null || transcriptID == null)
-                throw new GTFMissingInfoException(lineNumber);
+                throw new GTFMissingAttributesInfoException(lineNumber);
         }
 
         private static void storeExonInformation() {
