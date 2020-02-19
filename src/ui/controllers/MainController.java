@@ -2,6 +2,7 @@ package ui.controllers;
 
 import exceptions.RNAScoopException;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -52,19 +53,28 @@ public class MainController implements InteractiveElementController {
         viewMenu.setDisable(false);
     }
 
+    /**
+     * When reverse complement toggle is selected, (-) strands will be reverse complemented in
+     * the isoform plot; when it is unselected, they will not
+     */
     @FXML
-    protected void handleAboutButtonAction() {
-        Parent root;
-        try {
-            root = FXMLLoader.load(getClass().getClassLoader().getResource("ui/fxml/about.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle("About");
-            Rectangle2D screen = Screen.getPrimary().getBounds();
-            stage.setScene(new Scene(root, screen.getWidth() * ABOUT_SCALE_FACTOR, screen.getHeight() * ABOUT_SCALE_FACTOR));
-            stage.show();
-        }
-        catch (IOException e) {
-            ControllerMediator.getInstance().addConsoleErrorMessage("Could not load about window");
+    protected void handleRevComplementToggle() {
+        ControllerMediator.getInstance().toggleReverseComplement();
+    }
+
+    /**
+     * When isoform plot toggle is pressed, toggles visibility of the isoform plot
+     */
+    @FXML
+    protected void handleIsoformViewToggle() {
+        if (isoformPlotOpen) {
+            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getIsoformPlot());
+            isoformPlotToggle.setText("Open Isoform Plot");
+            isoformPlotOpen = false;
+        } else {
+            horizontalSplitPane.getItems().add(0, ControllerMediator.getInstance().getIsoformPlot());
+            isoformPlotToggle.setText("Close Isoform Plot");
+            isoformPlotOpen = true;
         }
     }
 
@@ -85,19 +95,11 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * When isoform plot toggle is pressed, toggles visibility of the isoform plot
+     * When clear console button is pressed clears console
      */
     @FXML
-    protected void handleIsoformViewToggle() {
-        if (isoformPlotOpen) {
-            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getIsoformPlot());
-            isoformPlotToggle.setText("Open Isoform Plot");
-            isoformPlotOpen = false;
-        } else {
-            horizontalSplitPane.getItems().add(0, ControllerMediator.getInstance().getIsoformPlot());
-            isoformPlotToggle.setText("Close Isoform Plot");
-            isoformPlotOpen = true;
-        }
+    protected void handleClearConsoleButton() {
+        ControllerMediator.getInstance().clearConsole();
     }
 
     /**
@@ -117,13 +119,20 @@ public class MainController implements InteractiveElementController {
         }
     }
 
-    /**
-     * When reverse complement toggle is selected, (-) strands will be reverse complemented in
-     * the isoform plot; when it is unselected, they will not
-     */
     @FXML
-    protected void handleRevComplementToggle() {
-        ControllerMediator.getInstance().toggleReverseComplement();
+    protected void handleAboutButtonAction() {
+        Parent root;
+        try {
+            root = FXMLLoader.load(getClass().getClassLoader().getResource("ui/fxml/about.fxml"));
+            Stage stage = new Stage();
+            stage.setTitle("About");
+            Rectangle2D screen = Screen.getPrimary().getBounds();
+            stage.setScene(new Scene(root, screen.getWidth() * ABOUT_SCALE_FACTOR, screen.getHeight() * ABOUT_SCALE_FACTOR));
+            stage.show();
+        }
+        catch (IOException e) {
+            ControllerMediator.getInstance().addConsoleErrorMessage("Could not load about window");
+        }
     }
 
     /**
@@ -170,9 +179,7 @@ public class MainController implements InteractiveElementController {
         public void run() {
             try {
                 runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + path.getValue()));
-                float start = System.nanoTime();
                 Parser.readFile((String) path.getValue());
-                System.out.println((System.nanoTime() - start)/1000000000f);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + path.getValue()));
                 runLater(MainController.this::addLoadedPaths);
             } catch (RNAScoopException e){
@@ -182,7 +189,6 @@ public class MainController implements InteractiveElementController {
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage("Could not find file at path: " + path.getValue()));
             } catch (Exception e) {
                 Parser.removeParsedGenes();
-                e.printStackTrace();
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("reading file from path: " + path.getValue()));
             } finally {
                 runLater(() -> ControllerMediator.getInstance().updateGenes());

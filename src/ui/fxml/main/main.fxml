@@ -20,6 +20,7 @@
                         <MenuItem fx:id="tSNEToggle" onAction="#handleTSNEViewToggle" text="Close t-SNE Plot"/>
                     </Menu>
                     <Menu text="Console">
+                        <MenuItem onAction="#handleClearConsoleButton" text="Clear Console"/>
                         <MenuItem fx:id="consoleToggle" onAction="#handleConsoleViewToggle" text="Close Console"/>
                     </Menu>
                 </Menu>

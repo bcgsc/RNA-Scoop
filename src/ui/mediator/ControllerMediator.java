@@ -48,7 +48,7 @@ public class ControllerMediator implements Mediator{
         mainController.initializeMain(console, isoformPlot, tSNEPlot);
     }
 
-    // Add console messages
+    // Console Functions
     public void addConsoleErrorMessage(String message) {
         consoleController.addConsoleErrorMessage(message);
     }
@@ -57,11 +57,19 @@ public class ControllerMediator implements Mediator{
         consoleController.addConsoleUnexpectedErrorMessage(action);
     }
 
+    public void clearConsole() {
+        consoleController.clearConsole();
+    }
+
     public void addConsoleMessage(String message) {
         consoleController.addConsoleMessage(message);
     }
 
     // Display Genes
+    public void displayGeneSelector() {
+        geneSelectorController.display();
+    }
+
     public void toggleReverseComplement() {
         isoformPlotController.toggleReverseComplement();
     }
@@ -135,10 +143,6 @@ public class ControllerMediator implements Mediator{
 
     public static ControllerMediator getInstance() {
         return ControllerMediatorHolder.INSTANCE;
-    }
-
-    public void displayGeneSelector() {
-        geneSelectorController.display();
     }
 
     private static class ControllerMediatorHolder {

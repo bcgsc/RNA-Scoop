@@ -19,25 +19,30 @@ public class ConsoleController implements Initializable{
     @FXML private ScrollPane console;
 
     private boolean lastMessageIsError;
+    private boolean consoleIsCleared;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         consoleMessage.setStyle("-fx-line-spacing: 0.85em;");
         consoleMessage.getChildren().add(new Text(FIRST_MESSAGE_INDICATOR + "Welcome to RNA-Scoop!"));
         lastMessageIsError = false;
+        consoleIsCleared = false;
     }
 
     public void addConsoleMessage(String message) {
-        removeFirstMessageIndicator();
-        consoleMessage.getChildren().add(new Text("\n" + FIRST_MESSAGE_INDICATOR + message));
-        lastMessageIsError = false;
+        addFirstMessageIndicator();
+        consoleMessage.getChildren().add(new Text(message));
         scrollToBottom();
+        lastMessageIsError = false;
+        consoleIsCleared = false;
     }
 
     public void addConsoleErrorMessage(String message) {
-        addErrorMessageIndicator();
+        addFirstAndErrorMessageIndicators();
         consoleMessage.getChildren().add(new Text(message));
         scrollToBottom();
+        lastMessageIsError = true;
+        consoleIsCleared = false;
     }
 
     /**
@@ -46,13 +51,33 @@ public class ConsoleController implements Initializable{
      * @param action the action the program was doing when the error occurred
      */
     public void addConsoleUnexpectedErrorMessage(String action) {
-        addErrorMessageIndicator();
+        addFirstAndErrorMessageIndicators();
         consoleMessage.getChildren().add(new Text("An unexpected error occurred while " + action));
         scrollToBottom();
+        lastMessageIsError = true;
+        consoleIsCleared = false;
+    }
+
+    public void clearConsole() {
+        consoleMessage.getChildren().clear();
+        lastMessageIsError = false;
+        consoleIsCleared = true;
     }
 
     public Node getConsole() {
         return console;
+    }
+
+    /**
+     * Adds first message indicator to blank line (where new message will go) in console
+     */
+    private void addFirstMessageIndicator() {
+        if (!consoleIsCleared) {
+            removeFirstMessageIndicator();
+            consoleMessage.getChildren().add(new Text("\n" + FIRST_MESSAGE_INDICATOR));
+        } else {
+            consoleMessage.getChildren().add(new Text(FIRST_MESSAGE_INDICATOR));
+        }
     }
 
     /**
@@ -69,15 +94,13 @@ public class ConsoleController implements Initializable{
     }
 
     /**
-     * Adds error message indicator to console, indicates that last message is an error
+     * Adds first message and error message indicators to console, indicates that latest message is an error
      */
-    private void addErrorMessageIndicator() {
-        removeFirstMessageIndicator();
+    private void addFirstAndErrorMessageIndicators() {
+        addFirstMessageIndicator();
         Text errorIndicator = new Text(ERROR_INDICATOR);
         errorIndicator.setStyle("-fx-fill: " + ERROR_INDICATOR_COLOR + ";");
-        consoleMessage.getChildren().add(new Text("\n" + FIRST_MESSAGE_INDICATOR));
         consoleMessage.getChildren().add(errorIndicator);
-        lastMessageIsError = true;
     }
 
 
