@@ -2,6 +2,7 @@ package ui.controllers;
 
 import exceptions.RNAScoopException;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -9,6 +10,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -265,12 +269,36 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Automatically resizes path combo box when window is resized; removes
-     * initial focus from path combo box
+     * Automatically resizes path combo box when window is resized, removes
+     * initial focus from path combo box, allows dragging and dropping of files
      */
     private void setUpPathComboBox() {
         window.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(window.getWidth() - 85));
+        setUpPathComboBoxDragNDrop();
         runLater(() -> window.requestFocus());
+    }
+
+    /**
+     * Allows user to drag a file into path combo box and set its value to
+     * the file's path
+     *
+     * If user drags multiple files, prints an error message to the console
+     */
+    private void setUpPathComboBoxDragNDrop() {
+        pathComboBox.setOnDragOver(event -> {
+            if (event.getGestureSource() != pathComboBox && event.getDragboard().hasFiles()) {
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+            event.consume();
+        });
+        pathComboBox.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            if (db.getFiles().size() > 1)
+                ControllerMediator.getInstance().addConsoleErrorMessage("You cannot load more than one file at a time");
+            else
+                pathComboBox.setValue(db.getFiles().get(0).getAbsolutePath());
+            event.consume();
+        });
     }
 
     private void addLoadedPath() {
