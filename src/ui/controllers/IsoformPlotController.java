@@ -1,6 +1,5 @@
 package ui.controllers;
 
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -12,7 +11,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import parser.Parser;
 import parser.data.Exon;
 import parser.data.Gene;
 import parser.data.Isoform;
@@ -43,13 +41,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     @FXML private Button selectGenesButton;
 
     private GraphicsContext gc;
-    private List<Gene> shownGenes;
     private boolean reverseComplement;
     private int canvasCurrY;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        shownGenes = new ArrayList<>();
         initializeGraphics();
         initializeScrollPane();
     }
@@ -60,7 +56,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     public void toggleReverseComplement() {
         reverseComplement = !reverseComplement;
-        drawGenes();
+        drawGenes(ControllerMediator.getInstance().getShownGenes());
     }
 
     public void disable() {
@@ -78,11 +74,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Sets shownGenes and redraws all genes
+     * Draws given genes
      */
-    public void setShownGenes(List<Gene> shownGenes) {
-        this.shownGenes = shownGenes;
-        drawGenes();
+    public void drawGenes(Collection<Gene> genes) {
+        clearCanvas();
+        incrementCanvasHeight(genes);
+        for (Gene gene : genes) {
+            drawGene(gene);
+        }
     }
 
     public Node getIsoformPlot() {
@@ -113,28 +112,17 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             double newCanvasWidth = newValue.doubleValue() - (2 * CANVAS_MARGIN + SCROLLBAR_WIDTH);
             if (newCanvasWidth >= CANVAS_MIN_WIDTH) {
                 canvas.setWidth(newValue.doubleValue() - (2 * CANVAS_MARGIN + SCROLLBAR_WIDTH));
-                drawGenes();
+                drawGenes(ControllerMediator.getInstance().getShownGenes());
             }
         });
     }
 
     /**
-     * Draws all genes meant to be shown
+     * Sets canvas height to height necessary to display given genes
      */
-    private void drawGenes() {
-        clearCanvas();
-        incrementCanvasHeight();
-        for (Gene gene : shownGenes) {
-            drawGene(gene);
-        }
-    }
-
-    /**
-     * Sets canvas height to height necessary to display genes
-     */
-    private void incrementCanvasHeight() {
+    private void incrementCanvasHeight(Collection<Gene> genes) {
         double newHeight = canvas.getHeight();
-        for (Gene gene : shownGenes) {
+        for (Gene gene : genes) {
             int numIsoforms = gene.getIsoforms().size();
             newHeight += numIsoforms * SPACING * 2 + SPACING;
         }

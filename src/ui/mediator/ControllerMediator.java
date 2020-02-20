@@ -9,7 +9,7 @@ import ui.controllers.IsoformPlotController;
 import ui.controllers.MainController;
 import ui.controllers.TSNEPlotController;
 
-import java.util.List;
+import java.util.Collection;
 
 public class ControllerMediator implements Mediator{
     private MainController mainController;
@@ -44,8 +44,33 @@ public class ControllerMediator implements Mediator{
         this.geneSelectorController = geneSelectorController;
     }
 
+    // Change Main Display
     public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
         mainController.initializeMain(console, isoformPlot, tSNEPlot);
+    }
+
+    public void openIsoformPlot() {
+        mainController.openIsoformPlot();
+    }
+
+    public void closeIsoformPlot() {
+        mainController.closeIsoformPlot();
+    }
+
+    public void openTSNEPlot() {
+        mainController.openTSNEPlot();
+    }
+
+    public void closeTSNEPlot() {
+        mainController.closeTSNEPlot();
+    }
+
+    public void openConsole() {
+        mainController.openConsole();
+    }
+
+    public void closeConsole() {
+        mainController.closeConsole();
     }
 
     // Console Functions
@@ -78,12 +103,16 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.updateGenes();
     }
 
-    public void clearShownGenes() {
-        geneSelectorController.clearShownGenes();
+    public void clearIsoformPlot() {
+        isoformPlotController.clearCanvas();
     }
 
-    public void setIsoformPlotShownGenes(List<Gene> shownGenes) {
-        isoformPlotController.setShownGenes(shownGenes);
+    public void drawGenes(Collection<Gene> genes) {
+        isoformPlotController.drawGenes(genes);
+    }
+
+    public void clearSelectedGenes() {
+        geneSelectorController.clearSelectedGenes();
     }
 
     //Display t-SNE
@@ -102,6 +131,31 @@ public class ControllerMediator implements Mediator{
 
     public Node getIsoformPlot() {
         return isoformPlotController.getIsoformPlot();
+    }
+
+    public Collection<Gene> getShownGenes() {
+        return geneSelectorController.getShownGenes();
+    }
+
+    public boolean isConsoleOpen() {
+        return mainController.isConsoleOpen();
+    }
+
+    public boolean isIsoformPlotOpen() {
+        return mainController.isIsoformPlotOpen();
+    }
+
+    public boolean isTSNEPlotOpen() {
+        return mainController.isTSNEPlotOpen();
+    }
+
+    public String getCurrentLoadedPath() {
+        return mainController.getCurrentLoadedPath();
+    }
+
+    //Setters
+    public void setPathComboBoxValue(String path) {
+        mainController.setPathComboBoxValue(path);
     }
 
     //Disable Functionality

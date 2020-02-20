@@ -6,6 +6,7 @@ import parser.data.Gene;
 import parser.data.Isoform;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,7 +17,7 @@ public class Parser {
      * Map of all genes parser has parsed so far
      * Key is the gene's ID, value is the gene
      */
-    private static HashMap<String, Gene> parsedGenes;
+    private static HashMap<String, Gene> parsedGenes = new HashMap<>();
 
     /**
      * Reads in file at given path and parses each line
@@ -45,6 +46,10 @@ public class Parser {
      */
     public static void removeParsedGenes() {
         parsedGenes = new HashMap<>();
+    }
+
+    public static HashMap<String, Gene> getParsedGenesMap() {
+        return parsedGenes;
     }
 
     /**
@@ -188,9 +193,5 @@ public class Parser {
             if (gene.getEndNucleotide() < exon.getEndNucleotide())
                 gene.setEndNucleotide(exon.getEndNucleotide());
         }
-    }
-
-    public static HashMap<String, Gene> getParsedGenes() {
-        return parsedGenes;
     }
 }

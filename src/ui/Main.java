@@ -9,16 +9,20 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import json.SessionIO;
 import ui.controllers.*;
 import ui.mediator.ControllerMediator;
+
+import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 
 
 public class Main extends Application {
     private static final float SCALE_FACTOR = 0.7f;
-    private static final Image logo = new Image("ui/resources/icons/RNA-ScoopIcon3.png");
+    private static final Image logo = new Image("ui/resources/icons/RNA-ScoopIcon.png");
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage window) throws Exception{
         FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("fxml/main/main.fxml"));
         FXMLLoader consoleLoader = new FXMLLoader(getClass().getResource("fxml/main/console.fxml"));
         FXMLLoader isoformPlotLoader = new FXMLLoader(getClass().getResource("fxml/main/isoformplot.fxml"));
@@ -34,7 +38,8 @@ public class Main extends Application {
         registerControllers(mainLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
                             tSNEPlotLoader.getController(), geneSelectorLoader.getController());
         ControllerMediator.getInstance().initializeMain(console, isoformPlot, tSNEPlot);
-        setUpStage(primaryStage, root);
+        loadPreviousSession();
+        setUpWindow(window, root);
     }
 
     /**
@@ -49,12 +54,42 @@ public class Main extends Application {
         ControllerMediator.getInstance().registerGeneSelectorController(geneSelectorController);
     }
 
-    private void setUpStage(Stage primaryStage, BorderPane root) {
-        primaryStage.setTitle("RNA-Scoop");
-        primaryStage.getIcons().add(logo);
+    /**
+     * Sets up main window
+     * Makes it so current session is saved after user clicks X button
+     */
+    private void setUpWindow(Stage window, BorderPane root) {
+        window.setTitle("RNA-Scoop");
+        window.getIcons().add(logo);
+        setWindowSize(window, root);
+        window.setOnCloseRequest(event -> {
+            try {
+                SessionIO.saveSession();
+            } catch (IOException e) {
+                System.err.println("An error occurred while saving the current session");
+                e.printStackTrace();
+            }
+        });
+        window.show();
+    }
+
+    /**
+     * Attempts to load a saved previous session; if can't the default view is displayed
+     */
+    private void loadPreviousSession() {
+        try {
+            SessionIO.loadSession();
+        } catch (NoSuchFileException e) {
+            System.out.println("No saved sessions found. Opening up default view");
+        } catch (IOException e) {
+            System.err.println("An error occurred while loading a saved session");
+            e.printStackTrace();
+        }
+    }
+
+    private void setWindowSize(Stage primaryStage, BorderPane root) {
         Rectangle2D screen = Screen.getPrimary().getBounds();
         primaryStage.setScene(new Scene(root, screen.getWidth() * SCALE_FACTOR, screen.getHeight() * SCALE_FACTOR));
-        primaryStage.show();
     }
 
     public static void main(String[] args) {

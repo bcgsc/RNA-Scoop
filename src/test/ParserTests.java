@@ -41,7 +41,7 @@ public class ParserTests {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        genes = Parser.getParsedGenes();
+        genes = Parser.getParsedGenesMap();
     }
 
     @Test

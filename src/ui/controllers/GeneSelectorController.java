@@ -22,7 +22,7 @@ import java.util.*;
 public class GeneSelectorController implements Initializable, InteractiveElementController {
 
     private static final float GENE_SELECTOR_SCALE_FACTOR = 0.40f;
-    private static final Image logo = new Image("ui/resources/icons/RNA-ScoopIcon2.png");
+    private static final Image logo = new Image("ui/resources/icons/RNA-ScoopIcon.png");
 
     @FXML private VBox geneSelector;
     @FXML private GridPane gridPane;
@@ -35,7 +35,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
 
     private Stage window;
     private List<Gene> genes;
-    private List<Gene> selectedGenes;
+    private List<Gene> shownGenes;
 
     /**
      * Sets up grid pane, window, gene and shown gene tables
@@ -82,12 +82,15 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     }
 
     /**
-     * Clears all genes in shown genes table, and tells the isoform plot
-     * about the changes
+     * Clears all genes in shown genes table, and clears the isoform plot
      */
-    public void clearShownGenes() {
-        selectedGenes.clear();
-        ControllerMediator.getInstance().setIsoformPlotShownGenes(selectedGenes);
+    public void clearSelectedGenes() {
+        shownGenes.clear();
+        ControllerMediator.getInstance().clearIsoformPlot();
+    }
+
+    public Collection<Gene> getShownGenes() {
+        return shownGenes;
     }
 
     /**
@@ -95,13 +98,12 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      */
     public void updateGenes() {
         genes.clear();
-        genes.addAll(Parser.getParsedGenes().values());
+        genes.addAll(Parser.getParsedGenesMap().values());
         genes.sort(Gene::compareTo);
     }
 
     /**
-     * Adds genes selected in genes table to shown genes table, and tells the isoform plot
-     * about the changes
+     * Adds genes selected in genes table to shown genes table and draws them
      */
     @FXML
     protected void handleAddSelectedButtonAction() {
@@ -109,11 +111,11 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         try {
             ObservableList<Gene> genesToAdd = genesTable.getSelectionModel().getSelectedItems();
             for (Gene gene : genesToAdd) {
-                if (!selectedGenes.contains(gene))
-                    selectedGenes.add(gene);
+                if (!shownGenes.contains(gene))
+                    shownGenes.add(gene);
             }
-            selectedGenes.sort(Gene::compareTo);
-            ControllerMediator.getInstance().setIsoformPlotShownGenes(selectedGenes);
+            shownGenes.sort(Gene::compareTo);
+            ControllerMediator.getInstance().drawGenes(shownGenes);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding selected genes");
             e.printStackTrace();
@@ -124,15 +126,15 @@ public class GeneSelectorController implements Initializable, InteractiveElement
 
     /**
      * Removes genes selected in shown genes table from shown genes table,
-     * and tells the isoform plot about the changes
+     * and redraws the isoform plot
      */
     @FXML
     protected void handleRemoveSelectedButtonAction() {
         disableAssociatedFunctionality();
         try {
             ObservableList<Gene> genesToRemove = shownGenesTable.getSelectionModel().getSelectedItems();
-            selectedGenes.removeAll(genesToRemove);
-            ControllerMediator.getInstance().setIsoformPlotShownGenes(selectedGenes);
+            shownGenes.removeAll(genesToRemove);
+            ControllerMediator.getInstance().drawGenes(shownGenes);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("removing selected genes");
         } finally {
@@ -140,15 +142,11 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         }
     }
 
-    /**
-     * Removes all genes in shown genes table from shown genes table,
-     * and tells the isoform plot about the changes
-     */
     @FXML
     protected void handleClearAllButtonAction() {
         disableAssociatedFunctionality();
         try {
-            clearShownGenes();
+            clearSelectedGenes();
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("clearing shown genes");
         } finally {
@@ -157,16 +155,15 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     }
 
     /**
-     * Adds all genes to shown genes table, and tells the isoform plot
-     * about the changes
+     * Adds all genes to shown genes table and draws them
      */
     @FXML
     protected void handleAddAllButtonAction() {
         disableAssociatedFunctionality();
         try {
-            selectedGenes.clear();
-            selectedGenes.addAll(genes);
-            ControllerMediator.getInstance().setIsoformPlotShownGenes(selectedGenes);
+            shownGenes.clear();
+            shownGenes.addAll(genes);
+            ControllerMediator.getInstance().drawGenes(shownGenes);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding all genes");
         } finally {
@@ -213,8 +210,8 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      */
     private void setUpShownGenesTableView() {
         shownGenesTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        selectedGenes = FXCollections.observableArrayList();
-        shownGenesTable.setItems((ObservableList) selectedGenes);
+        shownGenes = FXCollections.observableArrayList();
+        shownGenesTable.setItems((ObservableList) shownGenes);
         TableColumn<Gene,String> geneIDCol = new TableColumn("Gene ID");
         geneIDCol .setCellValueFactory(new PropertyValueFactory("id"));
         TableColumn<Gene,String> geneName = new TableColumn("Gene Name");
@@ -231,9 +228,8 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     private void setUpWindow() {
         window = new Stage();
         window.setTitle("RNA-Scoop - Gene Selector");
-        Rectangle2D screen = Screen.getPrimary().getBounds();
-        window.setScene(new Scene(geneSelector, screen.getWidth() * GENE_SELECTOR_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_SCALE_FACTOR));
         window.getIcons().add(logo);
+        setWindowSize();
         window.setOnCloseRequest(event -> {
             event.consume();
             window.hide();
@@ -252,5 +248,10 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableTSNEPlot();
+    }
+
+    private void setWindowSize() {
+        Rectangle2D screen = Screen.getPrimary().getBounds();
+        window.setScene(new Scene(geneSelector, screen.getWidth() * GENE_SELECTOR_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_SCALE_FACTOR));
     }
 }

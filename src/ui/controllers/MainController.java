@@ -2,13 +2,13 @@ package ui.controllers;
 
 import exceptions.RNAScoopException;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -23,9 +23,10 @@ import static javafx.application.Platform.*;
 public class MainController implements InteractiveElementController {
 
     private static final float ABOUT_SCALE_FACTOR = 0.33f;
+    private static final Image logo = new Image("ui/resources/icons/RNA-ScoopIcon.png");
 
     @FXML private BorderPane window;
-    @FXML private ComboBox path;
+    @FXML private ComboBox pathComboBox;
     @FXML private Button loadButton;
     @FXML private Menu viewMenu;
     @FXML private MenuItem tSNEToggle;
@@ -34,13 +35,15 @@ public class MainController implements InteractiveElementController {
     @FXML private SplitPane verticalSplitPane;
     @FXML private SplitPane horizontalSplitPane;
 
-    private boolean tSNEPlotOpen;
-    private boolean consoleOpen;
-    private boolean isoformPlotOpen;
+    private boolean tSNEPlotIsOpen;
+    private boolean consoleIsOpen;
+    private boolean isoformPlotIsOpen;
+    private String currentLoadedPath;
 
     public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
         addPanels(console, isoformPlot, tSNEPlot);
         setUpPathComboBox();
+        currentLoadedPath = null;
     }
 
     public void disable() {
@@ -51,6 +54,63 @@ public class MainController implements InteractiveElementController {
     public void enable() {
         loadButton.setDisable(false);
         viewMenu.setDisable(false);
+    }
+
+    public void openIsoformPlot() {
+        horizontalSplitPane.getItems().add(0, ControllerMediator.getInstance().getIsoformPlot());
+        isoformPlotToggle.setText("Close Isoform Plot");
+        isoformPlotIsOpen = true;
+    }
+
+    public void closeIsoformPlot() {
+        horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getIsoformPlot());
+        isoformPlotToggle.setText("Open Isoform Plot");
+        isoformPlotIsOpen = false;
+    }
+
+    public void openTSNEPlot() {
+        horizontalSplitPane.getItems().add(ControllerMediator.getInstance().getTSNEPlot());
+        tSNEToggle.setText("Close t-SNE Plot");
+        tSNEPlotIsOpen = true;
+    }
+
+    public void closeTSNEPlot() {
+        horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getTSNEPlot());
+        tSNEToggle.setText("Open t-SNE Plot");
+        tSNEPlotIsOpen = false;
+    }
+
+    public void openConsole() {
+        verticalSplitPane.getItems().add(1, ControllerMediator.getInstance().getConsole());
+        verticalSplitPane.setDividerPosition(0, 1);
+        consoleToggle.setText("Close Console");
+        consoleIsOpen = true;
+    }
+
+    public void closeConsole() {
+        verticalSplitPane.getItems().remove(ControllerMediator.getInstance().getConsole());
+        consoleToggle.setText("Open Console");
+        consoleIsOpen = false;
+    }
+
+    public boolean isTSNEPlotOpen() {
+        return tSNEPlotIsOpen;
+    }
+
+    public boolean isConsoleOpen() {
+        return consoleIsOpen;
+    }
+
+    public boolean isIsoformPlotOpen() {
+        return isoformPlotIsOpen;
+    }
+
+    public void setPathComboBoxValue(String path) {
+        pathComboBox.setValue(path);
+    }
+
+    public String getCurrentLoadedPath() {
+        return  currentLoadedPath;
     }
 
     /**
@@ -67,14 +127,10 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleIsoformViewToggle() {
-        if (isoformPlotOpen) {
-            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getIsoformPlot());
-            isoformPlotToggle.setText("Open Isoform Plot");
-            isoformPlotOpen = false;
+        if (isoformPlotIsOpen) {
+            closeIsoformPlot();
         } else {
-            horizontalSplitPane.getItems().add(0, ControllerMediator.getInstance().getIsoformPlot());
-            isoformPlotToggle.setText("Close Isoform Plot");
-            isoformPlotOpen = true;
+            openIsoformPlot();
         }
     }
 
@@ -83,14 +139,10 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleTSNEViewToggle() {
-        if (tSNEPlotOpen) {
-            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getTSNEPlot());
-            tSNEToggle.setText("Open t-SNE Plot");
-            tSNEPlotOpen = false;
+        if (tSNEPlotIsOpen) {
+            closeTSNEPlot();
         } else {
-            horizontalSplitPane.getItems().add(ControllerMediator.getInstance().getTSNEPlot());
-            tSNEToggle.setText("Close t-SNE Plot");
-            tSNEPlotOpen = true;
+            openTSNEPlot();
         }
     }
 
@@ -107,15 +159,10 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleConsoleViewToggle() {
-        if (consoleOpen) {
-            verticalSplitPane.getItems().remove(ControllerMediator.getInstance().getConsole());
-            consoleToggle.setText("Open Console");
-            consoleOpen = false;
+        if (consoleIsOpen) {
+            closeConsole();
         } else {
-            verticalSplitPane.getItems().add(1, ControllerMediator.getInstance().getConsole());
-            verticalSplitPane.setDividerPosition(0, 1);
-            consoleToggle.setText("Close Console");
-            consoleOpen = true;
+            openConsole();
         }
     }
 
@@ -128,6 +175,7 @@ public class MainController implements InteractiveElementController {
             stage.setTitle("About");
             Rectangle2D screen = Screen.getPrimary().getBounds();
             stage.setScene(new Scene(root, screen.getWidth() * ABOUT_SCALE_FACTOR, screen.getHeight() * ABOUT_SCALE_FACTOR));
+            stage.getIcons().add(logo);
             stage.show();
         }
         catch (IOException e) {
@@ -144,14 +192,14 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleLoadButtonAction() {
-        ControllerMediator.getInstance().clearShownGenes();
+        ControllerMediator.getInstance().clearSelectedGenes();
         disableAssociatedFunctionality();
         try {
             Thread fileLoaderThread = new Thread(new FileLoaderThread());
             fileLoaderThread.start();
         } catch (Exception e) {
             enableAssociatedFunctionality();
-            ControllerMediator.getInstance().addConsoleErrorMessage("reading file from path: " + path.getValue());
+            ControllerMediator.getInstance().addConsoleErrorMessage("reading file from path: " + pathComboBox.getValue());
         }
     }
 
@@ -178,18 +226,23 @@ public class MainController implements InteractiveElementController {
         @Override
         public void run() {
             try {
-                runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + path.getValue()));
-                Parser.readFile((String) path.getValue());
-                runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + path.getValue()));
-                runLater(MainController.this::addLoadedPaths);
+                String filePath = (String) pathComboBox.getValue();
+                runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + filePath));
+                Parser.readFile(filePath);
+                runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + filePath));
+                currentLoadedPath = filePath;
+                runLater(MainController.this::addLoadedPath);
             } catch (RNAScoopException e){
                 Parser.removeParsedGenes();
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
+                currentLoadedPath = null;
             } catch (FileNotFoundException e) {
-                runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage("Could not find file at path: " + path.getValue()));
+                runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage("Could not find file at path: " + pathComboBox.getValue()));
+                currentLoadedPath = null;
             } catch (Exception e) {
                 Parser.removeParsedGenes();
-                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("reading file from path: " + path.getValue()));
+                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("reading file from path: " + pathComboBox.getValue()));
+                currentLoadedPath = null;
             } finally {
                 runLater(() -> ControllerMediator.getInstance().updateGenes());
                 runLater(MainController.this::enableAssociatedFunctionality);
@@ -206,9 +259,9 @@ public class MainController implements InteractiveElementController {
         horizontalSplitPane.getItems().add(isoformPlot);
         horizontalSplitPane.getItems().add(tSNEPlot);
         verticalSplitPane.getItems().add(console);
-        tSNEPlotOpen = true;
-        consoleOpen = true;
-        isoformPlotOpen = true;
+        tSNEPlotIsOpen = true;
+        consoleIsOpen = true;
+        isoformPlotIsOpen = true;
     }
 
     /**
@@ -216,14 +269,14 @@ public class MainController implements InteractiveElementController {
      * initial focus from path combo box
      */
     private void setUpPathComboBox() {
-        window.widthProperty().addListener((observable, oldValue, newValue) -> path.setPrefWidth(window.getWidth() - 85));
+        window.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(window.getWidth() - 85));
         runLater(() -> window.requestFocus());
     }
 
-    private void addLoadedPaths() {
-        ObservableList<String> addedPaths = path.getItems();
-        if (!addedPaths.contains(path.getValue())) {
-            addedPaths.add((String) path.getValue());
+    private void addLoadedPath() {
+        ObservableList<String> addedPaths = pathComboBox.getItems();
+        if (!addedPaths.contains(currentLoadedPath)) {
+            addedPaths.add((String) pathComboBox.getValue());
         }
     }
 }

@@ -151,8 +151,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 throw new TSNeDataFileNotFoundException();
             if (urlToLabelsFile == null)
                 throw new TSNELabelsFileNotFoundException();
-            dataFile = new File(urlToDataFile.getFile());
-            labelsFile = new File(urlToLabelsFile.getFile());
+            dataFile = new File("mnist2500_X.txt");
+            labelsFile = new File("mnist2500_labels_int.txt");
         }
 
         private double [][] generateTSNEMatrix() throws TSNEInvalidPerplexityException {

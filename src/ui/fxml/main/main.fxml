@@ -34,7 +34,7 @@
                 <VBox.margin>
                     <Insets top="10" left="10"/>
                 </VBox.margin>
-                <ComboBox fx:id="path" editable="true" prefWidth="1200" promptText="Insert path to file here"/>
+                <ComboBox fx:id="pathComboBox" editable="true" prefWidth="1200" promptText="Insert path to file here"/>
                 <Button fx:id="loadButton" onAction="#handleLoadButtonAction" prefWidth="60" text="Load">
                     <HBox.margin>
                         <Insets left="5"/>
