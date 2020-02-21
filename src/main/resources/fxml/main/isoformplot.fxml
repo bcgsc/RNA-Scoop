@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<VBox fx:controller="controller.IsoformPlotController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:id="isoformPlot" style="-fx-background-color: #fafafa;">
+    <HBox>
+        <VBox.margin>
+            <Insets left="10" right="10" top="10"/>
+        </VBox.margin>
+        <Button fx:id="selectGenesButton" text="Select Genes" onAction="#handleSelectGenesButtonAction"/>
+    </HBox>
+    <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585"
+                style="-fx-background: #ffffff; -fx-border-color: #adadad;">
+        <VBox.margin>
+            <Insets topRightBottomLeft="10"/>
+        </VBox.margin>
+        <VBox alignment="CENTER">
+            <Canvas fx:id="canvas">
+                <VBox.margin>
+                    <Insets topRightBottomLeft="15"/>
+                </VBox.margin>
+            </Canvas>
+        </VBox>
+    </ScrollPane>
+</VBox>
