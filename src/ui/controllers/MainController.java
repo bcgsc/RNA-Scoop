@@ -150,11 +150,14 @@ public class MainController implements InteractiveElementController {
 
     /**
      * When open file chooser button is pressed, opens file chooser
+     * Gene selector is disabled when user is choosing file
      * The chosen file's path given to the path combo box, and the file is loaded
      */
     @FXML
     protected void handleOpenFileChooserButton() {
+        ControllerMediator.getInstance().disableGeneSelector();
         File file = fileChooser.showOpenDialog(window);
+        ControllerMediator.getInstance().enableGeneSelector();
         if (file != null) {
             pathComboBox.setValue(file.getAbsolutePath());
             loadFile();
