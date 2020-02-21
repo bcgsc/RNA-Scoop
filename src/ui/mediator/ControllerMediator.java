@@ -2,6 +2,7 @@ package ui.mediator;
 
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.stage.Stage;
 import parser.data.Gene;
 import ui.controllers.GeneSelectorController;
 import ui.controllers.ConsoleController;
@@ -45,8 +46,8 @@ public class ControllerMediator implements Mediator{
     }
 
     // Change Main Display
-    public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
-        mainController.initializeMain(console, isoformPlot, tSNEPlot);
+    public void initializeMain(Stage window, Parent console, Parent isoformPlot, Parent tSNEPlot) {
+        mainController.initializeMain(window, console, isoformPlot, tSNEPlot);
     }
 
     public void openIsoformPlot() {

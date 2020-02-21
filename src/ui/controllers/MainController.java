@@ -2,6 +2,7 @@ package ui.controllers;
 
 import exceptions.RNAScoopException;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -13,11 +14,15 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import parser.Parser;
 import ui.mediator.ControllerMediator;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -28,9 +33,9 @@ public class MainController implements InteractiveElementController {
     private static final float ABOUT_SCALE_FACTOR = 0.33f;
     private static final Image logo = new Image("ui/resources/icons/RNA-ScoopIcon.png");
 
-    @FXML private BorderPane window;
+    @FXML private BorderPane borderPane;
     @FXML private ComboBox pathComboBox;
-    @FXML private Button openFileLoaderButton;
+    @FXML private Button openFileChooserButton;
     @FXML private Menu viewMenu;
     @FXML private MenuItem tSNEToggle;
     @FXML private MenuItem isoformPlotToggle;
@@ -38,25 +43,29 @@ public class MainController implements InteractiveElementController {
     @FXML private SplitPane verticalSplitPane;
     @FXML private SplitPane horizontalSplitPane;
 
+    private Stage window;
+    private FileChooser fileChooser;
     private boolean tSNEPlotIsOpen;
     private boolean consoleIsOpen;
     private boolean isoformPlotIsOpen;
     private String currentLoadedPath;
 
-    public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
+    public void initializeMain(Stage window, Parent console, Parent isoformPlot, Parent tSNEPlot) {
+        this.window = window;
+        fileChooser = new FileChooser();
         addPanels(console, isoformPlot, tSNEPlot);
         setUpPathComboBox();
         currentLoadedPath = null;
     }
 
     public void disable() {
-        openFileLoaderButton.setDisable(true);
+        openFileChooserButton.setDisable(true);
         viewMenu.setDisable(true);
         pathComboBox.setDisable(true);
     }
 
     public void enable() {
-        openFileLoaderButton.setDisable(false);
+        openFileChooserButton.setDisable(false);
         viewMenu.setDisable(false);
         pathComboBox.setDisable(false);
     }
@@ -136,6 +145,19 @@ public class MainController implements InteractiveElementController {
             closeIsoformPlot();
         } else {
             openIsoformPlot();
+        }
+    }
+
+    /**
+     * When open file chooser button is pressed, opens file chooser
+     * The chosen file's path given to the path combo box, and the file is loaded
+     */
+    @FXML
+    protected void handleOpenFileChooserButton() {
+        File file = fileChooser.showOpenDialog(window);
+        if (file != null) {
+            pathComboBox.setValue(file.getAbsolutePath());
+            loadFile();
         }
     }
 
@@ -279,13 +301,15 @@ public class MainController implements InteractiveElementController {
      * Removes initial focus from path combo box
      */
     private void setUpPathComboBox() {
-        window.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(window.getWidth() - 95));
+        borderPane.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(window.getWidth() - 95));
         setUpPathComboBoxDragNDrop();
-        window.setOnKeyPressed(event -> {
+        // adds listener to border pane so that focus can be on any or no elements and
+        // the key press is still registered
+        borderPane.setOnKeyPressed(event -> {
             if (event.getCode().equals(KeyCode.ENTER))
                 loadFile();
         });
-        runLater(() -> window.requestFocus());
+        runLater(() -> borderPane.requestFocus());
     }
 
     /**

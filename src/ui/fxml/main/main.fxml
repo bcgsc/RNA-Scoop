@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ui.controllers.MainController"
-            fx:id="window" style="-fx-background-color: #fcfcfc;">
+            fx:id="borderPane" style="-fx-background-color: #fcfcfc;">
     <top>
         <VBox>
             <BorderPane.margin>
@@ -35,7 +35,7 @@
                     <Insets top="10" left="10"/>
                 </VBox.margin>
                 <ComboBox fx:id="pathComboBox" editable="true" prefWidth="1200" promptText="Insert path to file here"/>
-                <Button fx:id="openFileLoaderButton" prefWidth="70" text="Open...">
+                <Button fx:id="openFileChooserButton" onAction="#handleOpenFileChooserButton" prefWidth="70" text="Open...">
                     <HBox.margin>
                         <Insets left="5"/>
                     </HBox.margin>

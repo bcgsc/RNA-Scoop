@@ -37,7 +37,7 @@ public class Main extends Application {
 
         registerControllers(mainLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
                             tSNEPlotLoader.getController(), geneSelectorLoader.getController());
-        ControllerMediator.getInstance().initializeMain(console, isoformPlot, tSNEPlot);
+        ControllerMediator.getInstance().initializeMain(window, console, isoformPlot, tSNEPlot);
         loadPreviousSession();
         setUpWindow(window, root);
     }
