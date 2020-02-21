@@ -111,8 +111,8 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.drawGenes(genes);
     }
 
-    public void clearSelectedGenes() {
-        geneSelectorController.clearSelectedGenes();
+    public void clearShownGenes() {
+        geneSelectorController.clearShownGenes();
     }
 
     //Display t-SNE

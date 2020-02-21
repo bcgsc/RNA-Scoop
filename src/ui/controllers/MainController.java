@@ -2,7 +2,6 @@ package ui.controllers;
 
 import exceptions.RNAScoopException;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -10,8 +9,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Screen;
@@ -31,7 +30,7 @@ public class MainController implements InteractiveElementController {
 
     @FXML private BorderPane window;
     @FXML private ComboBox pathComboBox;
-    @FXML private Button loadButton;
+    @FXML private Button openFileLoaderButton;
     @FXML private Menu viewMenu;
     @FXML private MenuItem tSNEToggle;
     @FXML private MenuItem isoformPlotToggle;
@@ -51,13 +50,15 @@ public class MainController implements InteractiveElementController {
     }
 
     public void disable() {
-        loadButton.setDisable(true);
+        openFileLoaderButton.setDisable(true);
         viewMenu.setDisable(true);
+        pathComboBox.setDisable(true);
     }
 
     public void enable() {
-        loadButton.setDisable(false);
+        openFileLoaderButton.setDisable(false);
         viewMenu.setDisable(false);
+        pathComboBox.setDisable(false);
     }
 
     public void openIsoformPlot() {
@@ -188,15 +189,13 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * When load button is pressed, parses path to file and retrieves parsed genes
-     * Clears isoform plot and shown genes in genes selector
-     * Updates genes selector's genes
-     * Adds file path to path's list of previous file paths
+     * Clears t-SNE plot, all genes being shown in isoform plot, and disables associated functionality
+     * Loads file from path in path combo box on different thread
      * Displays error (and successful completion) messages in console
      */
-    @FXML
-    protected void handleLoadButtonAction() {
-        ControllerMediator.getInstance().clearSelectedGenes();
+    private void loadFile() {
+        ControllerMediator.getInstance().clearShownGenes();
+        ControllerMediator.getInstance().clearTSNEPlot();
         disableAssociatedFunctionality();
         try {
             Thread fileLoaderThread = new Thread(new FileLoaderThread());
@@ -209,7 +208,6 @@ public class MainController implements InteractiveElementController {
 
     private void disableAssociatedFunctionality() {
         disable();
-        ControllerMediator.getInstance().clearTSNEPlot();
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableTSNEPlot();
@@ -227,6 +225,12 @@ public class MainController implements InteractiveElementController {
      */
     private class FileLoaderThread implements Runnable {
 
+        /**
+         * Loads file from path in path combo box
+         * If the file is successfully loaded, sets the path as the current loaded path and adds it to
+         * the path combo box's list of loaded paths
+         * Writes messages to the console
+         */
         @Override
         public void run() {
             try {
@@ -269,13 +273,32 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Automatically resizes path combo box when window is resized, removes
-     * initial focus from path combo box, allows dragging and dropping of files
+     * Automatically resizes path combo box when window is resized
+     * Allows dragging and dropping of files
+     * Makes it so files are loaded from path in combo box when ENTER is pressed
+     * Removes initial focus from path combo box
      */
     private void setUpPathComboBox() {
-        window.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(window.getWidth() - 85));
+        window.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(window.getWidth() - 95));
         setUpPathComboBoxDragNDrop();
+        window.setOnKeyPressed(event -> {
+            if (event.getCode().equals(KeyCode.ENTER))
+                loadFile();
+        });
         runLater(() -> window.requestFocus());
+    }
+
+    /**
+     * Puts current loaded path at the first position in the path combo box's
+     * list of paths, and selects it
+     */
+    private void addLoadedPath() {
+        ObservableList<String> addedPaths = pathComboBox.getItems();
+        if (addedPaths.contains(currentLoadedPath)) {
+            addedPaths.remove(currentLoadedPath);
+        }
+        addedPaths.add(0, currentLoadedPath);
+        pathComboBox.getSelectionModel().select(0);
     }
 
     /**
@@ -299,12 +322,5 @@ public class MainController implements InteractiveElementController {
                 pathComboBox.setValue(db.getFiles().get(0).getAbsolutePath());
             event.consume();
         });
-    }
-
-    private void addLoadedPath() {
-        ObservableList<String> addedPaths = pathComboBox.getItems();
-        if (!addedPaths.contains(currentLoadedPath)) {
-            addedPaths.add((String) pathComboBox.getValue());
-        }
     }
 }

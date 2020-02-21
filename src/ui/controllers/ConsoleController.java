@@ -24,9 +24,9 @@ public class ConsoleController implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         consoleMessage.setStyle("-fx-line-spacing: 0.85em;");
-        consoleMessage.getChildren().add(new Text(FIRST_MESSAGE_INDICATOR + "Welcome to RNA-Scoop!"));
         lastMessageIsError = false;
-        consoleIsCleared = false;
+        consoleIsCleared = true;
+        addConsoleMessage("Welcome to RNA-Scoop!");
     }
 
     public void addConsoleMessage(String message) {
@@ -46,9 +46,9 @@ public class ConsoleController implements Initializable{
     }
 
     /**
-     * Adds an error message to the console which telling the user an
-     * unexpected error occurred when doing some action
-     * @param action the action the program was doing when the error occurred
+     * Adds an error message to the console telling the user an unexpected
+     * error occurred when doing some action
+     * @param action the action happening when the error occurred
      */
     public void addConsoleUnexpectedErrorMessage(String action) {
         addFirstAndErrorMessageIndicators();
@@ -89,7 +89,7 @@ public class ConsoleController implements Initializable{
         if (lastMessageIsError)
             firstMessage = (Text) consoleMessage.getChildren().get(numMessages - 3);
         else
-            firstMessage = (Text) consoleMessage.getChildren().get(numMessages - 1);
+            firstMessage = (Text) consoleMessage.getChildren().get(numMessages - 2);
         firstMessage.setText(firstMessage.getText().replaceFirst(FIRST_MESSAGE_INDICATOR, ""));
     }
 
