@@ -2,7 +2,6 @@ package annotation;
 
 
 import java.util.HashMap;
-import java.util.Objects;
 
 public class Gene implements Comparable<Gene> {
 
@@ -11,20 +10,6 @@ public class Gene implements Comparable<Gene> {
      * Key is transcript ID, value is the isoform
      */
     private HashMap<String, Isoform> isoforms;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Gene gene = (Gene) o;
-        return Objects.equals(name, gene.name) &&
-                Objects.equals(id, gene.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, id);
-    }
 
     private String name;
     private String id;
@@ -93,7 +78,7 @@ public class Gene implements Comparable<Gene> {
         return chromosome;
     }
 
-    public boolean isPositiveSense() {
+    public boolean isOnPositiveStrand() {
         return isPositiveSense;
     }
 

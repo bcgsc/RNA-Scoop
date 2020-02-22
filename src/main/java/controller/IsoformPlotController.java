@@ -1,23 +1,27 @@
 package controller;
 
+import annotation.Exon;
+import annotation.Gene;
+import annotation.Isoform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import annotation.Exon;
-import annotation.Gene;
-import annotation.Isoform;
 import mediator.ControllerMediator;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.ResourceBundle;
 
 public class IsoformPlotController implements Initializable, InteractiveElementController {
     private static final int CANVAS_MIN_WIDTH = 250;
@@ -38,6 +42,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     @FXML private ScrollPane scrollPane;
     @FXML private VBox isoformPlot;
     @FXML private Button selectGenesButton;
+    @FXML private CheckBox showNameCheckBox;
 
     private GraphicsContext gc;
     private boolean reverseComplement;
@@ -102,6 +107,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
+     * When show name check box is clicked, redraws genes
+     */
+    @FXML
+    protected void handleShowNameCheckBox() {
+        drawGenes(ControllerMediator.getInstance().getShownGenes());
+    }
+
+    /**
      * Adds listener to resize canvas width when scroll pane width changes
      * (unless scroll pane width < MIN_CANVAS_WIDTH)
      * Redraws canvas when resize occurs and gene is being displayed
@@ -138,20 +151,20 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Draws label for gene - gene name if exists, else gene ID
+     * Draws label for gene
+     * If show name check box is checked and gene has a name, includes it in label
+     * If reverse complement option is selected, includes the strand the gene is on in label
      */
     private void drawGeneLabel(Gene gene) {
         gc.setFill(FONT_COLOUR);
         gc.setFont(GENE_FONT);
 
-        String label;
+        String label = gene.getId();
         String name = gene.getName();
-        if (name != null)
-            label = name;
-        else
-            label = gene.getId();
+        if (name != null && showNameCheckBox.isSelected())
+            label += " (" + name + ")";
 
-        if (gene.isPositiveSense() && reverseComplement)
+        if (gene.isOnPositiveStrand() && reverseComplement)
             gc.fillText(label + " (+)", GENE_ID_X_OFFSET, canvasCurrY);
         else if (reverseComplement)
             gc.fillText(label + " (-)", GENE_ID_X_OFFSET, canvasCurrY);
@@ -173,7 +186,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             Isoform isoform = gene.getIsoform(isoformID);
             drawIsoformLabel(isoform, isoformID);
             canvasCurrY += SPACING / 3;
-            if(gene.isPositiveSense() || !reverseComplement)
+            if(gene.isOnPositiveStrand() || !reverseComplement)
                 drawIsoform(isoform, geneStart, pixelsPerNucleotide);
             else
                 drawIsoformReverseComplement(isoform, geneEnd, pixelsPerNucleotide);
@@ -183,14 +196,13 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     /**
      * Draws label for isoform - isoform name if exists, else isoform ID
+     * If show name check box is checked and isoform has a name, includes it in label
      */
     private void drawIsoformLabel(Isoform isoform, String isoformID) {
-        String label;
+        String label = isoformID;
         String name = isoform.getName();
-        if (name != null)
-            label = name;
-        else
-            label = isoformID;
+        if (name != null && showNameCheckBox.isSelected())
+            label += " ( " + name + ")";
         gc.setFont(TRANSCRIPT_FONT);
         gc.setFill(FONT_COLOUR);
         gc.fillText(label, ISOFORM_X_OFFSET, canvasCurrY);
@@ -288,5 +300,4 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         java.util.Collections.sort(list);
         return list;
     }
-
 }

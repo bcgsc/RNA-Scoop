@@ -41,7 +41,7 @@ public class SessionIO {
 
     private static class SessionMaker {
         private static final String PATH_KEY = "path";
-        private static final String ISOFORM_PLOT_OPEN_KEY = "isoform plot open";
+        private static final String ISOFORM_PLOT_OPEN_KEY = "isoform open";
         private static final String TSNE_PLOT_OPEN_KEY = "t-sne open";
         private static final String CONSOLE_OPEN_KEY = "console open";
 

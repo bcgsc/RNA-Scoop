@@ -55,7 +55,7 @@ public class ParserTests {
                 case GENE_0:
                     assertEquals(GENE_0_NAME, gene.getName());
                     assertEquals("1", gene.getChromosome());
-                    assertTrue(gene.isPositiveSense());
+                    assertTrue(gene.isOnPositiveStrand());
                     assertEquals(3073253, gene.getStartNucleotide());
                     assertEquals(3074322, gene.getEndNucleotide());
                     parsedGene0 = true;
@@ -63,7 +63,7 @@ public class ParserTests {
                 case GENE_1:
                     assertEquals(GENE_1_NAME, gene.getName());
                     assertEquals("chr1", gene.getChromosome());
-                    assertFalse(gene.isPositiveSense());
+                    assertFalse(gene.isOnPositiveStrand());
                     assertEquals(3205901, gene.getStartNucleotide());
                     assertEquals(3671498, gene.getEndNucleotide());
                     parsedGene1 = true;
