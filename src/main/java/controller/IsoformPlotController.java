@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class IsoformPlotController implements Initializable, InteractiveElementController {
-    private static final int CANVAS_MIN_WIDTH = 250;
+    private static final int CANVAS_MIN_WIDTH = 400;
     private static final int CANVAS_INIT_Y = 13;
     private static final int GENE_ID_X_OFFSET = 0;
     private static final int ISOFORM_X_OFFSET = 13;
@@ -65,10 +65,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     public void disable() {
         selectGenesButton.setDisable(true);
+        showNameCheckBox.setDisable(true);
     }
 
     public void enable() {
         selectGenesButton.setDisable(false);
+        showNameCheckBox.setDisable(false);
     }
 
     public void clearCanvas() {
@@ -202,7 +204,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         String label = isoformID;
         String name = isoform.getName();
         if (name != null && showNameCheckBox.isSelected())
-            label += " ( " + name + ")";
+            label += " (" + name + ")";
         gc.setFont(TRANSCRIPT_FONT);
         gc.setFill(FONT_COLOUR);
         gc.fillText(label, ISOFORM_X_OFFSET, canvasCurrY);
