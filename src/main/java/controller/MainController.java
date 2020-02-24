@@ -4,31 +4,24 @@ import exceptions.RNAScoopException;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
-import parser.Parser;
 import mediator.ControllerMediator;
+import parser.Parser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import static javafx.application.Platform.*;
+import static javafx.application.Platform.runLater;
 
 public class MainController implements InteractiveElementController {
-
-    private static final float ABOUT_SCALE_FACTOR = 0.33f;
-    private static final Image logo = new Image("/icons/RNA-ScoopIcon.png");
 
     @FXML private BorderPane borderPane;
     @FXML private ComboBox pathComboBox;
@@ -193,17 +186,13 @@ public class MainController implements InteractiveElementController {
         }
     }
 
+    /**
+     * Loads About window when About button is pressed
+     */
     @FXML
     protected void handleAboutButtonAction() {
-        Parent root;
         try {
-            root = FXMLLoader.load(getClass().getResource("/fxml/about.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle("About");
-            Rectangle2D screen = Screen.getPrimary().getBounds();
-            stage.setScene(new Scene(root, screen.getWidth() * ABOUT_SCALE_FACTOR, screen.getHeight() * ABOUT_SCALE_FACTOR));
-            stage.getIcons().add(logo);
-            stage.show();
+           FXMLLoader.load(getClass().getResource("/fxml/about.fxml"));
         }
         catch (IOException e) {
             ControllerMediator.getInstance().addConsoleErrorMessage("Could not load about window");

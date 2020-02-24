@@ -11,6 +11,10 @@
                 <Insets bottom="10"/>
             </BorderPane.margin>
             <MenuBar>
+                <Menu text="File">
+                    <MenuItem text="Save Session"/>
+                    <MenuItem text="Load Previous Session"/>
+                </Menu>
                 <Menu text="View" fx:id="viewMenu">
                     <Menu text="Isoform Plot">
                         <CheckMenuItem onAction="#handleRevComplementToggle" text="Reverse Complement (-) Strand"/>
