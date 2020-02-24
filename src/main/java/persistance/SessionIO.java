@@ -15,7 +15,10 @@ import java.nio.file.Paths;
  * previous session information is saved
  */
 public class SessionIO {
-    private static final String PREV_SESSION_PATH = "./src/main/resources/json/prevsession.json";
+    private static final String USERS_HOME_DIR = System.getProperty("user.home");
+    private static final String SESSION_DIR_NAME = ".rnascoop";
+    private static final String PREV_SESSION_NAME = "prevsession.json";
+    private static final String PREV_SESSION_PATH = USERS_HOME_DIR + File.separator + SESSION_DIR_NAME + File.separator + PREV_SESSION_NAME;
     private static final File PREV_SESSION_FILE = new File(PREV_SESSION_PATH);
 
     /**
@@ -23,6 +26,11 @@ public class SessionIO {
      */
     public static void saveSession() throws IOException{
         JSONObject session = SessionMaker.makeSession();
+        if (!PREV_SESSION_FILE.exists()) {
+            File sessionDirectory = new File(USERS_HOME_DIR + File.separator + SESSION_DIR_NAME);
+            sessionDirectory.mkdir();
+            new File(PREV_SESSION_PATH);
+        }
         FileWriter fileWriter = new FileWriter(PREV_SESSION_PATH);
         fileWriter.write(session.toString());
         fileWriter.flush();
