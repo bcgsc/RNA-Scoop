@@ -14,10 +14,13 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
 import parser.Parser;
+import persistance.SessionIO;
+import persistance.SessionMaker;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 
 import static javafx.application.Platform.runLater;
 
@@ -27,6 +30,7 @@ public class MainController implements InteractiveElementController {
     @FXML private ComboBox pathComboBox;
     @FXML private Button openFileChooserButton;
     @FXML private Menu viewMenu;
+    @FXML private CheckMenuItem revComplementToggle;
     @FXML private MenuItem tSNEToggle;
     @FXML private MenuItem isoformPlotToggle;
     @FXML private MenuItem consoleToggle;
@@ -61,40 +65,52 @@ public class MainController implements InteractiveElementController {
     }
 
     public void openIsoformPlot() {
-        horizontalSplitPane.getItems().add(0, ControllerMediator.getInstance().getIsoformPlot());
-        isoformPlotToggle.setText("Close Isoform Plot");
-        isoformPlotIsOpen = true;
+        if (!isoformPlotIsOpen) {
+            horizontalSplitPane.getItems().add(0, ControllerMediator.getInstance().getIsoformPlot());
+            isoformPlotToggle.setText("Close Isoform Plot");
+            isoformPlotIsOpen = true;
+        }
     }
 
     public void closeIsoformPlot() {
-        horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getIsoformPlot());
-        isoformPlotToggle.setText("Open Isoform Plot");
-        isoformPlotIsOpen = false;
+        if (isoformPlotIsOpen) {
+            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getIsoformPlot());
+            isoformPlotToggle.setText("Open Isoform Plot");
+            isoformPlotIsOpen = false;
+        }
     }
 
     public void openTSNEPlot() {
-        horizontalSplitPane.getItems().add(ControllerMediator.getInstance().getTSNEPlot());
-        tSNEToggle.setText("Close t-SNE Plot");
-        tSNEPlotIsOpen = true;
+        if (!tSNEPlotIsOpen) {
+            horizontalSplitPane.getItems().add(ControllerMediator.getInstance().getTSNEPlot());
+            tSNEToggle.setText("Close t-SNE Plot");
+            tSNEPlotIsOpen = true;
+        }
     }
 
     public void closeTSNEPlot() {
-        horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getTSNEPlot());
-        tSNEToggle.setText("Open t-SNE Plot");
-        tSNEPlotIsOpen = false;
+        if (tSNEPlotIsOpen) {
+            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getTSNEPlot());
+            tSNEToggle.setText("Open t-SNE Plot");
+            tSNEPlotIsOpen = false;
+        }
     }
 
     public void openConsole() {
-        verticalSplitPane.getItems().add(1, ControllerMediator.getInstance().getConsole());
-        verticalSplitPane.setDividerPosition(0, 1);
-        consoleToggle.setText("Close Console");
-        consoleIsOpen = true;
+        if(!consoleIsOpen) {
+            verticalSplitPane.getItems().add(1, ControllerMediator.getInstance().getConsole());
+            verticalSplitPane.setDividerPosition(0, 1);
+            consoleToggle.setText("Close Console");
+            consoleIsOpen = true;
+        }
     }
 
     public void closeConsole() {
-        verticalSplitPane.getItems().remove(ControllerMediator.getInstance().getConsole());
-        consoleToggle.setText("Open Console");
-        consoleIsOpen = false;
+        if (consoleIsOpen) {
+            verticalSplitPane.getItems().remove(ControllerMediator.getInstance().getConsole());
+            consoleToggle.setText("Open Console");
+            consoleIsOpen = false;
+        }
     }
 
     public boolean isTSNEPlotOpen() {
@@ -117,6 +133,38 @@ public class MainController implements InteractiveElementController {
         return  currentLoadedPath;
     }
 
+    public void restoreMainFromJSON(Map settings) {
+        restoreIsoformPlotFromJSON(settings);
+        restoreTSNEPlotFromJSON(settings);
+        restoreConsoleFromJSON(settings);
+        restorePathComboBoxFromJSON(settings);
+        restoreReverseComplementFromJSON(settings);
+    }
+
+    @FXML
+    protected void handleSaveSessionButton() {
+        File file = getSavedFileFromFileChooser();
+        if (file != null) {
+            try {
+                SessionIO.saveSessionAtPath(file.getPath());
+            } catch (Exception e) {
+                ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("saving session at path: " + file.getPath());
+            }
+        }
+    }
+
+    @FXML
+    protected void handleLoadSessionButton() {
+        File file = getFileFromFileChooser();
+        if (file != null) {
+            try {
+                SessionIO.loadSessionAtPath(file.getPath());
+            } catch (Exception e) {
+                ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading session from path: " + file.getPath());
+            }
+        }
+    }
+
     /**
      * When reverse complement toggle is selected, (-) strands will be reverse complemented in
      * the isoform plot; when it is unselected, they will not
@@ -135,22 +183,6 @@ public class MainController implements InteractiveElementController {
             closeIsoformPlot();
         } else {
             openIsoformPlot();
-        }
-    }
-
-    /**
-     * When open file chooser button is pressed, opens file chooser
-     * Gene selector is disabled when user is choosing file
-     * The chosen file's path given to the path combo box, and the file is loaded
-     */
-    @FXML
-    protected void handleOpenFileChooserButton() {
-        ControllerMediator.getInstance().disableGeneSelector();
-        File file = fileChooser.showOpenDialog(window);
-        ControllerMediator.getInstance().enableGeneSelector();
-        if (file != null) {
-            pathComboBox.setValue(file.getAbsolutePath());
-            loadFile();
         }
     }
 
@@ -197,6 +229,90 @@ public class MainController implements InteractiveElementController {
         catch (IOException e) {
             ControllerMediator.getInstance().addConsoleErrorMessage("Could not load about window");
         }
+    }
+
+    /**
+     * When open file chooser button is pressed, opens file chooser
+     * Gene selector is disabled when user is choosing file
+     * The chosen file's path given to the path combo box, and the file is loaded
+     */
+    @FXML
+    protected void handleOpenFileChooserButton() {
+        File file = getFileFromFileChooser();
+        if (file != null) {
+            pathComboBox.setValue(file.getAbsolutePath());
+            loadFile();
+        }
+    }
+
+    /**
+     * If the isoform plot was closed in the previous session, closes the isoform plot,
+     * otherwise opens it
+     */
+    private void restoreIsoformPlotFromJSON(Map settings) {
+        boolean prevIsoformPlotOpen = (boolean) settings.get(SessionMaker.ISOFORM_PLOT_OPEN_KEY);
+        if (prevIsoformPlotOpen)
+            openIsoformPlot();
+        else
+            closeIsoformPlot();
+    }
+
+    /**
+     * If the t-SNE plot was closed in the previous session, closes the t-SNE plot,
+     * otherwise opens it
+     */
+    private void restoreTSNEPlotFromJSON(Map settings) {
+        boolean prevTSNEPlotOpen = (boolean) settings.get(SessionMaker.TSNE_PLOT_OPEN_KEY);
+        if (prevTSNEPlotOpen)
+            openTSNEPlot();
+        else
+            closeTSNEPlot();
+    }
+
+    /**
+     * If the console was closed in the previous session, closes the console,
+     * otherwise opens it
+     */
+    private void restoreConsoleFromJSON(Map settings) {
+        boolean prevConsolePlotOpen = (boolean) settings.get(SessionMaker.CONSOLE_OPEN_KEY);
+        if (prevConsolePlotOpen)
+            openConsole();
+        else
+            closeConsole();
+    }
+
+    /**
+     * If reverse complementing was selected in a previous session, selects it,
+     * else deselects it
+     */
+    private void restoreReverseComplementFromJSON(Map settings) {
+        if ((boolean) settings.get(SessionMaker.REVERSE_COMPLEMENT_KEY))
+            revComplementToggle.setSelected(true);
+        else
+            revComplementToggle.setSelected(false);
+    }
+
+    /**
+     * If the loaded path from the previous session has been saved, sets the path combo box's value
+     * to it
+     */
+    private void restorePathComboBoxFromJSON(Map settings) {
+        if(settings.containsKey(SessionMaker.PATH_KEY))
+            ControllerMediator.getInstance().setPathComboBoxValue((String) settings.get(SessionMaker.PATH_KEY));
+    }
+
+    private File getFileFromFileChooser() {
+        ControllerMediator.getInstance().disableGeneSelector();
+        File file = fileChooser.showOpenDialog(window);
+        ControllerMediator.getInstance().enableGeneSelector();
+        return file;
+    }
+
+    private File getSavedFileFromFileChooser() {
+        ControllerMediator.getInstance().disableGeneSelector();
+        File file = fileChooser.showSaveDialog(window);
+        ControllerMediator.getInstance().enableGeneSelector();
+        return file;
     }
 
     /**

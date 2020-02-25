@@ -1,16 +1,14 @@
 package mediator;
 
+import annotation.Gene;
+import controller.*;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
-import annotation.Gene;
-import controller.GeneSelectorController;
-import controller.ConsoleController;
-import controller.IsoformPlotController;
-import controller.MainController;
-import controller.TSNEPlotController;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 public class ControllerMediator implements Mediator{
     private MainController mainController;
@@ -48,30 +46,6 @@ public class ControllerMediator implements Mediator{
     // Change Main Display
     public void initializeMain(Stage window, Parent console, Parent isoformPlot, Parent tSNEPlot) {
         mainController.initializeMain(window, console, isoformPlot, tSNEPlot);
-    }
-
-    public void openIsoformPlot() {
-        mainController.openIsoformPlot();
-    }
-
-    public void closeIsoformPlot() {
-        mainController.closeIsoformPlot();
-    }
-
-    public void openTSNEPlot() {
-        mainController.openTSNEPlot();
-    }
-
-    public void closeTSNEPlot() {
-        mainController.closeTSNEPlot();
-    }
-
-    public void openConsole() {
-        mainController.openConsole();
-    }
-
-    public void closeConsole() {
-        mainController.closeConsole();
     }
 
     // Console Functions
@@ -121,6 +95,20 @@ public class ControllerMediator implements Mediator{
         tsnePlotController.clearTSNEPlot();
     }
 
+    //Load from JSON
+
+    public void restoreIsoformPlotFromJSON(Map settings) {
+        isoformPlotController.restoreIsoformPlotFromJSON(settings);
+    }
+
+    public void restoreMainFromJSON(Map settings) {
+        mainController.restoreMainFromJSON(settings);
+    }
+
+    public void restoreConsoleFromJSON(Map settings) {
+        consoleController.restoreConsoleFromJSON(settings);
+    }
+
     // Getters
     public Node getTSNEPlot() {
         return tsnePlotController.getTSNEPlot();
@@ -134,8 +122,20 @@ public class ControllerMediator implements Mediator{
         return isoformPlotController.getIsoformPlot();
     }
 
+    public ArrayList<ConsoleController.Message> getConsoleMessages() {
+        return consoleController.getConsoleMessages();
+    }
+
     public Collection<Gene> getShownGenes() {
         return geneSelectorController.getShownGenes();
+    }
+
+    public boolean isShowingNames() {
+        return isoformPlotController.isShowingNames();
+    }
+
+    public boolean isReverseComplementing() {
+        return  isoformPlotController.isReverseComplementing();
     }
 
     public boolean isConsoleOpen() {

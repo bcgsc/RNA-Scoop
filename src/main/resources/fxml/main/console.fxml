@@ -7,7 +7,7 @@
 <ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="controller.ConsoleController"
             fx:id="console" prefHeight="50" style="-fx-background: #ffffff;">
     <VBox>
-        <TextFlow fx:id="consoleMessage">
+        <TextFlow fx:id="consoleTextFlow">
             <VBox.margin>
                 <Insets top="10" left="10" right="10" bottom="10"/>
             </VBox.margin>

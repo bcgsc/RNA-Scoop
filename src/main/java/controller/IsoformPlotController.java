@@ -16,12 +16,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import mediator.ControllerMediator;
+import persistance.SessionMaker;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class IsoformPlotController implements Initializable, InteractiveElementController {
     private static final int CANVAS_MIN_WIDTH = 400;
@@ -94,6 +92,19 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         return isoformPlot;
     }
 
+    public boolean isShowingNames() {
+        return showNameCheckBox.isSelected();
+    }
+
+    public boolean isReverseComplementing() {
+        return reverseComplement;
+    }
+
+    public void restoreIsoformPlotFromJSON(Map settings) {
+        restoreShowNamesFromJSON(settings);
+        restoreReverseComplementFromJSON(settings);
+    }
+
     /**
      * Opens up gene selector window
      */
@@ -129,6 +140,25 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 drawGenes(ControllerMediator.getInstance().getShownGenes());
             }
         });
+    }
+
+    /**
+     * If reverse complementing was selected in a previous session, will
+     * reverse complement genes on (-) strand when drawing them, else will not
+     */
+    private void restoreReverseComplementFromJSON(Map settings) {
+        reverseComplement = (boolean) settings.get(SessionMaker.REVERSE_COMPLEMENT_KEY);
+    }
+
+    /**
+     * If show names check box was selected in a previous session, selects it,
+     * else deselects it
+     */
+    private void restoreShowNamesFromJSON(Map settings) {
+        if ((boolean) settings.get(SessionMaker.SHOW_NAMES_KEY))
+            showNameCheckBox.setSelected(true);
+        else
+            showNameCheckBox.setSelected(false);
     }
 
     /**

@@ -12,12 +12,12 @@
             </BorderPane.margin>
             <MenuBar>
                 <Menu text="File">
-                    <MenuItem text="Save Session"/>
-                    <MenuItem text="Load Previous Session"/>
+                    <MenuItem onAction="#handleSaveSessionButton" text="Save Session"/>
+                    <MenuItem onAction="#handleLoadSessionButton" text="Load Previous Session"/>
                 </Menu>
                 <Menu text="View" fx:id="viewMenu">
                     <Menu text="Isoform Plot">
-                        <CheckMenuItem onAction="#handleRevComplementToggle" text="Reverse Complement (-) Strand"/>
+                        <CheckMenuItem fx:id="revComplementToggle" onAction="#handleRevComplementToggle" text="Reverse Complement (-) Strand"/>
                         <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close Isoform Plot"/>
                     </Menu>
                     <Menu text="t-SNE Plot">

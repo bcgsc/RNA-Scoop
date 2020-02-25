@@ -6,43 +6,52 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import persistance.SessionMaker;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 public class ConsoleController implements Initializable{
-    private static final String FIRST_MESSAGE_INDICATOR = "> ";
-    private static final String ERROR_INDICATOR = "ERROR: ";
-    private static final String ERROR_INDICATOR_COLOR = "red";
+    public static final String FIRST_MESSAGE_INDICATOR = "> ";
+    public static final String ERROR_INDICATOR = "ERROR: ";
+    public static final String ERROR_INDICATOR_COLOR = "red";
 
-    @FXML private TextFlow consoleMessage;
+    @FXML private TextFlow consoleTextFlow;
     @FXML private ScrollPane console;
 
+    //List of messages that have been added to the console
+    private ArrayList<Message> consoleMessages;
     private boolean lastMessageIsError;
     private boolean consoleIsCleared;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        consoleMessage.setStyle("-fx-line-spacing: 0.85em;");
+        consoleTextFlow.setStyle("-fx-line-spacing: 0.85em;");
         lastMessageIsError = false;
         consoleIsCleared = true;
+        consoleMessages = new ArrayList<>();
         addConsoleMessage("Welcome to RNA-Scoop!");
     }
 
     public void addConsoleMessage(String message) {
         addFirstMessageIndicator();
-        consoleMessage.getChildren().add(new Text(message));
+        consoleTextFlow.getChildren().add(new Text(message));
         scrollToBottom();
         lastMessageIsError = false;
         consoleIsCleared = false;
+        consoleMessages.add(new Message(message, MessageType.NORMAL));
     }
 
     public void addConsoleErrorMessage(String message) {
         addFirstAndErrorMessageIndicators();
-        consoleMessage.getChildren().add(new Text(message));
+        consoleTextFlow.getChildren().add(new Text(message));
         scrollToBottom();
         lastMessageIsError = true;
         consoleIsCleared = false;
+        consoleMessages.add(new Message(message, MessageType.ERROR));
     }
 
     /**
@@ -51,21 +60,32 @@ public class ConsoleController implements Initializable{
      * @param action the action happening when the error occurred
      */
     public void addConsoleUnexpectedErrorMessage(String action) {
+        String message = "An unexpected error occurred while " + action;
         addFirstAndErrorMessageIndicators();
-        consoleMessage.getChildren().add(new Text("An unexpected error occurred while " + action));
+        consoleTextFlow.getChildren().add(new Text(message));
         scrollToBottom();
         lastMessageIsError = true;
         consoleIsCleared = false;
+        consoleMessages.add(new Message(message, MessageType.ERROR));
     }
 
     public void clearConsole() {
-        consoleMessage.getChildren().clear();
+        consoleTextFlow.getChildren().clear();
         lastMessageIsError = false;
         consoleIsCleared = true;
+        consoleMessages.clear();
     }
 
     public Node getConsole() {
         return console;
+    }
+
+    public ArrayList<Message> getConsoleMessages() {
+        return consoleMessages;
+    }
+
+    public void restoreConsoleFromJSON(Map settings) {
+        restoreConsoleMessagesFromJSON(settings);
     }
 
     /**
@@ -74,9 +94,9 @@ public class ConsoleController implements Initializable{
     private void addFirstMessageIndicator() {
         if (!consoleIsCleared) {
             removeFirstMessageIndicator();
-            consoleMessage.getChildren().add(new Text("\n" + FIRST_MESSAGE_INDICATOR));
+            consoleTextFlow.getChildren().add(new Text("\n" + FIRST_MESSAGE_INDICATOR));
         } else {
-            consoleMessage.getChildren().add(new Text(FIRST_MESSAGE_INDICATOR));
+            consoleTextFlow.getChildren().add(new Text(FIRST_MESSAGE_INDICATOR));
         }
     }
 
@@ -84,12 +104,12 @@ public class ConsoleController implements Initializable{
      * Removes first message indicator from first console message
      */
     private void removeFirstMessageIndicator() {
-        int numMessages = consoleMessage.getChildren().size();
+        int numMessages = consoleTextFlow.getChildren().size();
         Text firstMessage;
         if (lastMessageIsError)
-            firstMessage = (Text) consoleMessage.getChildren().get(numMessages - 3);
+            firstMessage = (Text) consoleTextFlow.getChildren().get(numMessages - 3);
         else
-            firstMessage = (Text) consoleMessage.getChildren().get(numMessages - 2);
+            firstMessage = (Text) consoleTextFlow.getChildren().get(numMessages - 2);
         firstMessage.setText(firstMessage.getText().replaceFirst(FIRST_MESSAGE_INDICATOR, ""));
     }
 
@@ -100,7 +120,7 @@ public class ConsoleController implements Initializable{
         addFirstMessageIndicator();
         Text errorIndicator = new Text(ERROR_INDICATOR);
         errorIndicator.setStyle("-fx-fill: " + ERROR_INDICATOR_COLOR + ";");
-        consoleMessage.getChildren().add(errorIndicator);
+        consoleTextFlow.getChildren().add(errorIndicator);
     }
 
 
@@ -113,5 +133,50 @@ public class ConsoleController implements Initializable{
         console.layout();
 
         console.setVvalue(1);
+    }
+
+    /**
+     * Restore all console messages from a previous session
+     */
+    private void restoreConsoleMessagesFromJSON(Map settings) {
+        clearConsole();
+        ArrayList messages = (ArrayList) settings.get(SessionMaker.CONSOLE_MESSAGES_KEY);
+        for (Object message : messages) {
+            HashMap messageJSON = (HashMap) message;
+            String messageType = (String) messageJSON.get(SessionMaker.MESSAGE_IS_ERROR_KEY);
+            String messageText = (String) messageJSON.get(SessionMaker.MESSAGE_TEXT_KEY);
+            if (messageType.equals(MessageType.ERROR.toString()))
+                addConsoleErrorMessage(messageText);
+            else
+                addConsoleMessage(messageText);
+        }
+    }
+
+    /**
+     * Messages that have been added to the console
+     */
+    public class Message {
+        String messageText;
+        MessageType messageType;
+
+        private Message(String messageText, MessageType messageType) {
+            this.messageText = messageText;
+            this.messageType = messageType;
+        }
+
+        public String getMessageText() {
+            return messageText;
+        }
+
+        public MessageType getMessageType() {
+            return messageType;
+        }
+    }
+
+    /**
+     * Types of messages that can be added to the console
+     */
+    public enum MessageType {
+        NORMAL, ERROR, WARNING
     }
 }
