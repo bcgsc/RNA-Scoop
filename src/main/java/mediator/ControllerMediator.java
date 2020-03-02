@@ -4,7 +4,6 @@ import annotation.Gene;
 import controller.*;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,8 +43,8 @@ public class ControllerMediator implements Mediator{
     }
 
     // Change Main Display
-    public void initializeMain(Stage window, Parent console, Parent isoformPlot, Parent tSNEPlot) {
-        mainController.initializeMain(window, console, isoformPlot, tSNEPlot);
+    public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
+        mainController.initializeMain(console, isoformPlot, tSNEPlot);
     }
 
     // Console Functions
@@ -70,10 +69,6 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.display();
     }
 
-    public void toggleReverseComplement() {
-        isoformPlotController.toggleReverseComplement();
-    }
-
     public void updateGenes() {
         geneSelectorController.updateGenes();
     }
@@ -96,10 +91,6 @@ public class ControllerMediator implements Mediator{
     }
 
     //Load from JSON
-
-    public void restoreIsoformPlotFromJSON(Map settings) {
-        isoformPlotController.restoreIsoformPlotFromJSON(settings);
-    }
 
     public void restoreMainFromJSON(Map settings) {
         mainController.restoreMainFromJSON(settings);
@@ -130,12 +121,28 @@ public class ControllerMediator implements Mediator{
         return geneSelectorController.getShownGenes();
     }
 
-    public boolean isShowingNames() {
-        return isoformPlotController.isShowingNames();
+    public boolean isReverseComplementing() {
+        return  mainController.isReverseComplementing();
     }
 
-    public boolean isReverseComplementing() {
-        return  isoformPlotController.isReverseComplementing();
+    public boolean isShowingGeneNameAndID() {
+        return  mainController.isShowingGeneAndIDName();
+    }
+
+    public boolean isShowingGeneName() {
+        return  mainController.isShowingGeneName();
+    }
+
+    public boolean isShowingGeneID() {
+        return  mainController.isShowingGeneID();
+    }
+
+    public boolean isShowingIsoformName() {
+        return  mainController.isShowingIsoformName();
+    }
+
+    public boolean isShowingIsoformID() {
+        return  mainController.isShowingIsoformID();
     }
 
     public boolean isConsoleOpen() {

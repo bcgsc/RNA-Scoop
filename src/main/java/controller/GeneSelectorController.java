@@ -1,28 +1,35 @@
 package controller;
 
+import annotation.Gene;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import parser.Parser;
-import annotation.Gene;
 import mediator.ControllerMediator;
+import parser.Parser;
+import ui.Main;
 
 import java.net.URL;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.ResourceBundle;
 
 public class GeneSelectorController implements Initializable, InteractiveElementController {
 
     private static final float GENE_SELECTOR_SCALE_FACTOR = 0.40f;
-    private static final Image logo = new Image("/icons/RNA-ScoopIcon.png");
 
     @FXML private VBox geneSelector;
     @FXML private GridPane gridPane;
@@ -228,7 +235,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     private void setUpWindow() {
         window = new Stage();
         window.setTitle("RNA-Scoop - Gene Selector");
-        window.getIcons().add(logo);
+        window.getIcons().add(Main.RNA_SCOOP_LOGO);
         setWindowSize();
         window.setOnCloseRequest(event -> {
             event.consume();

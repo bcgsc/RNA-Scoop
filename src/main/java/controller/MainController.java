@@ -1,41 +1,55 @@
 package controller;
 
+import annotation.Gene;
 import exceptions.RNAScoopException;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
 import parser.Parser;
 import persistance.SessionIO;
 import persistance.SessionMaker;
+import ui.Main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 
 import static javafx.application.Platform.runLater;
 
 public class MainController implements InteractiveElementController {
+    private static final float MAIN_SCALE_FACTOR = 0.7f;
 
     @FXML private BorderPane borderPane;
     @FXML private ComboBox pathComboBox;
     @FXML private Button openFileChooserButton;
+    @FXML private Menu fileMenu;
     @FXML private Menu viewMenu;
-    @FXML private CheckMenuItem revComplementToggle;
     @FXML private MenuItem tSNEToggle;
     @FXML private MenuItem isoformPlotToggle;
     @FXML private MenuItem consoleToggle;
     @FXML private SplitPane verticalSplitPane;
     @FXML private SplitPane horizontalSplitPane;
+    //isoform plot setting toggles
+    @FXML private CheckMenuItem revComplementToggle;
+    @FXML private RadioMenuItem showGeneNameAndIDToggle;
+    @FXML private RadioMenuItem showGeneNameToggle;
+    @FXML private RadioMenuItem showGeneIDToggle;
+    @FXML private CheckMenuItem showIsoformNameToggle;
+    @FXML private CheckMenuItem showIsoformIDToggle;
 
     private Stage window;
     private FileChooser fileChooser;
@@ -44,23 +58,24 @@ public class MainController implements InteractiveElementController {
     private boolean isoformPlotIsOpen;
     private String currentLoadedPath;
 
-    public void initializeMain(Stage window, Parent console, Parent isoformPlot, Parent tSNEPlot) {
-        this.window = window;
+    public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
         fileChooser = new FileChooser();
+        setUpWindow();
         addPanels(console, isoformPlot, tSNEPlot);
         setUpPathComboBox();
-        currentLoadedPath = null;
     }
 
     public void disable() {
-        openFileChooserButton.setDisable(true);
+        fileMenu.setDisable(true);
         viewMenu.setDisable(true);
+        openFileChooserButton.setDisable(true);
         pathComboBox.setDisable(true);
     }
 
     public void enable() {
-        openFileChooserButton.setDisable(false);
+        fileMenu.setDisable(false);
         viewMenu.setDisable(false);
+        openFileChooserButton.setDisable(false);
         pathComboBox.setDisable(false);
     }
 
@@ -113,6 +128,10 @@ public class MainController implements InteractiveElementController {
         }
     }
 
+    public void setPathComboBoxValue(String path) {
+        pathComboBox.setValue(path);
+    }
+
     public boolean isTSNEPlotOpen() {
         return tSNEPlotIsOpen;
     }
@@ -125,12 +144,32 @@ public class MainController implements InteractiveElementController {
         return isoformPlotIsOpen;
     }
 
-    public void setPathComboBoxValue(String path) {
-        pathComboBox.setValue(path);
+    public String getCurrentLoadedPath() {
+        return currentLoadedPath;
     }
 
-    public String getCurrentLoadedPath() {
-        return  currentLoadedPath;
+    public boolean isReverseComplementing() {
+        return revComplementToggle.isSelected();
+    }
+
+    public boolean isShowingGeneAndIDName() {
+        return showGeneNameAndIDToggle.isSelected();
+    }
+
+    public boolean isShowingGeneName() {
+        return showGeneNameToggle.isSelected();
+    }
+
+    public boolean isShowingGeneID() {
+        return showGeneIDToggle.isSelected();
+    }
+
+    public boolean isShowingIsoformName() {
+        return showIsoformNameToggle.isSelected();
+    }
+
+    public boolean isShowingIsoformID() {
+        return showIsoformIDToggle.isSelected();
     }
 
     public void restoreMainFromJSON(Map settings) {
@@ -138,7 +177,7 @@ public class MainController implements InteractiveElementController {
         restoreTSNEPlotFromJSON(settings);
         restoreConsoleFromJSON(settings);
         restorePathComboBoxFromJSON(settings);
-        restoreReverseComplementFromJSON(settings);
+        restoreIsoformPlotSettingsTogglesFromJSON(settings);
     }
 
     @FXML
@@ -166,12 +205,13 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * When reverse complement toggle is selected, (-) strands will be reverse complemented in
-     * the isoform plot; when it is unselected, they will not
+     * Redraws genes when one of the isoform plot setting toggles (reverse complement,
+     * show gene name, show gene ID, show isoform name, show isoform ID) changes state
      */
     @FXML
-    protected void handleRevComplementToggle() {
-        ControllerMediator.getInstance().toggleReverseComplement();
+    protected void handleIsoformPlotSettingToggle() {
+        Collection<Gene> genes = ControllerMediator.getInstance().getShownGenes();
+        ControllerMediator.getInstance().drawGenes(genes);
     }
 
     /**
@@ -282,14 +322,13 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * If reverse complementing was selected in a previous session, selects it,
-     * else deselects it
+     * Restores isoform plot setting toggles to what they were in the previous session
      */
-    private void restoreReverseComplementFromJSON(Map settings) {
-        if ((boolean) settings.get(SessionMaker.REVERSE_COMPLEMENT_KEY))
-            revComplementToggle.setSelected(true);
-        else
-            revComplementToggle.setSelected(false);
+    private void restoreIsoformPlotSettingsTogglesFromJSON(Map settings) {
+        restoreReverseComplementToggle(settings);
+        restoreShowGeneNameIDToggles(settings);
+        restoreShowIsoformNameToggle(settings);
+        restoreShowIsoformIDToggle(settings);
     }
 
     /**
@@ -299,6 +338,57 @@ public class MainController implements InteractiveElementController {
     private void restorePathComboBoxFromJSON(Map settings) {
         if(settings.containsKey(SessionMaker.PATH_KEY))
             ControllerMediator.getInstance().setPathComboBoxValue((String) settings.get(SessionMaker.PATH_KEY));
+    }
+
+    /**
+     * If the reverse complement toggle was selected in the previous session, selects it, else
+     * deselects it
+     */
+    private void restoreReverseComplementToggle(Map settings) {
+        boolean wasReverseComplementing = (boolean) settings.get(SessionMaker.REVERSE_COMPLEMENT_KEY);
+        if (wasReverseComplementing)
+            revComplementToggle.setSelected(true);
+        else
+            revComplementToggle.setSelected(false);
+    }
+
+    /**
+     * Selects the show gene name/ID toggle that was selected in the previous session, deselects the
+     * rest
+     */
+    private void restoreShowGeneNameIDToggles(Map settings) {
+        boolean wasShowingGeneNameAndID = (boolean) settings.get(SessionMaker.SHOW_GENE_NAME_AND_ID_KEY);
+        boolean wasShowingGeneName = (boolean) settings.get(SessionMaker.SHOW_GENE_NAME_KEY);
+        if (wasShowingGeneNameAndID)
+            showGeneNameAndIDToggle.setSelected(true);
+        else if (wasShowingGeneName)
+            showGeneNameToggle.setSelected(true);
+        else
+            showGeneIDToggle.setSelected(true);
+    }
+
+    /**
+     * If the show isoform name toggle was selected in the previous session, selects it, else
+     * deselects it
+     */
+    private void restoreShowIsoformNameToggle(Map settings) {
+        boolean wasShowingIsoformName = (boolean) settings.get(SessionMaker.SHOW_ISOFORM_NAME_KEY);
+        if (wasShowingIsoformName)
+            showIsoformNameToggle.setSelected(true);
+        else
+            showIsoformNameToggle.setSelected(false);
+    }
+
+    /**
+     * If the show isoform ID toggle was selected in the previous session, selects it, else
+     * deselects it
+     */
+    private void restoreShowIsoformIDToggle(Map settings) {
+        boolean wasShowingIsoformID = (boolean) settings.get(SessionMaker.SHOW_ISOFORM_ID_KEY);
+        if (wasShowingIsoformID)
+            showIsoformIDToggle.setSelected(true);
+        else
+            showIsoformIDToggle.setSelected(false);
     }
 
     private File getFileFromFileChooser() {
@@ -386,8 +476,33 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
+     * Sets up main window
+     * Makes it so current session is saved after user clicks X button
+     */
+    private void setUpWindow() {
+        window = new Stage();
+        window.setTitle("RNA-Scoop");
+        window.getIcons().add(Main.RNA_SCOOP_LOGO);
+        setWindowSize();
+        window.setOnCloseRequest(event -> {
+            try {
+                SessionIO.saveSession();
+            } catch (IOException e) {
+                System.err.println("An error occurred while saving the current session");
+                e.printStackTrace();
+            }
+        });
+        window.show();
+    }
+
+    private void setWindowSize() {
+        Rectangle2D screen = Screen.getPrimary().getBounds();
+        window.setScene(new Scene(borderPane, screen.getWidth() * MAIN_SCALE_FACTOR, screen.getHeight() * MAIN_SCALE_FACTOR));
+    }
+
+    /**
      * Add's the console, isoform plot and t-sne plot panels to the main
-     * window.
+     * window (by default all panels are open)
      */
 
     private void addPanels(Parent console, Parent isoformPlot, Parent tSNEPlot) {
@@ -406,7 +521,7 @@ public class MainController implements InteractiveElementController {
      * Removes initial focus from path combo box
      */
     private void setUpPathComboBox() {
-        borderPane.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(window.getWidth() - 95));
+        borderPane.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(borderPane.getWidth() - 95));
         setUpPathComboBoxDragNDrop();
         // adds listener to border pane so that focus can be on any or no elements and
         // the key press is still registered
@@ -415,6 +530,7 @@ public class MainController implements InteractiveElementController {
                 loadFile();
         });
         runLater(() -> borderPane.requestFocus());
+        currentLoadedPath = null;
     }
 
     /**

@@ -11,13 +11,24 @@
                 <Insets bottom="10"/>
             </BorderPane.margin>
             <MenuBar>
-                <Menu text="File">
+                <Menu fx:id="fileMenu" text="File">
                     <MenuItem onAction="#handleSaveSessionButton" text="Save Session"/>
                     <MenuItem onAction="#handleLoadSessionButton" text="Load Previous Session"/>
                 </Menu>
                 <Menu text="View" fx:id="viewMenu">
                     <Menu text="Isoform Plot">
-                        <CheckMenuItem fx:id="revComplementToggle" onAction="#handleRevComplementToggle" text="Reverse Complement (-) Strand"/>
+                        <fx:define>
+                            <ToggleGroup fx:id="geneLabelSettings"/>
+                        </fx:define>
+                        <CheckMenuItem fx:id="revComplementToggle" onAction="#handleIsoformPlotSettingToggle" text="Reverse Complement (-) Strand"/>
+                        <SeparatorMenuItem/>
+                        <RadioMenuItem fx:id="showGeneNameAndIDToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene Name and ID"/>
+                        <RadioMenuItem fx:id="showGeneNameToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene Name" selected="true"/>
+                        <RadioMenuItem fx:id="showGeneIDToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene ID"/>
+                        <SeparatorMenuItem/>
+                        <CheckMenuItem fx:id="showIsoformNameToggle" onAction="#handleIsoformPlotSettingToggle" text="Show Isoform Name"/>
+                        <CheckMenuItem fx:id="showIsoformIDToggle" onAction="#handleIsoformPlotSettingToggle" text="Show Isoform ID"/>
+                        <SeparatorMenuItem/>
                         <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close Isoform Plot"/>
                     </Menu>
                     <Menu text="t-SNE Plot">
@@ -25,6 +36,7 @@
                     </Menu>
                     <Menu text="Console">
                         <MenuItem onAction="#handleClearConsoleButton" text="Clear Console"/>
+                        <SeparatorMenuItem/>
                         <MenuItem fx:id="consoleToggle" onAction="#handleConsoleViewToggle" text="Close Console"/>
                     </Menu>
                 </Menu>

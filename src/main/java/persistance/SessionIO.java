@@ -71,7 +71,6 @@ public class SessionIO {
             Map settings = prevSession.toMap();
             clearAllData();
             ControllerMediator.getInstance().restoreMainFromJSON(settings);
-            ControllerMediator.getInstance().restoreIsoformPlotFromJSON(settings);
             ControllerMediator.getInstance().restoreConsoleFromJSON(settings);
         }
 

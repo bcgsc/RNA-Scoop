@@ -5,18 +5,17 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import ui.Main;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class AboutController implements Initializable {
     private static final float ABOUT_SCALE_FACTOR = 0.33f;
-    private static final Image logo = new Image("/icons/RNA-ScoopIcon.png");
 
     @FXML VBox vbox;
     @FXML ScrollPane scrollPane;
@@ -56,7 +55,7 @@ public class AboutController implements Initializable {
         stage.setTitle("About");
         Rectangle2D screen = Screen.getPrimary().getBounds();
         stage.setScene(new Scene(scrollPane, screen.getWidth() * ABOUT_SCALE_FACTOR, screen.getHeight() * ABOUT_SCALE_FACTOR));
-        stage.getIcons().add(logo);
+        stage.getIcons().add(Main.RNA_SCOOP_LOGO);
         stage.show();
     }
 }

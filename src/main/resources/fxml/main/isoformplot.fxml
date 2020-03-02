@@ -5,7 +5,6 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
 <VBox fx:controller="controller.IsoformPlotController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:id="isoformPlot" style="-fx-background-color: #fafafa;">
     <HBox>
@@ -13,11 +12,6 @@
             <Insets left="10" right="10" top="10"/>
         </VBox.margin>
         <Button fx:id="selectGenesButton" onAction="#handleSelectGenesButtonAction" text="Select Genes"/>
-        <CheckBox fx:id="showNameCheckBox" onAction="#handleShowNameCheckBox" text="Show name" selected="true">
-            <HBox.margin>
-                <Insets top="5" left="10"/>
-            </HBox.margin>
-        </CheckBox>
     </HBox>
     <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585"
                 style="-fx-background: #ffffff; -fx-border-color: #adadad;">

@@ -13,7 +13,11 @@ public class SessionMaker {
     public static final String TSNE_PLOT_OPEN_KEY = "t-sne open";
     public static final String CONSOLE_OPEN_KEY = "console open";
     public static final String REVERSE_COMPLEMENT_KEY = "rev complement";
-    public static final String SHOW_NAMES_KEY = "show names";
+    public static final String SHOW_GENE_NAME_AND_ID_KEY = "show gene name and id";
+    public static final String SHOW_GENE_NAME_KEY = "show gene name";
+    public static final String SHOW_GENE_ID_KEY = "show gene id";
+    public static final String SHOW_ISOFORM_NAME_KEY = "show isoform name";
+    public static final String SHOW_ISOFORM_ID_KEY = "show isoform id";
     public static final String CONSOLE_MESSAGES_KEY = "console messages";
     public static final String MESSAGE_TEXT_KEY = "message text";
     public static final String MESSAGE_IS_ERROR_KEY = "message is error";
@@ -33,7 +37,11 @@ public class SessionMaker {
         session.put(TSNE_PLOT_OPEN_KEY, ControllerMediator.getInstance().isTSNEPlotOpen());
         session.put(CONSOLE_OPEN_KEY, ControllerMediator.getInstance().isConsoleOpen());
         session.put(REVERSE_COMPLEMENT_KEY, ControllerMediator.getInstance().isReverseComplementing());
-        session.put(SHOW_NAMES_KEY, ControllerMediator.getInstance().isShowingNames());
+        session.put(SHOW_GENE_NAME_AND_ID_KEY, ControllerMediator.getInstance().isShowingGeneNameAndID());
+        session.put(SHOW_GENE_NAME_KEY, ControllerMediator.getInstance().isShowingGeneName());
+        session.put(SHOW_GENE_ID_KEY, ControllerMediator.getInstance().isShowingGeneID());
+        session.put(SHOW_ISOFORM_NAME_KEY, ControllerMediator.getInstance().isShowingIsoformName());
+        session.put(SHOW_ISOFORM_ID_KEY, ControllerMediator.getInstance().isShowingIsoformID());
         addConsoleMessagesToSession(session);
         return session;
     }

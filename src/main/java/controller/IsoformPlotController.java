@@ -9,42 +9,46 @@ import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import mediator.ControllerMediator;
-import persistance.SessionMaker;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.ResourceBundle;
 
 public class IsoformPlotController implements Initializable, InteractiveElementController {
-    private static final int CANVAS_MIN_WIDTH = 400;
-    private static final int CANVAS_INIT_Y = 13;
-    private static final int GENE_ID_X_OFFSET = 0;
-    private static final int ISOFORM_X_OFFSET = 13;
-    private static final int SPACING = 25;
-    private static final int SCROLLBAR_WIDTH = 20;
-    private static final int CANVAS_MARGIN = 15;
     private static final Color FONT_COLOUR = Color.BLACK;
     private static final Color EXON_COLOUR = Color.color(0.600, 0.851, 1);
     private static final Color OUTLINE_COLOUR = Color.BLACK;
     private static final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
     private static final Font TRANSCRIPT_FONT = Font.font("Verdana",12);
+    private static final float GENE_FONT_HEIGHT = getFontHeight(GENE_FONT);
+    private static final float ISOFORM_FONT_HEIGHT = getFontHeight(TRANSCRIPT_FONT);
+    private static final int CANVAS_MIN_WIDTH = 400;
+    private static final int CANVAS_INIT_Y = 0;
+    private static final int GENE_ID_X_OFFSET = 0;
+    private static final int ISOFORM_X_OFFSET = 13;
+    private static final int SCROLLBAR_WIDTH = 20;
+    private static final int CANVAS_MARGIN = 15;
     private static final int EXON_HEIGHT = 10;
+    private static final int GENE_GENE_SPACING = 5;
+    private static final int GENE_ISOFORM_SPACING = 8;
+    private static final int ISOFORM_SPACING = 8;
 
     @FXML private Canvas canvas;
     @FXML private ScrollPane scrollPane;
     @FXML private VBox isoformPlot;
     @FXML private Button selectGenesButton;
-    @FXML private CheckBox showNameCheckBox;
 
     private GraphicsContext gc;
-    private boolean reverseComplement;
-    private int canvasCurrY;
+    private float canvasCurrY;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -52,29 +56,18 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         initializeScrollPane();
     }
 
-    /**
-     * Changes whether genes on the (-) strand should be reverse complemented or not,
-     * and redraws genes
-     */
-    public void toggleReverseComplement() {
-        reverseComplement = !reverseComplement;
-        drawGenes(ControllerMediator.getInstance().getShownGenes());
-    }
-
     public void disable() {
         selectGenesButton.setDisable(true);
-        showNameCheckBox.setDisable(true);
     }
 
     public void enable() {
         selectGenesButton.setDisable(false);
-        showNameCheckBox.setDisable(false);
     }
 
     public void clearCanvas() {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        canvas.setHeight(0);
         canvasCurrY = CANVAS_INIT_Y;
+        canvas.setHeight(CANVAS_INIT_Y);
     }
 
     /**
@@ -85,24 +78,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         incrementCanvasHeight(genes);
         for (Gene gene : genes) {
             drawGene(gene);
+            canvasCurrY += GENE_GENE_SPACING;
         }
     }
 
     public Node getIsoformPlot() {
         return isoformPlot;
-    }
-
-    public boolean isShowingNames() {
-        return showNameCheckBox.isSelected();
-    }
-
-    public boolean isReverseComplementing() {
-        return reverseComplement;
-    }
-
-    public void restoreIsoformPlotFromJSON(Map settings) {
-        restoreShowNamesFromJSON(settings);
-        restoreReverseComplementFromJSON(settings);
     }
 
     /**
@@ -116,15 +97,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     private void initializeGraphics() {
         gc = canvas.getGraphicsContext2D();
         canvasCurrY = CANVAS_INIT_Y;
-        reverseComplement = false;
-    }
-
-    /**
-     * When show name check box is clicked, redraws genes
-     */
-    @FXML
-    protected void handleShowNameCheckBox() {
-        drawGenes(ControllerMediator.getInstance().getShownGenes());
+        canvas.setHeight(CANVAS_INIT_Y);
     }
 
     /**
@@ -143,66 +116,87 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * If reverse complementing was selected in a previous session, will
-     * reverse complement genes on (-) strand when drawing them, else will not
-     */
-    private void restoreReverseComplementFromJSON(Map settings) {
-        reverseComplement = (boolean) settings.get(SessionMaker.REVERSE_COMPLEMENT_KEY);
-    }
-
-    /**
-     * If show names check box was selected in a previous session, selects it,
-     * else deselects it
-     */
-    private void restoreShowNamesFromJSON(Map settings) {
-        if ((boolean) settings.get(SessionMaker.SHOW_NAMES_KEY))
-            showNameCheckBox.setSelected(true);
-        else
-            showNameCheckBox.setSelected(false);
-    }
-
-    /**
      * Sets canvas height to height necessary to display given genes
      */
     private void incrementCanvasHeight(Collection<Gene> genes) {
-        double newHeight = canvas.getHeight();
-        for (Gene gene : genes) {
-            int numIsoforms = gene.getIsoforms().size();
-            newHeight += numIsoforms * SPACING * 2 + SPACING;
+        int numGenes = genes.size();
+        if (numGenes > 0) {
+            double newHeight = canvas.getHeight();
+            newHeight += (numGenes - 1) * GENE_GENE_SPACING;
+            newHeight += numGenes * (GENE_FONT_HEIGHT + GENE_ISOFORM_SPACING);
+            for (Gene gene : genes) {
+                Collection<Isoform> isoforms = gene.getIsoforms().values();
+                int numIsoforms = isoforms.size();
+                newHeight += numIsoforms * (2 * ISOFORM_SPACING + EXON_HEIGHT);
+                if (ControllerMediator.getInstance().isShowingIsoformID() || ControllerMediator.getInstance().isShowingGeneNameAndID()) {
+                    newHeight += numIsoforms * ISOFORM_FONT_HEIGHT;
+                }
+                else if (ControllerMediator.getInstance().isShowingIsoformName()) {
+                    for (Isoform isoform: isoforms) {
+                        if (isoform.getName() != null)
+                            newHeight += ISOFORM_FONT_HEIGHT;
+                    }
+                }
+            }
+            // there is no label below the last isoform
+            newHeight -= ISOFORM_SPACING;
+            canvas.setHeight(newHeight);
+        } else {
+            canvas.setHeight(0);
         }
-        canvas.setHeight(newHeight);
     }
 
     /**
-     * Clears canvas, draws and labels all isoforms of the given gene
+     * Draws and labels all isoforms of the given gene
      * @param gene gene to draw
      */
     private void drawGene(Gene gene) {
         drawGeneLabel(gene);
+        canvasCurrY += GENE_ISOFORM_SPACING;
         drawAllIsoforms(gene);
     }
 
     /**
      * Draws label for gene
-     * If show name check box is checked and gene has a name, includes it in label
-     * If reverse complement option is selected, includes the strand the gene is on in label
      */
     private void drawGeneLabel(Gene gene) {
+        canvasCurrY += GENE_FONT_HEIGHT;
         gc.setFill(FONT_COLOUR);
         gc.setFont(GENE_FONT);
 
-        String label = gene.getId();
-        String name = gene.getName();
-        if (name != null && showNameCheckBox.isSelected())
-            label += " (" + name + ")";
+        String label = makeGeneLabelText(gene);
+
+        gc.fillText(label, GENE_ID_X_OFFSET, canvasCurrY);
+    }
+
+    /**
+     * Makes gene label text:
+     *   - if show gene name toggle is selected, label includes gene name
+     *   - if show gene ID toggle is selected, label includes gene ID
+     *   - if show gene name and ID toggle is selected, label includes gene ID first, followed
+     *     by gene name in brackets
+     *   - if reverse complement toggle is selected, label includes strand gene is on
+     */
+    private String makeGeneLabelText(Gene gene) {
+        String label = "";
+        boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
+        boolean showingGeneNameAndID = ControllerMediator.getInstance().isShowingGeneNameAndID();
+        boolean showingGeneName = ControllerMediator.getInstance().isShowingGeneName();
+        String geneID = gene.getId();
+        String geneName = gene.getName();
+
+        if (showingGeneNameAndID && geneName != null)
+            label += geneID + " (" + geneName + ")";
+        else if (showingGeneName && geneName != null)
+            label += geneName;
+        else
+            label += geneID;
 
         if (gene.isOnPositiveStrand() && reverseComplement)
-            gc.fillText(label + " (+)", GENE_ID_X_OFFSET, canvasCurrY);
+            label += " (+)";
         else if (reverseComplement)
-            gc.fillText(label + " (-)", GENE_ID_X_OFFSET, canvasCurrY);
-        else
-            gc.fillText(label, GENE_ID_X_OFFSET, canvasCurrY);
-        canvasCurrY += SPACING;
+            label += " (-)";
+        return label;
     }
 
     /**
@@ -212,32 +206,58 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         int geneStart = gene.getStartNucleotide();
         int geneEnd = gene.getEndNucleotide();
         double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart + 1);
+        boolean showingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
+        boolean showingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
         Collection<String> isoformsID = gene.getIsoforms().keySet();
         List<String> sortedIsoformsIDs = asSortedList(isoformsID);
+        boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
         for (String isoformID : sortedIsoformsIDs) {
             Isoform isoform = gene.getIsoform(isoformID);
-            drawIsoformLabel(isoform, isoformID);
-            canvasCurrY += SPACING / 3;
+            if ((showingIsoformName && isoform.getName() != null)|| showingIsoformID)
+                drawIsoformLabel(isoform, isoformID);
+            canvasCurrY += ISOFORM_SPACING;
             if(gene.isOnPositiveStrand() || !reverseComplement)
                 drawIsoform(isoform, geneStart, pixelsPerNucleotide);
             else
                 drawIsoformReverseComplement(isoform, geneEnd, pixelsPerNucleotide);
-            canvasCurrY += SPACING * 5/3;
+            canvasCurrY += EXON_HEIGHT;
+            canvasCurrY += ISOFORM_SPACING;
         }
     }
 
     /**
-     * Draws label for isoform - isoform name if exists, else isoform ID
-     * If show name check box is checked and isoform has a name, includes it in label
+     * Draws label for isoforms
      */
     private void drawIsoformLabel(Isoform isoform, String isoformID) {
-        String label = isoformID;
-        String name = isoform.getName();
-        if (name != null && showNameCheckBox.isSelected())
-            label += " (" + name + ")";
+        canvasCurrY += ISOFORM_FONT_HEIGHT;
+        String label = makeIsoformLabelText(isoform, isoformID);
         gc.setFont(TRANSCRIPT_FONT);
         gc.setFill(FONT_COLOUR);
         gc.fillText(label, ISOFORM_X_OFFSET, canvasCurrY);
+    }
+
+    /**
+     * Makes isoform label text:
+     *   - if show isoform name toggle is selected, label includes gene name
+     *   - if show isoform ID toggle is selected, label includes gene ID
+     *   - if show isoform name and show isoform ID toggles are selected, label includes isoform ID
+     *     first, followed by isoform name in brackets
+     *   - if neither toggle is selected, returns an empty string
+     */
+    private String makeIsoformLabelText(Isoform isoform, String isoformID) {
+        String label = "";
+        boolean showingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
+        boolean showingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
+        String isoformName = isoform.getName();
+
+        if (showingIsoformID && showingIsoformName && isoformName != null)
+            label += isoformID + " (" +isoformName + ")";
+        else if (showingIsoformName && isoformName != null)
+            label += isoformName;
+        else
+            label += isoformID;
+
+        return label;
     }
 
     /**
@@ -322,6 +342,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         double y = canvasCurrY + (double) EXON_HEIGHT / 2;
         gc.setFill(OUTLINE_COLOUR);
         gc.strokeLine(startX, y, endX, y);
+    }
+
+    private static float getFontHeight(Font font) {
+        Text text = new Text("ABC");
+        text.setFont(font);
+        return (float) text.getLayoutBounds().getHeight();
     }
 
     /**

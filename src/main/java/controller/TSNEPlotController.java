@@ -5,10 +5,8 @@ import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.tsne.barneshut.BarnesHutTSne;
 import com.jujutsu.utils.MatrixUtils;
 import com.jujutsu.utils.TSneUtils;
-import exceptions.TSNEInvalidPerplexityException;
-import exceptions.TSNELabelsFileNotFoundException;
 import exceptions.RNAScoopException;
-import exceptions.TSNeDataFileNotFoundException;
+import exceptions.TSNEInvalidPerplexityException;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -16,6 +14,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import mediator.ControllerMediator;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -34,7 +33,6 @@ import org.jfree.data.general.Dataset;
 import org.jfree.data.general.Series;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import mediator.ControllerMediator;
 import ui.PointColor;
 
 import javax.swing.*;
@@ -47,7 +45,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 
-import static javafx.application.Platform.*;
+import static javafx.application.Platform.runLater;
 
 public class TSNEPlotController implements Initializable, InteractiveElementController {
     @FXML private VBox tSNEPlot;
@@ -143,15 +141,15 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         /**
          * Load t-SNE data and labels files
          */
-        private void loadFiles() throws TSNeDataFileNotFoundException, TSNELabelsFileNotFoundException {
+        private void loadFiles() {
             /*URL urlToDataFile = getClass().getResource("/src/resources/mnist2500_X.txt");
             URL urlToLabelsFile = getClass().getResource("/src/resources/mnist2500_labels_int.txt");
             if(urlToDataFile == null)
                 throw new TSNeDataFileNotFoundException();
             if (urlToLabelsFile == null)
                 throw new TSNELabelsFileNotFoundException();*/
-            dataFile = new File("/home/mstephenson/RNA-Scoop/mnist2500_X.txt");
-            labelsFile = new File("/home/mstephenson/RNA-Scoop/mnist2500_labels_int.txt");
+            dataFile = new File("mnist2500_X.txt");
+            labelsFile = new File("mnist2500_labels_int.txt");
         }
 
         private double [][] generateTSNEMatrix() throws TSNEInvalidPerplexityException {
