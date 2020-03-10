@@ -125,6 +125,10 @@ public class ControllerMediator implements Mediator{
         return  mainController.isReverseComplementing();
     }
 
+    public boolean isHidingIsoformsWithNoJunctions() {
+        return  mainController.isHidingIsoformsWithNoJunctions();
+    }
+
     public boolean isShowingGeneNameAndID() {
         return  mainController.isShowingGeneAndIDName();
     }

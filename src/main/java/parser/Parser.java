@@ -1,11 +1,13 @@
 package parser;
 
-import exceptions.*;
 import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
+import exceptions.*;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

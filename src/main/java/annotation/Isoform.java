@@ -11,17 +11,21 @@ public class Isoform {
     private HashMap<String, Integer> expressionPerCellMap;
     private ArrayList<Exon> exons;
     private String name;
+    private boolean hasExonJunctions;
 
     public Isoform() {
         expressionPerCellMap = new HashMap<>();
         exons = new ArrayList<>();
         name = null;
+        hasExonJunctions = false;
     }
 
     public void addExon(Exon exon) {
         if (!exons.contains(exon)) {
             exons.add(exon);
             exons.sort(Exon::compareTo);
+            if(exons.size() > 1 && !hasExonJunctions)
+                hasExonJunctions = true;
         }
     }
 
@@ -36,4 +40,6 @@ public class Isoform {
     public ArrayList<Exon> getExons() {
         return exons;
     }
+
+    public boolean hasExonJunctions() {return hasExonJunctions;}
 }

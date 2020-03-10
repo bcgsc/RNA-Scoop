@@ -1,10 +1,9 @@
-
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import parser.Parser;
 import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
+import parser.Parser;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -97,8 +96,7 @@ public class ParserTests {
             }
 
         }
-        HashMap<String, Isoform> isoforms = gene.getIsoforms();
-        assertEquals(GENE_1_ISOFORMS.length, countIsoforms(isoforms));
+        assertEquals(GENE_1_ISOFORMS.length, gene.getNumIsoforms());
     }
 
     @Test
@@ -165,12 +163,5 @@ public class ParserTests {
             timesRan++;
         }
         assertEquals(ISOFORM_2_EXONS.length, timesRan);
-    }
-
-    private int countIsoforms(HashMap<String, Isoform> isoforms) {
-        int num = 0;
-        for (String key : isoforms.keySet())
-            num++;
-        return num;
     }
 }

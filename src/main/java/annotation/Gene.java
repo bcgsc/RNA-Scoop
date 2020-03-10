@@ -1,7 +1,9 @@
 package annotation;
 
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 public class Gene implements Comparable<Gene> {
 
@@ -16,7 +18,7 @@ public class Gene implements Comparable<Gene> {
     private int startNucleotide;
     private int endNucleotide;
     private String chromosome;
-    private boolean isPositiveSense;
+    private boolean onPositiveStrand;
 
     public Gene(String id, String chromosome, String strand) {
         isoforms = new HashMap<>();
@@ -27,15 +29,11 @@ public class Gene implements Comparable<Gene> {
         startNucleotide = Integer.MAX_VALUE;
         endNucleotide = 0;
         this.chromosome = chromosome;
-        isPositiveSense = strand.equals("+");
+        onPositiveStrand = strand.equals("+");
     }
 
     public void addIsoform(String transcriptID, Isoform isoform) {
         isoforms.put(transcriptID, isoform);
-    }
-
-    public Boolean hasIsoform(String transcriptID) {
-        return isoforms.containsKey(transcriptID);
     }
 
     public void setName(String name) {
@@ -50,12 +48,36 @@ public class Gene implements Comparable<Gene> {
         this.endNucleotide = endNucleotide;
     }
 
+    public Boolean hasIsoform(String transcriptID) {
+        return isoforms.containsKey(transcriptID);
+    }
+
     public Isoform getIsoform(String transcriptID) {
         return isoforms.get(transcriptID);
     }
 
-    public HashMap<String, Isoform> getIsoforms() {
+    public HashMap<String, Isoform> getIsoformsMap() {
         return isoforms;
+    }
+
+    public Collection<Isoform> getIsoforms() {
+        return isoforms.values();
+    }
+
+    public int getNumIsoforms() {
+        return isoforms.size();
+    }
+
+    public boolean hasIsoformWithJunctions() {
+        for (Isoform isoform : isoforms.values()) {
+            if (isoform.hasExonJunctions())
+                return true;
+        }
+        return false;
+    }
+
+    public Collection<Isoform> getIsoformsWithJunctions() {
+        return isoforms.values().stream().filter(Isoform::hasExonJunctions).collect(Collectors.toList());
     }
 
     public String getName() {
@@ -79,7 +101,7 @@ public class Gene implements Comparable<Gene> {
     }
 
     public boolean isOnPositiveStrand() {
-        return isPositiveSense;
+        return onPositiveStrand;
     }
 
     @Override

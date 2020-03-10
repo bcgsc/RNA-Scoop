@@ -44,6 +44,7 @@ public class MainController implements InteractiveElementController {
     @FXML private SplitPane verticalSplitPane;
     @FXML private SplitPane horizontalSplitPane;
     //isoform plot setting toggles
+    @FXML private CheckMenuItem hideIsoformsWithNoJunctionsToggle;
     @FXML private CheckMenuItem revComplementToggle;
     @FXML private RadioMenuItem showGeneNameAndIDToggle;
     @FXML private RadioMenuItem showGeneNameToggle;
@@ -150,6 +151,10 @@ public class MainController implements InteractiveElementController {
 
     public boolean isReverseComplementing() {
         return revComplementToggle.isSelected();
+    }
+
+    public boolean isHidingIsoformsWithNoJunctions () {
+        return hideIsoformsWithNoJunctionsToggle.isSelected();
     }
 
     public boolean isShowingGeneAndIDName() {
@@ -326,6 +331,7 @@ public class MainController implements InteractiveElementController {
      */
     private void restoreIsoformPlotSettingsTogglesFromJSON(Map settings) {
         restoreReverseComplementToggle(settings);
+        restoreHideIsoformsWithNoJunctionsToggle(settings);
         restoreShowGeneNameIDToggles(settings);
         restoreShowIsoformNameToggle(settings);
         restoreShowIsoformIDToggle(settings);
@@ -350,6 +356,18 @@ public class MainController implements InteractiveElementController {
             revComplementToggle.setSelected(true);
         else
             revComplementToggle.setSelected(false);
+    }
+
+    /**
+     * If the hide isoforms with no junctions toggle was selected in the previous session, selects it,
+     * else deselects it
+     */
+    private void restoreHideIsoformsWithNoJunctionsToggle(Map settings) {
+        boolean wasHidingIsoformsWithNoJunctions = (boolean) settings.get(SessionMaker.HIDE_ISOFORMS_WITH_NO_JUNCTIONS_KEY);
+        if (wasHidingIsoformsWithNoJunctions)
+            hideIsoformsWithNoJunctionsToggle.setSelected(true);
+        else
+            hideIsoformsWithNoJunctionsToggle.setSelected(false);
     }
 
     /**
@@ -516,12 +534,14 @@ public class MainController implements InteractiveElementController {
 
     /**
      * Automatically resizes path combo box when window is resized
+     * Sets path combo box initial width
      * Allows dragging and dropping of files
      * Makes it so files are loaded from path in combo box when ENTER is pressed
      * Removes initial focus from path combo box
      */
     private void setUpPathComboBox() {
         borderPane.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(borderPane.getWidth() - 95));
+        pathComboBox.setPrefWidth(borderPane.getWidth() - 95);
         setUpPathComboBoxDragNDrop();
         // adds listener to border pane so that focus can be on any or no elements and
         // the key press is still registered

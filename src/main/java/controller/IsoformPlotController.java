@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class IsoformPlotController implements Initializable, InteractiveElementController {
     private static final Color FONT_COLOUR = Color.BLACK;
@@ -71,12 +72,16 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Draws given genes
+     * Draws given genes, except genes that don't have isoforms with exon
+     * junctions, if supposed to be hiding those
      */
     public void drawGenes(Collection<Gene> genes) {
+        Collection<Gene> genesToDraw = genes;
+        if (ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions())
+            genesToDraw = genesToDraw.stream().filter(Gene::hasIsoformWithJunctions).collect(Collectors.toList());
         clearCanvas();
-        incrementCanvasHeight(genes);
-        for (Gene gene : genes) {
+        incrementCanvasHeight(genesToDraw);
+        for (Gene gene : genesToDraw) {
             drawGene(gene);
             canvasCurrY += GENE_GENE_SPACING;
         }
@@ -125,18 +130,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             newHeight += (numGenes - 1) * GENE_GENE_SPACING;
             newHeight += numGenes * (GENE_FONT_HEIGHT + GENE_ISOFORM_SPACING);
             for (Gene gene : genes) {
-                Collection<Isoform> isoforms = gene.getIsoforms().values();
+                Collection<Isoform> isoforms = getIsoformsToDraw(gene);
+
                 int numIsoforms = isoforms.size();
                 newHeight += numIsoforms * (2 * ISOFORM_SPACING + EXON_HEIGHT);
-                if (ControllerMediator.getInstance().isShowingIsoformID() || ControllerMediator.getInstance().isShowingGeneNameAndID()) {
-                    newHeight += numIsoforms * ISOFORM_FONT_HEIGHT;
-                }
-                else if (ControllerMediator.getInstance().isShowingIsoformName()) {
-                    for (Isoform isoform: isoforms) {
-                        if (isoform.getName() != null)
-                            newHeight += ISOFORM_FONT_HEIGHT;
-                    }
-                }
+                newHeight += getHeightForIsoformLabels(isoforms);
             }
             // there is no label below the last isoform
             newHeight -= ISOFORM_SPACING;
@@ -154,6 +152,43 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         drawGeneLabel(gene);
         canvasCurrY += GENE_ISOFORM_SPACING;
         drawAllIsoforms(gene);
+    }
+
+    /**
+     * Returns isoforms of given gene that should be drawn
+     */
+    private Collection<Isoform> getIsoformsToDraw(Gene gene) {
+        Collection<Isoform> isoforms;
+        boolean hidingIsoformsWithNoJunctions = ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions();
+        if (hidingIsoformsWithNoJunctions)
+            isoforms = gene.getIsoformsWithJunctions();
+        else
+            isoforms = gene.getIsoforms();
+        return isoforms;
+    }
+
+    /**
+     * Returns combined height of all the labels of the given isoforms
+     */
+    private double getHeightForIsoformLabels(Collection<Isoform> isoforms) {
+        boolean isShowingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
+        boolean isShowingGeneNameAndID = ControllerMediator.getInstance().isShowingGeneNameAndID();
+        boolean isShowingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
+        int numIsoforms = isoforms.size();
+        double height = 0;
+
+        if (isShowingIsoformID || isShowingGeneNameAndID) {
+            height += numIsoforms * ISOFORM_FONT_HEIGHT;
+        }
+        else {
+            if (isShowingIsoformName) {
+                for (Isoform isoform: isoforms) {
+                    if (isoform.getName() != null)
+                        height += ISOFORM_FONT_HEIGHT;
+                }
+            }
+        }
+        return height;
     }
 
     /**
@@ -206,23 +241,43 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         int geneStart = gene.getStartNucleotide();
         int geneEnd = gene.getEndNucleotide();
         double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart + 1);
-        boolean showingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
-        boolean showingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
-        Collection<String> isoformsID = gene.getIsoforms().keySet();
+        Collection<String> isoformsID = gene.getIsoformsMap().keySet();
         List<String> sortedIsoformsIDs = asSortedList(isoformsID);
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
+
         for (String isoformID : sortedIsoformsIDs) {
             Isoform isoform = gene.getIsoform(isoformID);
-            if ((showingIsoformName && isoform.getName() != null)|| showingIsoformID)
-                drawIsoformLabel(isoform, isoformID);
-            canvasCurrY += ISOFORM_SPACING;
-            if(gene.isOnPositiveStrand() || !reverseComplement)
-                drawIsoform(isoform, geneStart, pixelsPerNucleotide);
-            else
-                drawIsoformReverseComplement(isoform, geneEnd, pixelsPerNucleotide);
-            canvasCurrY += EXON_HEIGHT;
-            canvasCurrY += ISOFORM_SPACING;
+            if (shouldDrawIsoform(isoform)) {
+                if (shouldDrawIsoformLabel(isoform))
+                    drawIsoformLabel(isoform, isoformID);
+                canvasCurrY += ISOFORM_SPACING;
+                if(gene.isOnPositiveStrand() || !reverseComplement)
+                    drawIsoform(isoform, geneStart, pixelsPerNucleotide);
+                else
+                    drawIsoformReverseComplement(isoform, geneEnd, pixelsPerNucleotide);
+                canvasCurrY += EXON_HEIGHT;
+                canvasCurrY += ISOFORM_SPACING;
+            }
         }
+    }
+
+    /**
+     * Returns false if isoform has no exon junctions and are hiding isoforms with
+     * no junctions, else returns true
+     */
+    private boolean shouldDrawIsoform(Isoform isoform) {
+        boolean isHidingIsoformsWithNoJunctions = ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions();
+        return !(isHidingIsoformsWithNoJunctions && !isoform.hasExonJunctions());
+    }
+
+    /**
+     * Returns true if are showing isoform name and the given isoform has a name, or if
+     * are showing isoform ID, else returns false
+     */
+    private boolean shouldDrawIsoformLabel(Isoform isoform) {
+        boolean isShowingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
+        boolean isShowingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
+        return (isShowingIsoformName && isoform.getName() != null) || isShowingIsoformID;
     }
 
     /**
@@ -246,13 +301,13 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     private String makeIsoformLabelText(Isoform isoform, String isoformID) {
         String label = "";
-        boolean showingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
-        boolean showingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
+        boolean isShowingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
+        boolean isShowingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
         String isoformName = isoform.getName();
 
-        if (showingIsoformID && showingIsoformName && isoformName != null)
+        if (isShowingIsoformID && isShowingIsoformName && isoformName != null)
             label += isoformID + " (" +isoformName + ")";
-        else if (showingIsoformName && isoformName != null)
+        else if (isShowingIsoformName && isoformName != null)
             label += isoformName;
         else
             label += isoformID;

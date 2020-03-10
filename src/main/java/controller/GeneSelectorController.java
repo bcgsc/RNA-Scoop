@@ -206,8 +206,10 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         geneIDCol .setCellValueFactory(new PropertyValueFactory("id"));
         TableColumn<Gene,String> geneName = new TableColumn("Gene Name");
         geneName.setCellValueFactory(new PropertyValueFactory("name"));
+        TableColumn<Gene,String> numIsoforms = new TableColumn("# Isoforms");
+        numIsoforms.setCellValueFactory(new PropertyValueFactory("numIsoforms"));
 
-        genesTable.getColumns().setAll(geneIDCol , geneName);
+        genesTable.getColumns().setAll(geneIDCol , geneName, numIsoforms);
         genesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 

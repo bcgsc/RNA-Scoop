@@ -1,10 +1,10 @@
 package persistance;
 
-import controller.ConsoleController;
-import mediator.ControllerMediator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import controller.ConsoleController;
+import mediator.ControllerMediator;
 import java.util.ArrayList;
 
 public class SessionMaker {
@@ -13,6 +13,7 @@ public class SessionMaker {
     public static final String TSNE_PLOT_OPEN_KEY = "t-sne open";
     public static final String CONSOLE_OPEN_KEY = "console open";
     public static final String REVERSE_COMPLEMENT_KEY = "rev complement";
+    public static final String HIDE_ISOFORMS_WITH_NO_JUNCTIONS_KEY = "hide isoforms with no junctions";
     public static final String SHOW_GENE_NAME_AND_ID_KEY = "show gene name and id";
     public static final String SHOW_GENE_NAME_KEY = "show gene name";
     public static final String SHOW_GENE_ID_KEY = "show gene id";
@@ -37,6 +38,7 @@ public class SessionMaker {
         session.put(TSNE_PLOT_OPEN_KEY, ControllerMediator.getInstance().isTSNEPlotOpen());
         session.put(CONSOLE_OPEN_KEY, ControllerMediator.getInstance().isConsoleOpen());
         session.put(REVERSE_COMPLEMENT_KEY, ControllerMediator.getInstance().isReverseComplementing());
+        session.put(HIDE_ISOFORMS_WITH_NO_JUNCTIONS_KEY, ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions());
         session.put(SHOW_GENE_NAME_AND_ID_KEY, ControllerMediator.getInstance().isShowingGeneNameAndID());
         session.put(SHOW_GENE_NAME_KEY, ControllerMediator.getInstance().isShowingGeneName());
         session.put(SHOW_GENE_ID_KEY, ControllerMediator.getInstance().isShowingGeneID());

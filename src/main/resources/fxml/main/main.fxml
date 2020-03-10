@@ -21,6 +21,7 @@
                             <ToggleGroup fx:id="geneLabelSettings"/>
                         </fx:define>
                         <CheckMenuItem fx:id="revComplementToggle" onAction="#handleIsoformPlotSettingToggle" text="Reverse Complement (-) Strand"/>
+                        <CheckMenuItem fx:id="hideIsoformsWithNoJunctionsToggle" onAction="#handleIsoformPlotSettingToggle" text="Hide Isoforms with No Exon Junctions"/>
                         <SeparatorMenuItem/>
                         <RadioMenuItem fx:id="showGeneNameAndIDToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene Name and ID"/>
                         <RadioMenuItem fx:id="showGeneNameToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene Name" selected="true"/>
@@ -50,7 +51,7 @@
                 <VBox.margin>
                     <Insets top="10" left="10"/>
                 </VBox.margin>
-                <ComboBox fx:id="pathComboBox" editable="true" prefWidth="1200" promptText="Insert path to file here"/>
+                <ComboBox fx:id="pathComboBox" editable="true" promptText="Insert path to file here"/>
                 <Button fx:id="openFileChooserButton" onAction="#handleOpenFileChooserButton" prefWidth="70" text="Open...">
                     <HBox.margin>
                         <Insets left="5"/>
