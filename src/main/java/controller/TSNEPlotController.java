@@ -38,12 +38,10 @@ import ui.PointColor;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.net.URL;
 import java.util.List;
-import java.util.ResourceBundle;
-import java.util.Scanner;
+import java.util.*;
 
 import static javafx.application.Platform.runLater;
 
@@ -133,6 +131,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
             } catch (Exception e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the t-SNE plot"));
+                e.printStackTrace();
             } finally {
                 runLater(TSNEPlotController.this::enableAssociatedFunctionality);
             }
@@ -163,16 +162,18 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 throw new TSNEInvalidPerplexityException();
 
             int initial_dims = 55;
-            double [][] X = MatrixUtils.simpleRead2DMatrix(dataFile, "   ");
+            double [][] X = MatrixUtils.simpleRead2DMatrix(dataFile, "\t");
             BarnesHutTSne tsne = new BHTSne();
             TSneConfiguration config = TSneUtils.buildConfig(X, 2, initial_dims, perplexityValue, 1000);
             return tsne.tsne(config);
         }
 
+
         /**
          * Plots given t-SNE matrix
          */
         private void drawTsne(double[][] tSNEMatrix) throws FileNotFoundException {
+            System.out.print(tSNEMatrix.length);
             createDataSet(tSNEMatrix);
 
             DatasetSelectionExtension<XYCursor> datasetExtension

@@ -2,6 +2,7 @@ package controller;
 
 import annotation.Gene;
 import exceptions.RNAScoopException;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -494,8 +495,7 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Sets up main window
-     * Makes it so current session is saved after user clicks X button
+     * Sets up main window, when this window is closed, program shuts down
      */
     private void setUpWindow() {
         window = new Stage();
@@ -503,12 +503,7 @@ public class MainController implements InteractiveElementController {
         window.getIcons().add(Main.RNA_SCOOP_LOGO);
         setWindowSize();
         window.setOnCloseRequest(event -> {
-            try {
-                SessionIO.saveSession();
-            } catch (IOException e) {
-                System.err.println("An error occurred while saving the current session");
-                e.printStackTrace();
-            }
+            Platform.exit();
         });
         window.show();
     }

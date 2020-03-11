@@ -37,6 +37,14 @@ public class Main extends Application {
     }
 
     /**
+     * When program ends, current session is saved
+     */
+    @Override
+    public void stop() throws Exception {
+        SessionIO.saveSession();
+    }
+
+    /**
      * Registers controllers with mediator
      */
     private void registerControllers(MainController mainController, ConsoleController consoleController, IsoformPlotController isoformPlotController,
