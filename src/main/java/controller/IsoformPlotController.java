@@ -26,7 +26,10 @@ import java.util.stream.Collectors;
 
 public class IsoformPlotController implements Initializable, InteractiveElementController {
     private static final Color FONT_COLOUR = Color.BLACK;
-    private static final Color EXON_COLOUR = Color.color(0.600, 0.851, 1);
+    private static final int DEFAULT_EXON_HUE = 202;
+    private static final int DEFAULT_EXON_BRIGHTNESS = 1;
+    private static final double DEFAULT_EXON_SATURATION = 0.4;
+    private static final Color DEFAULT_EXON_COLOUR = Color.hsb(DEFAULT_EXON_HUE, DEFAULT_EXON_SATURATION, DEFAULT_EXON_BRIGHTNESS);
     private static final Color OUTLINE_COLOUR = Color.BLACK;
     private static final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
     private static final Font TRANSCRIPT_FONT = Font.font("Verdana",12);
@@ -45,7 +48,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     @FXML private Canvas canvas;
     @FXML private ScrollPane scrollPane;
-    @FXML private VBox isoformPlot;
+    @FXML private VBox isoformPlotPanel;
     @FXML private Button selectGenesButton;
 
     private GraphicsContext gc;
@@ -69,6 +72,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         canvasCurrY = CANVAS_INIT_Y;
         canvas.setHeight(CANVAS_INIT_Y);
+        System.out.println("canvas cleared");
     }
 
     /**
@@ -88,7 +92,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     public Node getIsoformPlot() {
-        return isoformPlot;
+        return isoformPlotPanel;
     }
 
     /**
@@ -244,6 +248,9 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         Collection<String> isoformsID = gene.getIsoformsMap().keySet();
         List<String> sortedIsoformsIDs = asSortedList(isoformsID);
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
+        boolean shouldGetCustomIsoformColor = ControllerMediator.getInstance().areCellsSelected();
+        double minIsoformExpression = ControllerMediator.getInstance().getMinCellIsoformExpression();
+        double maxIsoformExpression = ControllerMediator.getInstance().getMaxCellIsoformExpression();
 
         for (String isoformID : sortedIsoformsIDs) {
             Isoform isoform = gene.getIsoform(isoformID);
@@ -251,14 +258,23 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 if (shouldDrawIsoformLabel(isoform))
                     drawIsoformLabel(isoform, isoformID);
                 canvasCurrY += ISOFORM_SPACING;
+                Color isoformColor = DEFAULT_EXON_COLOUR;
+                if (shouldGetCustomIsoformColor)
+                    isoformColor = getCustomIsoformColor(isoformID, minIsoformExpression, maxIsoformExpression);
                 if(gene.isOnPositiveStrand() || !reverseComplement)
-                    drawIsoform(isoform, geneStart, pixelsPerNucleotide);
+                    drawIsoform(isoform, geneStart, pixelsPerNucleotide, isoformColor);
                 else
-                    drawIsoformReverseComplement(isoform, geneEnd, pixelsPerNucleotide);
+                    drawIsoformReverseComplement(isoform, geneEnd, pixelsPerNucleotide, isoformColor);
                 canvasCurrY += EXON_HEIGHT;
                 canvasCurrY += ISOFORM_SPACING;
             }
         }
+    }
+
+    private Color getCustomIsoformColor(String isoformID, double minIsoformExpression, double maxIsoformExpression) {
+        double isoformExpression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoformID);
+        double saturation = isoformExpression / (maxIsoformExpression - minIsoformExpression);
+        return Color.hsb(DEFAULT_EXON_HUE, saturation, DEFAULT_EXON_BRIGHTNESS);
     }
 
     /**
@@ -318,10 +334,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Draws the exons and introns of the given isoform, without reverse complementing
      */
-    private void drawIsoform(Isoform isoform, int geneStart, double pixelsPerNucleotide) {
+    private void drawIsoform(Isoform isoform, int geneStart, double pixelsPerNucleotide, Color isoformColor) {
         ArrayList<Exon> exons = isoform.getExons();
         for (int i = 0; i < exons.size(); ++i) {
-            drawExon(geneStart, pixelsPerNucleotide, exons, i);
+            drawExon(geneStart, pixelsPerNucleotide, exons, i, isoformColor);
             if (i != 0) {
                 drawIntron(geneStart, pixelsPerNucleotide, exons, i);
             }
@@ -332,10 +348,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Draws the exons and introns of the reverse complement of the given isoform
      */
-    private void drawIsoformReverseComplement(Isoform isoform, int geneEnd, double pixelsPerNucleotide) {
+    private void drawIsoformReverseComplement(Isoform isoform, int geneEnd, double pixelsPerNucleotide, Color isoformColor) {
         ArrayList<Exon> exons = isoform.getExons();
         for (int i = 0; i < exons.size(); ++i) {
-            drawExonReverseComplement(geneEnd, pixelsPerNucleotide, exons, i);
+            drawExonReverseComplement(geneEnd, pixelsPerNucleotide, exons, i, isoformColor);
             if (i != 0) {
                 drawIntronReverseComplement(geneEnd, pixelsPerNucleotide, exons, i);
             }
@@ -345,12 +361,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Draws the given exon, without reverse complementing
      */
-    private void drawExon(int geneStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
+    private void drawExon(int geneStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i, Color isoformColor) {
         int exonStart = exons.get(i).getStartNucleotide();
         int exonEnd = exons.get(i).getEndNucleotide();
         double startX = (exonStart - geneStart) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
-        drawExonGraphic(startX, width);
+        drawExonGraphic(startX, width, isoformColor);
     }
 
     /**
@@ -367,12 +383,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Draws the reverse complement of the given exon
      */
-    private void drawExonReverseComplement(int geneEnd, double pixelsPerNucleotide, ArrayList<Exon> exons, int i) {
+    private void drawExonReverseComplement(int geneEnd, double pixelsPerNucleotide, ArrayList<Exon> exons, int i, Color isoformColor) {
         int exonStart = exons.get(i).getStartNucleotide();
         int exonEnd = exons.get(i).getEndNucleotide();
         double startX = (geneEnd - exonEnd) * pixelsPerNucleotide + ISOFORM_X_OFFSET;
         double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
-        drawExonGraphic(startX, width);
+        drawExonGraphic(startX, width, isoformColor);
     }
 
     /**
@@ -386,8 +402,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         drawIntronGraphic(startX, endX);
     }
 
-    private void drawExonGraphic(double startX, double width) {
-        gc.setFill(EXON_COLOUR);
+    private void drawExonGraphic(double startX, double width, Color isoformColor) {
+        gc.setFill(isoformColor);
         gc.fillRect(startX, canvasCurrY, width, EXON_HEIGHT);
         gc.setFill(OUTLINE_COLOUR);
         gc.strokeRect(startX, canvasCurrY, width, EXON_HEIGHT);

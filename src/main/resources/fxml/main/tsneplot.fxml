@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="controller.TSNEPlotController"
-      fx:id="tSNEPlot" style="-fx-background-color: #fafafa;">
+      fx:id="tSNEPlotPanel" style="-fx-background-color: #fafafa;">
     <HBox>
         <VBox.margin>
             <Insets top="10" left="10"/>
@@ -21,7 +21,7 @@
         </Text>
         <TextField fx:id="perplexity" text="20" prefWidth="50"/>
     </HBox>
-    <SwingNode fx:id="canvas">
+    <SwingNode fx:id="swingNode">
         <VBox.margin>
             <Insets bottom="10" left="10" right="10" top="10"/>
         </VBox.margin>

@@ -33,9 +33,7 @@ public class Parser {
             ++lineNumber;
             String dataString = removeComments(currentLine);
             String[] data = dataString.split("\t");
-            if (data.length < 9)
-                throw new GTFFileMissingColumnsException(lineNumber);
-            if (isExonData(data)) {
+            if (data.length == 9 && isExonData(data)) {
                 ExonDataParser.parse(data, lineNumber);
             }
         }
@@ -81,9 +79,9 @@ public class Parser {
         private static String strand;
         // attribute values
         private static String geneID;
-        private static String transcriptID;
+        private static String isoformID;
         private static String geneName;
-        private static String transcriptName;
+        private static String isoformName;
 
         private static void clearData() {
             exonData = null;
@@ -92,9 +90,9 @@ public class Parser {
             startNucleotide = 0;
             strand = null;
             geneID = null;
-            transcriptID = null;
+            isoformID = null;
             geneName = null;
-            transcriptName = null;
+            isoformName = null;
         }
 
         /**
@@ -151,18 +149,18 @@ public class Parser {
                             geneID = attributeValue;
                             break;
                         case "transcript_id":
-                            transcriptID = attributeValue;
+                            isoformID = attributeValue;
                             break;
                         case "gene_name":
                             geneName = attributeValue;
                             break;
                         case "transcript_name":
-                            transcriptName = attributeValue;
+                            isoformName = attributeValue;
                             break;
                     }
                 }
             }
-            if (geneID == null || transcriptID == null)
+            if (geneID == null || isoformID == null)
                 throw new GTFMissingAttributesInfoException(lineNumber);
         }
 
@@ -176,19 +174,19 @@ public class Parser {
                 gene = new Gene(geneID, chromosome, strand);
                 parsedGenes.put(geneID, gene);
             }
-            if(gene.hasIsoform(transcriptID)) {
-                isoform = gene.getIsoform(transcriptID);
+            if(gene.hasIsoform(isoformID)) {
+                isoform = gene.getIsoform(isoformID);
             } else {
                 isoform = new Isoform();
-                gene.addIsoform(transcriptID, isoform);
+                gene.addIsoform(isoformID, isoform);
             }
             exon = new Exon(startNucleotide, endNucleotide);
             isoform.addExon(exon);
 
             if (geneName != null && gene.getName() == null)
                 gene.setName(geneName);
-            if (transcriptName != null && isoform.getName() == null)
-                isoform.setName(transcriptName);
+            if (isoformName != null && isoform.getName() == null)
+                isoform.setName(isoformName);
             if (gene.getStartNucleotide() > exon.getStartNucleotide())
                 gene.setStartNucleotide(exon.getStartNucleotide());
             if (gene.getEndNucleotide() < exon.getEndNucleotide())

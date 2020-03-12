@@ -3,7 +3,6 @@ package controller;
 import com.jujutsu.tsne.TSneConfiguration;
 import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.tsne.barneshut.BarnesHutTSne;
-import com.jujutsu.utils.MatrixUtils;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
 import exceptions.TSNEInvalidPerplexityException;
@@ -25,12 +24,16 @@ import org.jfree.chart.panel.selectionhandler.RegionSelectionHandler;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.item.IRSUtilities;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.extension.DatasetIterator;
 import org.jfree.data.extension.DatasetSelectionExtension;
 import org.jfree.data.extension.impl.DatasetExtensionManager;
 import org.jfree.data.extension.impl.XYCursor;
 import org.jfree.data.extension.impl.XYDatasetSelectionExtension;
 import org.jfree.data.general.Dataset;
+import org.jfree.data.general.SelectionChangeEvent;
+import org.jfree.data.general.SelectionChangeListener;
 import org.jfree.data.general.Series;
+import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import ui.PointColor;
@@ -45,29 +48,36 @@ import java.util.*;
 
 import static javafx.application.Platform.runLater;
 
-public class TSNEPlotController implements Initializable, InteractiveElementController {
-    @FXML private VBox tSNEPlot;
+public class TSNEPlotController implements Initializable, InteractiveElementController, SelectionChangeListener<XYCursor> {
+    @FXML private VBox tSNEPlotPanel;
     @FXML private Button drawTSNEButton;
     @FXML private TextField perplexity;
-    @FXML private SwingNode canvas;
+    @FXML private SwingNode swingNode;
 
-    private JPanel pane;
-    private XYSeriesCollection dataSet;
+    private JPanel tSNEPlot;
+    private XYSeriesCollection cellsInTSNEPlot;
+    private ArrayList<CellDataItem> selectedCells;
+    private double minCellIsoformExpression;
+    private double maxCellIsoformExpression;
 
     /**
      * Sets up pane in which t-SNE plot is displayed
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        pane = new JPanel(new GridLayout(1, 2));
-        pane.setPreferredSize(new Dimension(500, 1000));
-        canvas.setContent(pane);
-        pane.setBackground(Color.WHITE);
-        pane.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
+        tSNEPlot = new JPanel(new GridLayout(1, 2));
+        tSNEPlot.setPreferredSize(new Dimension(500, 1000));
+        swingNode.setContent(tSNEPlot);
+        tSNEPlot.setBackground(Color.WHITE);
+        tSNEPlot.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
+        cellsInTSNEPlot = new XYSeriesCollection();
+        selectedCells = new ArrayList<>();
+        minCellIsoformExpression = Double.MAX_VALUE;
+        maxCellIsoformExpression = 0;
     }
 
     public Node getTSNEPlot() {
-        return tSNEPlot;
+        return tSNEPlotPanel;
     }
 
     public void disable() {
@@ -81,9 +91,49 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     public void clearTSNEPlot() {
-        pane.removeAll();
-        pane.validate();
-        pane.repaint();
+        minCellIsoformExpression = Double.MAX_VALUE;
+        maxCellIsoformExpression = 0;
+        cellsInTSNEPlot.removeAllSeries();
+        selectedCells.clear();
+        tSNEPlot.removeAll();
+        tSNEPlot.validate();
+        tSNEPlot.repaint();
+    }
+
+    public boolean isTSNEPlotCleared() {
+        return cellsInTSNEPlot.getSeriesCount() == 0;
+    }
+
+    public boolean areCellsSelected() {
+        return selectedCells.size() > 0;
+    }
+
+    public double getIsoformExpressionLevel(String isoformID) {
+        return selectedCells.get(0).getIsoformExpressionLevel(isoformID);
+    }
+
+    public double getMinCellIsoformExpression() {
+        return minCellIsoformExpression;
+    }
+
+    public double getMaxCellIsoformExpression() {
+        return maxCellIsoformExpression;
+    }
+
+    @Override
+    public void selectionChanged(SelectionChangeEvent<XYCursor> selectionChangeEvent) {
+        if (!isTSNEPlotCleared()) {
+            XYDatasetSelectionExtension ext = (XYDatasetSelectionExtension)
+                    selectionChangeEvent.getSelectionExtension();
+            DatasetIterator<XYCursor> selectionIterator = ext.getSelectionIterator(true);
+            selectedCells.clear();
+            while (selectionIterator.hasNext()) {
+                XYCursor dc = selectionIterator.next();
+
+                selectedCells.add((CellDataItem) cellsInTSNEPlot.getSeries(dc.series).getDataItem(dc.item));
+            }
+            ControllerMediator.getInstance().drawGenes(ControllerMediator.getInstance().getShownGenes());
+        }
     }
 
     /**
@@ -103,7 +153,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
     private void disableAssociatedFunctionality() {
         disable();
-        clearTSNEPlot();
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
@@ -116,16 +165,41 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().enableGeneSelector();
     }
 
+    private static class CellDataItem extends XYDataItem {
+        private double[] isoformExpressionLevels;
+        HashMap<String, Integer> isoformIndexMap;
+
+        public CellDataItem(Number x, Number y, double[] isoformExpressionLevels, HashMap<String, Integer> isoformIndexMap) {
+            super(x, y);
+            this.isoformExpressionLevels = isoformExpressionLevels;
+            this.isoformIndexMap = isoformIndexMap;
+        }
+
+        public double getIsoformExpressionLevel(String isoformID) {
+            Integer isoformIndex = isoformIndexMap.get(isoformID);
+            if (isoformIndex != null) {
+                System.out.println("the isoform level is " + isoformExpressionLevels[isoformIndex]);
+                return isoformExpressionLevels[isoformIndex];
+            }
+            else
+                return 0;
+        }
+    }
+
     private class TSNEPlotMaker implements Runnable {
         private File dataFile;
-        private File labelsFile;
+        private File colorsFile;
+        private File isoformLabelsFile;
+
         @Override
         public void run() {
+            clearTSNEPlot();
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing t-SNE plot..."));
             try {
                 loadFiles();
-                double[][] tSNEMatrix = generateTSNEMatrix();
-                drawTsne(tSNEMatrix);
+                double [][] cellIsoformExpressionMatrix = makeCellIsoformExpressionMatrix();
+                double[][] tSNEMatrix = generateTSNEMatrix(cellIsoformExpressionMatrix);
+                drawTsne(cellIsoformExpressionMatrix, tSNEMatrix);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot"));
             } catch(RNAScoopException e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
@@ -141,17 +215,40 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          * Load t-SNE data and labels files
          */
         private void loadFiles() {
-            /*URL urlToDataFile = getClass().getResource("/src/resources/mnist2500_X.txt");
-            URL urlToLabelsFile = getClass().getResource("/src/resources/mnist2500_labels_int.txt");
-            if(urlToDataFile == null)
-                throw new TSNeDataFileNotFoundException();
-            if (urlToLabelsFile == null)
-                throw new TSNELabelsFileNotFoundException();*/
-            dataFile = new File("mnist2500_X.txt");
-            labelsFile = new File("mnist2500_labels_int.txt");
+            dataFile = new File("/home/mstephenson/small_matrix/matrix.txt");
+            isoformLabelsFile = new File("/home/mstephenson/small_matrix/isoform_labels.txt");
+            colorsFile = new File("mnist200_labels_int.txt");
         }
 
-        private double [][] generateTSNEMatrix() throws TSNEInvalidPerplexityException {
+        private double[][] makeCellIsoformExpressionMatrix() throws IOException {
+            BufferedReader reader = new BufferedReader(new FileReader(dataFile.getPath()));
+            ArrayList<double[]> cellIsoformExpressionArrayList = new ArrayList<>();
+            String currentLine;
+            while ((currentLine = reader.readLine()) != null && !currentLine.matches("\\s*")) {
+                String[] cols = currentLine.trim().split("\t");
+                double[] row = new double[cols.length];
+                for(int i = 0; i < cols.length; ++i) {
+                    if (cols[i].length() != 0) {
+                        row[i] = Double.parseDouble(cols[i].trim());
+                        if (row[i] > maxCellIsoformExpression)
+                            maxCellIsoformExpression = row[i];
+                        if (row[i] < minCellIsoformExpression)
+                            minCellIsoformExpression = row[i];
+                    }
+                }
+                cellIsoformExpressionArrayList.add(row);
+            }
+            reader.close();
+
+            int numCells = cellIsoformExpressionArrayList.size();
+            double[][] cellIsoformExpressionArray = new double[numCells][];
+
+            for (int i = 0; i < numCells; i++)
+                cellIsoformExpressionArray[i] = cellIsoformExpressionArrayList.get(i);
+            return cellIsoformExpressionArray;
+        }
+
+        private double [][] generateTSNEMatrix(double[][] cellIsoformExpressionMatrix) throws TSNEInvalidPerplexityException {
             double perplexityValue;
             try {
                 perplexityValue = Double.parseDouble(perplexity.getText());
@@ -162,9 +259,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 throw new TSNEInvalidPerplexityException();
 
             int initial_dims = 55;
-            double [][] X = MatrixUtils.simpleRead2DMatrix(dataFile, "\t");
             BarnesHutTSne tsne = new BHTSne();
-            TSneConfiguration config = TSneUtils.buildConfig(X, 2, initial_dims, perplexityValue, 1000);
+            TSneConfiguration config = TSneUtils.buildConfig(cellIsoformExpressionMatrix, 2, initial_dims, perplexityValue, 1000);
             return tsne.tsne(config);
         }
 
@@ -172,22 +268,22 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         /**
          * Plots given t-SNE matrix
          */
-        private void drawTsne(double[][] tSNEMatrix) throws FileNotFoundException {
-            System.out.print(tSNEMatrix.length);
-            createDataSet(tSNEMatrix);
+        private void drawTsne(double[][] cellIsoformExpressionMatrix, double[][] tSNEMatrix) throws FileNotFoundException {
+            createDataSet(cellIsoformExpressionMatrix, tSNEMatrix);
 
             DatasetSelectionExtension<XYCursor> datasetExtension
-                    = new XYDatasetSelectionExtension(dataSet);
+                    = new XYDatasetSelectionExtension(cellsInTSNEPlot);
+            datasetExtension.addChangeListener(TSNEPlotController.this);
 
             JFreeChart chart = createPlot(datasetExtension);
             ChartPanel panel = new ChartPanel(chart);
             panel.setMouseWheelEnabled(true);
 
             addSelectionHandler(panel);
-            addSelectionManager(dataSet, datasetExtension, panel);
+            addSelectionManager(cellsInTSNEPlot, datasetExtension, panel);
 
-            pane.add(panel);
-            pane.validate();
+            tSNEPlot.add(panel);
+            tSNEPlot.validate();
         }
 
         /**
@@ -197,31 +293,46 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          * NOTE: if labels file does not have a label on a separate line for every cell,
          * cells will be left out of the data set!
          */
-        private void createDataSet(double[][] tSNEMatrix) throws FileNotFoundException {
-            dataSet = new XYSeriesCollection();
-            Scanner scanner = new Scanner(labelsFile);
+        private void createDataSet(double[][] cellIsoformExpressionMatrix, double[][] tSNEMatrix) throws FileNotFoundException {
+            Scanner colorScanner = new Scanner(colorsFile);
+            HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap();
             int cellIndex = 0;
-            while (scanner.hasNextLine()) {
-                String label = scanner.nextLine();
+            while (colorScanner.hasNextLine()) {
+                String label = colorScanner.nextLine();
                 XYSeries series = new XYSeries(label);
                 if (!dataSetHasSeries(series)) {
-                    dataSet.addSeries(series);
+                    cellsInTSNEPlot.addSeries(series);
                 } else {
-                    series = dataSet.getSeries(label);
+                    series = cellsInTSNEPlot.getSeries(label);
                 }
+
                 double cellX = tSNEMatrix[cellIndex][0];
                 double cellY = tSNEMatrix[cellIndex][1];
-                series.add(cellX, cellY);
+
+                CellDataItem cellDataItem = new CellDataItem(cellX, cellY, cellIsoformExpressionMatrix[cellIndex], isoformIndexMap);
+                series.add(cellDataItem);
                 cellIndex++;
             }
-            scanner.close();
+            colorScanner.close();
+        }
+
+        private HashMap<String, Integer> getIsoformIndexMap() throws FileNotFoundException {
+            Scanner isoformLabelsScanner = new Scanner(isoformLabelsFile);
+            HashMap<String, Integer> isoformIndexMap = new HashMap<>();
+            int index = 0;
+            while (isoformLabelsScanner.hasNextLine()) {
+                String isoformLabel = isoformLabelsScanner.nextLine();
+                isoformIndexMap.put(isoformLabel, index);
+                index++;
+            }
+            return isoformIndexMap;
         }
 
         /**
          * @return true if dataset has a series with the same key, false otherwise
          */
         private boolean dataSetHasSeries(Series series) {
-            List<XYSeries> dataSetSeries = dataSet.getSeries();
+            List<XYSeries> dataSetSeries = cellsInTSNEPlot.getSeries();
             for(Series otherSeries : dataSetSeries) {
                 if (otherSeries.getKey().equals(series.getKey())) {
                     return true;
@@ -231,7 +342,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
 
         private JFreeChart createPlot(DatasetSelectionExtension<XYCursor> ext) {
-            JFreeChart chart = ChartFactory.createScatterPlot("", " ", " ", dataSet);
+            JFreeChart chart = ChartFactory.createScatterPlot("", " ", " ", cellsInTSNEPlot);
 
             XYPlot plot = (XYPlot) chart.getPlot();
             setPlotViewProperties(plot);
@@ -276,7 +387,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             r.setBaseShapesFilled(true);
             r.setUseFillPaint(true);
             Shape shape  = new Ellipse2D.Double(0,0,5,5);
-            for(int i = 0; i < dataSet.getSeriesCount(); i++) {
+            for(int i = 0; i < cellsInTSNEPlot.getSeriesCount(); i++) {
                 r.setSeriesShape(i, shape);
                 Color seriesColor = PointColor.getColor();
                 r.setSeriesFillPaint(i, seriesColor);

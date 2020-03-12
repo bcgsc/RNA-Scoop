@@ -144,6 +144,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             ControllerMediator.getInstance().drawGenes(shownGenes);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("removing selected genes");
+            e.printStackTrace();
         } finally {
             enableAssociatedFunctionality();
         }
@@ -156,6 +157,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             clearShownGenes();
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("clearing shown genes");
+            e.printStackTrace();
         } finally {
             enableAssociatedFunctionality();
         }
@@ -173,6 +175,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             ControllerMediator.getInstance().drawGenes(shownGenes);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding all genes");
+            e.printStackTrace();
         } finally {
             enableAssociatedFunctionality();
         }

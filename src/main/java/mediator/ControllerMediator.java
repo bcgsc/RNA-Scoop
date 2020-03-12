@@ -121,6 +121,22 @@ public class ControllerMediator implements Mediator{
         return geneSelectorController.getShownGenes();
     }
 
+    public boolean areCellsSelected () {
+        return tsnePlotController.areCellsSelected();
+    }
+
+    public double getIsoformExpressionLevel(String isoformID) {
+        return tsnePlotController.getIsoformExpressionLevel(isoformID);
+    }
+
+    public double getMinCellIsoformExpression() {
+        return tsnePlotController.getMinCellIsoformExpression();
+    }
+
+    public double getMaxCellIsoformExpression() {
+        return tsnePlotController.getMaxCellIsoformExpression();
+    }
+
     public boolean isReverseComplementing() {
         return  mainController.isReverseComplementing();
     }
