@@ -23,15 +23,17 @@ public class Main extends Application {
         FXMLLoader isoformPlotLoader = new FXMLLoader(getClass().getResource("/fxml/main/isoformplot.fxml"));
         FXMLLoader tSNEPlotLoader = new FXMLLoader(getClass().getResource("/fxml/main/tsneplot.fxml"));
         FXMLLoader geneSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/geneselector.fxml"));
+        FXMLLoader tpmGradientLoader = new FXMLLoader(getClass().getResource("/fxml/tpmgradient.fxml"));
 
         mainLoader.load();
         Parent console = consoleLoader.load();
         Parent isoformPlot = isoformPlotLoader.load();
         Parent tSNEPlot = tSNEPlotLoader.load();
         geneSelectorLoader.load();
+        tpmGradientLoader.load();
 
         registerControllers(mainLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
-                            tSNEPlotLoader.getController(), geneSelectorLoader.getController());
+                            tSNEPlotLoader.getController(), geneSelectorLoader.getController(), tpmGradientLoader.getController());
         ControllerMediator.getInstance().initializeMain(console, isoformPlot, tSNEPlot);
         loadPreviousSession();
     }
@@ -48,12 +50,13 @@ public class Main extends Application {
      * Registers controllers with mediator
      */
     private void registerControllers(MainController mainController, ConsoleController consoleController, IsoformPlotController isoformPlotController,
-                                     TSNEPlotController tSNEPlotController, GeneSelectorController geneSelectorController) {
+                                     TSNEPlotController tSNEPlotController, GeneSelectorController geneSelectorController, TPMGradientAdjusterController tpmGradientAdjusterController) {
         ControllerMediator.getInstance().registerMainController(mainController);
         ControllerMediator.getInstance().registerConsoleController(consoleController);
         ControllerMediator.getInstance().registerIsoformPlotController(isoformPlotController);
         ControllerMediator.getInstance().registerTSNEPlotController(tSNEPlotController);
         ControllerMediator.getInstance().registerGeneSelectorController(geneSelectorController);
+        ControllerMediator.getInstance().registerTPMGradientController(tpmGradientAdjusterController);
     }
 
     /**

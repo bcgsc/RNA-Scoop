@@ -4,6 +4,7 @@ import annotation.Gene;
 import controller.*;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +16,7 @@ public class ControllerMediator implements Mediator{
     private IsoformPlotController isoformPlotController;
     private TSNEPlotController tsnePlotController;
     private GeneSelectorController geneSelectorController;
+    private TPMGradientAdjusterController tpmGradientAdjusterController;
 
     // Register controllers
     @Override
@@ -42,6 +44,11 @@ public class ControllerMediator implements Mediator{
         this.geneSelectorController = geneSelectorController;
     }
 
+    @Override
+    public void registerTPMGradientController(TPMGradientAdjusterController tpmGradientAdjusterController) {
+        this.tpmGradientAdjusterController = tpmGradientAdjusterController;
+    }
+
     // Change Main Display
     public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
         mainController.initializeMain(console, isoformPlot, tSNEPlot);
@@ -67,6 +74,10 @@ public class ControllerMediator implements Mediator{
     // Display Genes
     public void displayGeneSelector() {
         geneSelectorController.display();
+    }
+
+    public void displayTPMGradientAdjuster() {
+        tpmGradientAdjusterController.display();
     }
 
     public void updateGenes() {
@@ -129,12 +140,20 @@ public class ControllerMediator implements Mediator{
         return tsnePlotController.getIsoformExpressionLevel(isoformID);
     }
 
-    public double getMinCellIsoformExpression() {
-        return tsnePlotController.getMinCellIsoformExpression();
+    public double getGradientMinTPM() {
+        return tpmGradientAdjusterController.getGradientMinTPM();
     }
 
-    public double getMaxCellIsoformExpression() {
-        return tsnePlotController.getMaxCellIsoformExpression();
+    public double getGradientMaxTPM() {
+        return tpmGradientAdjusterController.getGradientMaxTPM();
+    }
+
+    public Color getMinTPMColor() {
+        return tpmGradientAdjusterController.getMinTPMColor();
+    }
+
+    public Color getMaxTPMColor() {
+        return tpmGradientAdjusterController.getMaxTPMColor();
     }
 
     public boolean isReverseComplementing() {
@@ -186,6 +205,22 @@ public class ControllerMediator implements Mediator{
         mainController.setPathComboBoxValue(path);
     }
 
+    public void setRecommendedMinTPM(int recommendedMinTPM) {
+        tpmGradientAdjusterController.setRecommendedMinTPM(recommendedMinTPM);
+    }
+
+    public void setRecommendedMaxTPM(int recommendedMaxTPM) {
+        tpmGradientAdjusterController.setRecommendedMaxTPM(recommendedMaxTPM);
+    }
+
+    public void addMinTPMToGradientMinTPMLabel(double realMinTPM) {
+        tpmGradientAdjusterController.addMinTPMToGradientMinTPMLabel(realMinTPM);
+    }
+
+    public void addMaxTPMToGradientMaxTPMLabel(double realMaxTPM) {
+        tpmGradientAdjusterController.addMaxTPMToGradientMaxTPMLabel(realMaxTPM);
+    }
+
     //Disable Functionality
     public void disableMain() {
         mainController.disable();
@@ -203,6 +238,10 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.disable();
     }
 
+    public void disableTPMGradientAdjuster() {
+        tpmGradientAdjusterController.disable();
+    }
+
     //Enable Functionality
     public void enableMain() {
         mainController.enable();
@@ -218,6 +257,10 @@ public class ControllerMediator implements Mediator{
 
     public void enableGeneSelector() {
         geneSelectorController.enable();
+    }
+
+    public void enableTPMGradientAdjuster() {
+        tpmGradientAdjusterController.enable();
     }
 
     // Everything below here is in support of Singleton pattern

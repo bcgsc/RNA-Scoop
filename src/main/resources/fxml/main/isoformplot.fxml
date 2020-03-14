@@ -12,6 +12,11 @@
             <Insets left="10" right="10" top="10"/>
         </VBox.margin>
         <Button fx:id="selectGenesButton" onAction="#handleSelectGenesButtonAction" text="Select Genes"/>
+        <Button fx:id="setTPMGradientButton" onAction="#handleSetTPMGradientButtonAction" text="Set TPM Gradient">
+            <HBox.margin>
+                <Insets left="10"/>
+            </HBox.margin>
+        </Button>
     </HBox>
     <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585"
                 style="-fx-background: #ffffff; -fx-border-color: #adadad;">

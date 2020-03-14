@@ -1,10 +1,6 @@
 package mediator;
 
-import controller.GeneSelectorController;
-import controller.ConsoleController;
-import controller.IsoformPlotController;
-import controller.MainController;
-import controller.TSNEPlotController;
+import controller.*;
 
 public interface Mediator {
     void registerMainController(MainController mainController);
@@ -12,4 +8,5 @@ public interface Mediator {
     void registerIsoformPlotController(IsoformPlotController isoformPlotController);
     void registerTSNEPlotController(TSNEPlotController tsnePlotController);
     void registerGeneSelectorController(GeneSelectorController geneSelectorController);
+    void registerTPMGradientController(TPMGradientAdjusterController tpmGradientAdjusterController);
 }

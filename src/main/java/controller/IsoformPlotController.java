@@ -26,10 +26,7 @@ import java.util.stream.Collectors;
 
 public class IsoformPlotController implements Initializable, InteractiveElementController {
     private static final Color FONT_COLOUR = Color.BLACK;
-    private static final int DEFAULT_EXON_HUE = 202;
-    private static final int DEFAULT_EXON_BRIGHTNESS = 1;
-    private static final double DEFAULT_EXON_SATURATION = 0.4;
-    private static final Color DEFAULT_EXON_COLOUR = Color.hsb(DEFAULT_EXON_HUE, DEFAULT_EXON_SATURATION, DEFAULT_EXON_BRIGHTNESS);
+    private static final Color DEFAULT_EXON_COLOUR = Color.color(0.929, 0.929, 0.929);
     private static final Color OUTLINE_COLOUR = Color.BLACK;
     private static final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
     private static final Font TRANSCRIPT_FONT = Font.font("Verdana",12);
@@ -50,6 +47,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     @FXML private ScrollPane scrollPane;
     @FXML private VBox isoformPlotPanel;
     @FXML private Button selectGenesButton;
+    @FXML private Button setTPMGradientButton;
 
     private GraphicsContext gc;
     private float canvasCurrY;
@@ -62,17 +60,18 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     public void disable() {
         selectGenesButton.setDisable(true);
+        setTPMGradientButton.setDisable(true);
     }
 
     public void enable() {
         selectGenesButton.setDisable(false);
+        setTPMGradientButton.setDisable(false);
     }
 
     public void clearCanvas() {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         canvasCurrY = CANVAS_INIT_Y;
         canvas.setHeight(CANVAS_INIT_Y);
-        System.out.println("canvas cleared");
     }
 
     /**
@@ -101,6 +100,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     @FXML
     protected void handleSelectGenesButtonAction() {
         ControllerMediator.getInstance().displayGeneSelector();
+    }
+
+    /**
+     * Opens up TPM gradient adjuster window
+     */
+    @FXML
+    protected void handleSetTPMGradientButtonAction() {
+        ControllerMediator.getInstance().displayTPMGradientAdjuster();
     }
 
     private void initializeGraphics() {
@@ -249,8 +256,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         List<String> sortedIsoformsIDs = asSortedList(isoformsID);
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
         boolean shouldGetCustomIsoformColor = ControllerMediator.getInstance().areCellsSelected();
-        double minIsoformExpression = ControllerMediator.getInstance().getMinCellIsoformExpression();
-        double maxIsoformExpression = ControllerMediator.getInstance().getMaxCellIsoformExpression();
 
         for (String isoformID : sortedIsoformsIDs) {
             Isoform isoform = gene.getIsoform(isoformID);
@@ -260,7 +265,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 canvasCurrY += ISOFORM_SPACING;
                 Color isoformColor = DEFAULT_EXON_COLOUR;
                 if (shouldGetCustomIsoformColor)
-                    isoformColor = getCustomIsoformColor(isoformID, minIsoformExpression, maxIsoformExpression);
+                    isoformColor = getCustomIsoformColor(isoformID);
                 if(gene.isOnPositiveStrand() || !reverseComplement)
                     drawIsoform(isoform, geneStart, pixelsPerNucleotide, isoformColor);
                 else
@@ -271,10 +276,20 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
     }
 
-    private Color getCustomIsoformColor(String isoformID, double minIsoformExpression, double maxIsoformExpression) {
+    private Color getCustomIsoformColor(String isoformID) {
         double isoformExpression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoformID);
-        double saturation = isoformExpression / (maxIsoformExpression - minIsoformExpression);
-        return Color.hsb(DEFAULT_EXON_HUE, saturation, DEFAULT_EXON_BRIGHTNESS);
+        double minTPM = ControllerMediator.getInstance().getGradientMinTPM();
+        double maxTPM = ControllerMediator.getInstance().getGradientMaxTPM();
+        Color minTPMColor = ControllerMediator.getInstance().getMinTPMColor();
+        Color maxTPMColor = ControllerMediator.getInstance().getMaxTPMColor();
+        double t;
+        if (isoformExpression <= minTPM)
+            t = 0;
+        else if (isoformExpression >= maxTPM)
+            t = 1;
+        else
+            t = (isoformExpression - minTPM) / (maxTPM - minTPM);
+        return minTPMColor.interpolate(maxTPMColor, t);
     }
 
     /**

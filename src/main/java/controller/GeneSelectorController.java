@@ -253,6 +253,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableTSNEPlot();
+        ControllerMediator.getInstance().disableTPMGradientAdjuster();
     }
 
     private void enableAssociatedFunctionality() {
@@ -260,6 +261,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableTSNEPlot();
+        ControllerMediator.getInstance().enableTPMGradientAdjuster();
     }
 
     private void setWindowSize() {

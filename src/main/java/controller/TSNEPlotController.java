@@ -3,6 +3,7 @@ package controller;
 import com.jujutsu.tsne.TSneConfiguration;
 import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.tsne.barneshut.BarnesHutTSne;
+import com.jujutsu.utils.MatrixUtils;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
 import exceptions.TSNEInvalidPerplexityException;
@@ -57,8 +58,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     private JPanel tSNEPlot;
     private XYSeriesCollection cellsInTSNEPlot;
     private ArrayList<CellDataItem> selectedCells;
-    private double minCellIsoformExpression;
-    private double maxCellIsoformExpression;
 
     /**
      * Sets up pane in which t-SNE plot is displayed
@@ -72,8 +71,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         tSNEPlot.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
         cellsInTSNEPlot = new XYSeriesCollection();
         selectedCells = new ArrayList<>();
-        minCellIsoformExpression = Double.MAX_VALUE;
-        maxCellIsoformExpression = 0;
     }
 
     public Node getTSNEPlot() {
@@ -91,8 +88,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     public void clearTSNEPlot() {
-        minCellIsoformExpression = Double.MAX_VALUE;
-        maxCellIsoformExpression = 0;
         cellsInTSNEPlot.removeAllSeries();
         selectedCells.clear();
         tSNEPlot.removeAll();
@@ -109,15 +104,11 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     public double getIsoformExpressionLevel(String isoformID) {
-        return selectedCells.get(0).getIsoformExpressionLevel(isoformID);
-    }
-
-    public double getMinCellIsoformExpression() {
-        return minCellIsoformExpression;
-    }
-
-    public double getMaxCellIsoformExpression() {
-        return maxCellIsoformExpression;
+        double isoformExpressionSum = 0;
+        int numSelected = selectedCells.size();
+        for (CellDataItem selectedCell : selectedCells)
+            isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
+        return isoformExpressionSum / numSelected;
     }
 
     @Override
@@ -156,6 +147,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
+        ControllerMediator.getInstance().disableTPMGradientAdjuster();
     }
 
     private void enableAssociatedFunctionality() {
@@ -163,6 +155,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
+        ControllerMediator.getInstance().enableTPMGradientAdjuster();
     }
 
     private static class CellDataItem extends XYDataItem {
@@ -178,7 +171,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         public double getIsoformExpressionLevel(String isoformID) {
             Integer isoformIndex = isoformIndexMap.get(isoformID);
             if (isoformIndex != null) {
-                System.out.println("the isoform level is " + isoformExpressionLevels[isoformIndex]);
                 return isoformExpressionLevels[isoformIndex];
             }
             else
@@ -197,7 +189,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing t-SNE plot..."));
             try {
                 loadFiles();
-                double [][] cellIsoformExpressionMatrix = makeCellIsoformExpressionMatrix();
+                double [][] cellIsoformExpressionMatrix = MatrixUtils.simpleRead2DMatrix(dataFile, "\t");
+                setTPMMaxAndMinValues(cellIsoformExpressionMatrix);
                 double[][] tSNEMatrix = generateTSNEMatrix(cellIsoformExpressionMatrix);
                 drawTsne(cellIsoformExpressionMatrix, tSNEMatrix);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot"));
@@ -211,41 +204,36 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
         }
 
+        private void setTPMMaxAndMinValues(double[][] cellIsoformExpressionMatrix) {
+            double[] expressionArray = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).toArray();
+            Arrays.sort(expressionArray);
+            int expressionArraySize = expressionArray.length;
+            double minTPM = expressionArray[0];
+            double maxTPM = expressionArray[expressionArraySize - 1];
+
+            double[] filteredExpressionArray = Arrays.stream(expressionArray).filter(tpm -> tpm >= 1).toArray();
+            int filteredExpressionArraySize = filteredExpressionArray.length;
+            double filteredMinTPM = filteredExpressionArray[0];
+            double filteredMaxTPM = filteredExpressionArray[filteredExpressionArraySize - 1];
+            double q1 = filteredExpressionArray[filteredExpressionArraySize / 4];
+            double q3 = filteredExpressionArray[filteredExpressionArraySize * 3/4];
+            double iqr = q3 - q1;
+            int recommendedMinTPM = (int) Double.max(q1 - 1.5 * iqr, filteredMinTPM);
+            int recommendedMaxTPM = (int) Double.min(q3 + 1.5 * iqr, filteredMaxTPM);
+
+            ControllerMediator.getInstance().setRecommendedMinTPM(recommendedMinTPM);
+            ControllerMediator.getInstance().setRecommendedMaxTPM(recommendedMaxTPM);
+            ControllerMediator.getInstance().addMinTPMToGradientMinTPMLabel(minTPM);
+            ControllerMediator.getInstance().addMaxTPMToGradientMaxTPMLabel(maxTPM);
+        }
+
         /**
          * Load t-SNE data and labels files
          */
         private void loadFiles() {
-            dataFile = new File("/home/mstephenson/small_matrix/matrix.txt");
-            isoformLabelsFile = new File("/home/mstephenson/small_matrix/isoform_labels.txt");
+            dataFile = new File("matrix.txt");
+            isoformLabelsFile = new File("isoform_labels.txt");
             colorsFile = new File("mnist200_labels_int.txt");
-        }
-
-        private double[][] makeCellIsoformExpressionMatrix() throws IOException {
-            BufferedReader reader = new BufferedReader(new FileReader(dataFile.getPath()));
-            ArrayList<double[]> cellIsoformExpressionArrayList = new ArrayList<>();
-            String currentLine;
-            while ((currentLine = reader.readLine()) != null && !currentLine.matches("\\s*")) {
-                String[] cols = currentLine.trim().split("\t");
-                double[] row = new double[cols.length];
-                for(int i = 0; i < cols.length; ++i) {
-                    if (cols[i].length() != 0) {
-                        row[i] = Double.parseDouble(cols[i].trim());
-                        if (row[i] > maxCellIsoformExpression)
-                            maxCellIsoformExpression = row[i];
-                        if (row[i] < minCellIsoformExpression)
-                            minCellIsoformExpression = row[i];
-                    }
-                }
-                cellIsoformExpressionArrayList.add(row);
-            }
-            reader.close();
-
-            int numCells = cellIsoformExpressionArrayList.size();
-            double[][] cellIsoformExpressionArray = new double[numCells][];
-
-            for (int i = 0; i < numCells; i++)
-                cellIsoformExpressionArray[i] = cellIsoformExpressionArrayList.get(i);
-            return cellIsoformExpressionArray;
         }
 
         private double [][] generateTSNEMatrix(double[][] cellIsoformExpressionMatrix) throws TSNEInvalidPerplexityException {

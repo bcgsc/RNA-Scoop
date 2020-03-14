@@ -447,6 +447,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableTSNEPlot();
+        ControllerMediator.getInstance().disableTPMGradientAdjuster();
     }
 
     private void enableAssociatedFunctionality() {
@@ -454,6 +455,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableTSNEPlot();
+        ControllerMediator.getInstance().enableTPMGradientAdjuster();
     }
 
     /**
