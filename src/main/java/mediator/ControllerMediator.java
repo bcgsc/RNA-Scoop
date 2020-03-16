@@ -213,6 +213,10 @@ public class ControllerMediator implements Mediator{
         tpmGradientAdjusterController.setRecommendedMaxTPM(recommendedMaxTPM);
     }
 
+    public void setGradientMaxMinToRecommended() {
+        tpmGradientAdjusterController.setGradientMaxMinToRecommended();
+    }
+
     public void addMinTPMToGradientMinTPMLabel(double realMinTPM) {
         tpmGradientAdjusterController.addMinTPMToGradientMinTPMLabel(realMinTPM);
     }

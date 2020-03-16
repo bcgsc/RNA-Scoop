@@ -101,6 +101,11 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         this.recommendedMaxTPM = recommendedMaxTPM;
     }
 
+    public void setGradientMaxMinToRecommended() {
+        gradientMinTPM.setText(Integer.toString(recommendedMinTPM));
+        gradientMaxTPM.setText(Integer.toString(recommendedMaxTPM));
+    }
+
     public double getGradientMinTPM() {
         return Double.parseDouble(gradientMinTPM.getText());
     }
@@ -135,8 +140,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
 
     @FXML
     protected void handleUseRecommendedMaxMinButton() {
-        gradientMinTPM.setText(Integer.toString(recommendedMinTPM));
-        gradientMaxTPM.setText(Integer.toString(recommendedMaxTPM));
+        setGradientMaxMinToRecommended();
         redrawShownGenes();
     }
 
