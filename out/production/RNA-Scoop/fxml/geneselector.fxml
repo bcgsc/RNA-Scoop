@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.GeneSelectorController"
+      fx:id="geneSelector" style="-fx-background-color: #fcfcfc;">
+    <GridPane fx:id="gridPane" style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
+        <VBox.margin>
+            <Insets topRightBottomLeft="10"/>
+        </VBox.margin>
+        <VBox alignment="CENTER" GridPane.columnIndex="0">
+            <GridPane.margin>
+                <Insets topRightBottomLeft="10"/>
+            </GridPane.margin>
+            <Text text="Genes">
+                <VBox.margin>
+                    <Insets bottom="5"/>
+                </VBox.margin>
+            </Text>
+            <TableView fx:id="genesTable" style="-fx-border-color: #adadad; -fx-background: #ffffff;" VBox.vgrow="ALWAYS"/>
+        </VBox>
+        <VBox alignment="CENTER" GridPane.columnIndex="1">
+            <Button fx:id="addAllButton" onAction="#handleAddAllButtonAction" text="Add All" textAlignment="CENTER">
+                <VBox.margin>
+                    <Insets bottom="10"/>
+                </VBox.margin>
+            </Button>
+            <Button fx:id="addSelectedButton" onAction="#handleAddSelectedButtonAction" text="Add Selected" textAlignment="CENTER"
+                    contentDisplay="TOP" wrapText="true" style="-fx-graphic: url('/icons/addSelected.png')">
+                <VBox.margin>
+                    <Insets bottom="10"/>
+                </VBox.margin>
+            </Button>
+            <Button fx:id="removeSelectedButton" onAction="#handleRemoveSelectedButtonAction" text="Remove Selected" textAlignment="CENTER"
+                    contentDisplay="TOP" wrapText="true" style="-fx-graphic: url('/icons/removeSelected.png')">
+                <VBox.margin>
+                    <Insets bottom="10"/>
+                </VBox.margin>
+            </Button>
+            <Button fx:id="clearAllButton" onAction="#handleClearAllButtonAction" text="Clear All" textAlignment="CENTER" wrapText="true"/>
+        </VBox>
+        <VBox alignment="CENTER" GridPane.columnIndex="2">
+            <GridPane.margin>
+                <Insets topRightBottomLeft="10"/>
+            </GridPane.margin>
+            <Text text="Genes Shown">
+                <VBox.margin>
+                    <Insets bottom="5"/>
+                </VBox.margin>
+            </Text>
+            <TableView fx:id="shownGenesTable" style="-fx-border-color: #adadad; -fx-background: #ffffff;"
+                       VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </GridPane>
+</VBox>

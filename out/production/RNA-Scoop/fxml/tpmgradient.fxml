@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.control.Button?>
+<VBox xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.TPMGradientAdjusterController"
+      fx:id="tpmGradientAdjuster" style="-fx-background-color: #fcfcfc;">
+    <GridPane fx:id="gridPane" style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
+        <VBox.margin>
+            <Insets topRightBottomLeft="10"/>
+        </VBox.margin>
+        <HBox alignment="BOTTOM_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <GridPane.margin>
+                <Insets right="10" left="10"/>
+            </GridPane.margin>
+            <Text fx:id="minGradientTPMLabel" text="Min TPM: ">
+                <HBox.margin>
+                    <Insets bottom="6"/>
+                </HBox.margin>
+            </Text>
+            <TextField fx:id="gradientMinTPM" onAction="#handleChangedTPMMinMax" text="1" prefWidth="75"/>
+        </HBox>
+        <HBox alignment="BOTTOM_RIGHT" GridPane.columnIndex="2" GridPane.rowIndex="0">
+            <GridPane.margin>
+                <Insets right="10" left="10"/>
+            </GridPane.margin>
+            <Text fx:id="maxGradientTPMLabel" text="Max TPM: ">
+                <HBox.margin>
+                    <Insets bottom="6" left="10"/>
+                </HBox.margin>
+            </Text>
+            <TextField fx:id="gradientMaxTPM" onAction="#handleChangedTPMMinMax" text="10000" prefWidth="75"/>
+        </HBox>
+        <HBox alignment="BOTTOM_CENTER" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Button fx:id="useRecommendedMaxMinButton" onAction="#handleUseRecommendedMaxMinButton" text="Use Recommended Max/Min"/>
+        </HBox>
+        <Rectangle fx:id="tpmGradient" GridPane.rowIndex="1" GridPane.columnSpan="3">
+            <GridPane.margin>
+                <Insets right="10" left="10"/>
+            </GridPane.margin>
+        </Rectangle>
+        <HBox alignment="TOP_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="2">
+            <GridPane.margin>
+                <Insets right="10" left="10"/>
+            </GridPane.margin>
+            <ColorPicker fx:id="minTPMColorPicker" onAction="#handleTPMColorPicker" prefWidth="50"/>
+        </HBox>
+        <HBox alignment="TOP_RIGHT" GridPane.columnIndex="2" GridPane.rowIndex="2">
+            <GridPane.margin>
+                <Insets right="10" left="10"/>
+            </GridPane.margin>
+            <ColorPicker fx:id="maxTPMColorPicker" onAction="#handleTPMColorPicker" prefWidth="50"/>
+        </HBox>
+    </GridPane>
+</VBox>

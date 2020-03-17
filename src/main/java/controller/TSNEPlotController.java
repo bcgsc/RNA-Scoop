@@ -1,5 +1,6 @@
 package controller;
 
+import annotation.Gene;
 import com.jujutsu.tsne.TSneConfiguration;
 import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.tsne.barneshut.BarnesHutTSne;
@@ -66,9 +67,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     public void initialize(URL location, ResourceBundle resources) {
         tSNEPlot = new JPanel(new GridLayout(1, 2));
         tSNEPlot.setPreferredSize(new Dimension(500, 1000));
-        swingNode.setContent(tSNEPlot);
         tSNEPlot.setBackground(Color.WHITE);
         tSNEPlot.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
+        swingNode.setContent(tSNEPlot);
         cellsInTSNEPlot = new XYSeriesCollection();
         selectedCells = new ArrayList<>();
     }
@@ -92,7 +93,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         selectedCells.clear();
         tSNEPlot.removeAll();
         tSNEPlot.validate();
-        tSNEPlot.repaint();
     }
 
     public boolean isTSNEPlotCleared() {
@@ -103,6 +103,10 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         return selectedCells.size() > 0;
     }
 
+    /**
+     * Returns the average expression level of the isoform with the given
+     * ID in the cells selected in the t-SNE plot
+     */
     public double getIsoformExpressionLevel(String isoformID) {
         double isoformExpressionSum = 0;
         int numSelected = selectedCells.size();
@@ -111,19 +115,22 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         return isoformExpressionSum / numSelected;
     }
 
+    /**
+     * When the cells selected in the t-SNE plot changes, unless the change was clearing the
+     * t-SNE plot, stores which cells are selected and redraws the genes currently shown
+     */
     @Override
     public void selectionChanged(SelectionChangeEvent<XYCursor> selectionChangeEvent) {
         if (!isTSNEPlotCleared()) {
-            XYDatasetSelectionExtension ext = (XYDatasetSelectionExtension)
-                    selectionChangeEvent.getSelectionExtension();
+            XYDatasetSelectionExtension ext = (XYDatasetSelectionExtension) selectionChangeEvent.getSelectionExtension();
             DatasetIterator<XYCursor> selectionIterator = ext.getSelectionIterator(true);
             selectedCells.clear();
             while (selectionIterator.hasNext()) {
                 XYCursor dc = selectionIterator.next();
-
                 selectedCells.add((CellDataItem) cellsInTSNEPlot.getSeries(dc.series).getDataItem(dc.item));
             }
-            ControllerMediator.getInstance().drawGenes(ControllerMediator.getInstance().getShownGenes());
+            Collection<Gene> shownGenes = ControllerMediator.getInstance().getShownGenes();
+            ControllerMediator.getInstance().drawGenes(shownGenes);
         }
     }
 
@@ -158,8 +165,18 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
     }
 
+    /**
+     * Represents a cell in the t-SNE plot
+     */
     private static class CellDataItem extends XYDataItem {
+        /**
+         * Each number is the level of expression of some isoform in this cell.
+         */
         private double[] isoformExpressionLevels;
+        /**
+         * Says the index at which each isoforms' expression level in this cell is
+         * stored in isoformExpressionLevels
+         */
         HashMap<String, Integer> isoformIndexMap;
 
         public CellDataItem(Number x, Number y, double[] isoformExpressionLevels, HashMap<String, Integer> isoformIndexMap) {
@@ -168,6 +185,10 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             this.isoformIndexMap = isoformIndexMap;
         }
 
+        /**
+         * Returns the level of expression of the isoform with the given ID
+         * in this cell
+         */
         public double getIsoformExpressionLevel(String isoformID) {
             Integer isoformIndex = isoformIndexMap.get(isoformID);
             if (isoformIndex != null) {
@@ -235,9 +256,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          * Load t-SNE data and labels files
          */
         private void loadFiles() {
-            dataFile = new File("/home/mstephenson/small_matrix/matrix.txt");
-            isoformLabelsFile = new File("/home/mstephenson/small_matrix/isoform_labels.txt");
-            colorsFile = new File("/home/mstephenson/RNA-Scoop/mnist200_labels_int.txt");
+            dataFile = new File("matrix.txt");
+            isoformLabelsFile = new File("isoform_labels.txt");
+            colorsFile = new File("mnist200_labels_int.txt");
         }
 
         private double [][] generateTSNEMatrix(double[][] cellIsoformExpressionMatrix) throws TSNEInvalidPerplexityException {

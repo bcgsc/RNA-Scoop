@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="controller.MainController"
+            fx:id="borderPane" style="-fx-background-color: #fcfcfc;">
+    <top>
+        <VBox>
+            <BorderPane.margin>
+                <Insets bottom="10"/>
+            </BorderPane.margin>
+            <MenuBar>
+                <Menu fx:id="fileMenu" text="File">
+                    <MenuItem onAction="#handleSaveSessionButton" text="Save Session"/>
+                    <MenuItem onAction="#handleLoadSessionButton" text="Load Previous Session"/>
+                </Menu>
+                <Menu text="View" fx:id="viewMenu">
+                    <Menu text="Isoform Plot">
+                        <fx:define>
+                            <ToggleGroup fx:id="geneLabelSettings"/>
+                        </fx:define>
+                        <CheckMenuItem fx:id="revComplementToggle" onAction="#handleIsoformPlotSettingToggle" text="Reverse Complement (-) Strand"/>
+                        <CheckMenuItem fx:id="hideIsoformsWithNoJunctionsToggle" onAction="#handleIsoformPlotSettingToggle" text="Hide Isoforms with No Exon Junctions"/>
+                        <SeparatorMenuItem/>
+                        <RadioMenuItem fx:id="showGeneNameAndIDToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene Name and ID"/>
+                        <RadioMenuItem fx:id="showGeneNameToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene Name" selected="true"/>
+                        <RadioMenuItem fx:id="showGeneIDToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene ID"/>
+                        <SeparatorMenuItem/>
+                        <CheckMenuItem fx:id="showIsoformNameToggle" onAction="#handleIsoformPlotSettingToggle" text="Show Isoform Name"/>
+                        <CheckMenuItem fx:id="showIsoformIDToggle" onAction="#handleIsoformPlotSettingToggle" text="Show Isoform ID"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close Isoform Plot"/>
+                    </Menu>
+                    <Menu text="t-SNE Plot">
+                        <MenuItem fx:id="tSNEToggle" onAction="#handleTSNEViewToggle" text="Close t-SNE Plot"/>
+                    </Menu>
+                    <Menu text="Console">
+                        <MenuItem onAction="#handleClearConsoleButton" text="Clear Console"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem fx:id="consoleToggle" onAction="#handleConsoleViewToggle" text="Close Console"/>
+                    </Menu>
+                </Menu>
+                <Menu>
+                    <graphic>
+                        <Label text="About" onMouseClicked="#handleAboutButtonAction"/>
+                    </graphic>
+                </Menu>
+            </MenuBar>
+            <HBox>
+                <VBox.margin>
+                    <Insets top="10" left="10"/>
+                </VBox.margin>
+                <ComboBox fx:id="pathComboBox" editable="true" promptText="Insert path to file here"/>
+                <Button fx:id="openFileChooserButton" onAction="#handleOpenFileChooserButton" prefWidth="70" text="Open...">
+                    <HBox.margin>
+                        <Insets left="5"/>
+                    </HBox.margin>
+                </Button>
+            </HBox>
+        </VBox>
+    </top>
+    <center>
+        <SplitPane fx:id="verticalSplitPane" orientation="VERTICAL" dividerPositions="1" style="-fx-border-color: #c2c2c2;">
+            <BorderPane.margin>
+                <Insets bottom="10" right="10" left="10"/>
+            </BorderPane.margin>
+            <SplitPane fx:id="horizontalSplitPane"/>
+        </SplitPane>
+    </center>
+</BorderPane>
+
