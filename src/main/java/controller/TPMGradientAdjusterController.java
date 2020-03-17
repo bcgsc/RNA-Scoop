@@ -33,6 +33,8 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR = 0.4f;
     private static final Color DEFAULT_MIN_TPM_COLOR = Color.color(1.000, 1.000,1.000);
     private static final Color DEFAULT_MAX_TPM_COLOR = Color.color(0.000, 0.608, 0.969);
+    public static final int DEFAULT_RECOMMENDED_MIN_TPM = 1;
+    public static final int DEFAULT_RECOMMENDED_MAX_TPM = 10000;
 
     @FXML private VBox tpmGradientAdjuster;
     @FXML private GridPane gridPane;
@@ -50,15 +52,13 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     private int recommendedMaxTPM;
 
     /**
-     * Sets up grid pane, window, gene and shown gene tables
+     * Sets up grid pane, TPM gradient and the window
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        recommendedMinTPM = 1;
-        recommendedMaxTPM = 10000;
-        setUpWindow();
         setUpGridPane();
         setUpTPMGradient();
+        setUpWindow();
     }
 
     /**
@@ -85,12 +85,20 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         maxTPMColorPicker.setDisable(false);
     }
 
-    public void addMinTPMToGradientMinTPMLabel(double realMinTPM) {
-        minGradientTPMLabel.setText("Min TPM (" + roundToOneDecimal(realMinTPM) + ")" + ": ");
+    /**
+     * Displays the gene selector window
+     */
+    public void display() {
+        window.hide();
+        window.show();
     }
 
-    public void addMaxTPMToGradientMaxTPMLabel(double realMaxTPM) {
-        maxGradientTPMLabel.setText("Max TPM (" + roundToOneDecimal(realMaxTPM)+ ")" + ": ");
+    public void addMinTPMToGradientMinTPMLabel(double minTPM) {
+        minGradientTPMLabel.setText("Min TPM (" + roundToOneDecimal(minTPM) + ")" + ": ");
+    }
+
+    public void addMaxTPMToGradientMaxTPMLabel(double maxTPM) {
+        maxGradientTPMLabel.setText("Max TPM (" + roundToOneDecimal(maxTPM)+ ")" + ": ");
     }
 
     public void setRecommendedMinTPM(int recommendedMinTPM) {
@@ -127,45 +135,37 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         redrawShownGenes();
     }
 
+    /**
+     * When a new color for the gradient is picked, redraws the gradient
+     * and the shown genes
+     */
     @FXML
     protected void handleTPMColorPicker() {
-        drawGradient();
+        drawTPMGradient();
         redrawShownGenes();
     }
 
-    private void redrawShownGenes() {
-        Collection<Gene> shownGenes = ControllerMediator.getInstance().getShownGenes();
-        ControllerMediator.getInstance().drawGenes(shownGenes);
-    }
-
+    /**
+     * Sets the gradient max and min to the recommended values and redraws the
+     * shown genes
+     */
     @FXML
     protected void handleUseRecommendedMaxMinButton() {
         setGradientMaxMinToRecommended();
         redrawShownGenes();
     }
 
-
-    /**
-     * Displays the gene selector window
-     */
-    public void display() {
-        window.hide();
-        window.show();
+    private void drawTPMGradient() {
+        Color minTPMColor = minTPMColorPicker.getValue();
+        Color maxTPMColor = maxTPMColorPicker.getValue();
+        Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(1, maxTPMColor)};
+        LinearGradient gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
+        tpmGradient.setFill(gradient);
     }
 
-    /**
-     * Sets up TPM gradient adjuster window
-     * Makes it so window is hidden when X button is pressed
-     */
-    private void setUpWindow() {
-        window = new Stage();
-        window.setTitle("RNA-Scoop - TPM Gradient Adjuster");
-        window.getIcons().add(Main.RNA_SCOOP_LOGO);
-        setWindowSize();
-        window.setOnCloseRequest(event -> {
-            event.consume();
-            window.hide();
-        });
+    private void redrawShownGenes() {
+        Collection<Gene> shownGenes = ControllerMediator.getInstance().getShownGenes();
+        ControllerMediator.getInstance().drawGenes(shownGenes);
     }
 
     /**
@@ -188,26 +188,42 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         gridPane.getRowConstraints().addAll(row1, row2, row3);
     }
 
+    /**
+     * Makes TPM gradient resize when window resizes
+     * Sets TPM gradient to default colors
+     * Sets recommended TPM gradient max and min to defaault values, and sets
+     * the gradient's max and min to those values
+     * Draws the TPM gradient
+     */
     private void setUpTPMGradient() {
         gridPane.heightProperty().addListener((ov, oldValue, newValue) -> {
             tpmGradient.setHeight(newValue.doubleValue() * .3);
-            drawGradient();
+            drawTPMGradient();
         });
         gridPane.widthProperty().addListener((ov, oldValue, newValue) -> {
             tpmGradient.setWidth(newValue.doubleValue() - 25);
-            drawGradient();
+            drawTPMGradient();
         });
         minTPMColorPicker.setValue(DEFAULT_MIN_TPM_COLOR);
         maxTPMColorPicker.setValue(DEFAULT_MAX_TPM_COLOR);
-        drawGradient();
+        recommendedMinTPM = DEFAULT_RECOMMENDED_MIN_TPM;
+        recommendedMaxTPM = DEFAULT_RECOMMENDED_MAX_TPM;
+        setGradientMaxMinToRecommended();
+        drawTPMGradient();
     }
-
-    private void drawGradient() {
-        Color minTPMColor = minTPMColorPicker.getValue();
-        Color maxTPMColor = maxTPMColorPicker.getValue();
-        Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(1, maxTPMColor)};
-        LinearGradient gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
-        tpmGradient.setFill(gradient);
+    /**
+     * Sets up TPM gradient adjuster window
+     * Makes it so window is hidden when X button is pressed
+     */
+    private void setUpWindow() {
+        window = new Stage();
+        window.setTitle("RNA-Scoop - TPM Gradient Adjuster");
+        window.getIcons().add(Main.RNA_SCOOP_LOGO);
+        setWindowSize();
+        window.setOnCloseRequest(event -> {
+            event.consume();
+            window.hide();
+        });
     }
 
     private void setWindowSize() {

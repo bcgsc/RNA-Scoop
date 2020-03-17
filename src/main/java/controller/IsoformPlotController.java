@@ -54,8 +54,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        initializeGraphics();
-        initializeScrollPane();
+        setUpGraphics();
+        setUpScrollPane();
     }
 
     public void disable() {
@@ -110,7 +110,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().displayTPMGradientAdjuster();
     }
 
-    private void initializeGraphics() {
+    private void setUpGraphics() {
         gc = canvas.getGraphicsContext2D();
         canvasCurrY = CANVAS_INIT_Y;
         canvas.setHeight(CANVAS_INIT_Y);
@@ -121,7 +121,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * (unless scroll pane width < MIN_CANVAS_WIDTH)
      * Redraws canvas when resize occurs and gene is being displayed
      */
-    private void initializeScrollPane() {
+    private void setUpScrollPane() {
         scrollPane.widthProperty().addListener((ov, oldValue, newValue) -> {
             double newCanvasWidth = newValue.doubleValue() - (2 * CANVAS_MARGIN + SCROLLBAR_WIDTH);
             if (newCanvasWidth >= CANVAS_MIN_WIDTH) {

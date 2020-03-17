@@ -127,7 +127,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             selectedCells.clear();
             while (selectionIterator.hasNext()) {
                 XYCursor dc = selectionIterator.next();
-                selectedCells.add((CellDataItem) cellsInTSNEPlot.getSeries(dc.series).getDataItem(dc.item));
+                CellDataItem selectedCell = (CellDataItem) cellsInTSNEPlot.getSeries(dc.series).getDataItem(dc.item);
+                selectedCells.add(selectedCell);
             }
             Collection<Gene> shownGenes = ControllerMediator.getInstance().getShownGenes();
             ControllerMediator.getInstance().drawGenes(shownGenes);
@@ -174,8 +175,11 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          */
         private double[] isoformExpressionLevels;
         /**
-         * Says the index at which each isoforms' expression level in this cell is
-         * stored in isoformExpressionLevels
+         * Map which stores the index in isoformExpressionLevels where an isoform's
+         * expression level in this cell is stored
+         *
+         * Key is isoform ID, value is the index where that isoform's expression
+         * level is stored
          */
         HashMap<String, Integer> isoformIndexMap;
 
@@ -204,19 +208,22 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         private File colorsFile;
         private File isoformLabelsFile;
 
-        private XYSeriesCollection newCellsInTSNEPlot;
+        private XYSeriesCollection cellsInNewTSNEPlot;
 
+        /**
+         * Draws the t-SNE plot and sets the TPM gradient values
+         */
         @Override
         public void run() {
             clearTSNEPlot();
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing t-SNE plot..."));
             try {
                 loadFiles();
-                newCellsInTSNEPlot = new XYSeriesCollection();
+                cellsInNewTSNEPlot = new XYSeriesCollection();
                 double [][] cellIsoformExpressionMatrix = MatrixUtils.simpleRead2DMatrix(dataFile, "\t");
-                setTPMMaxAndMinValues(cellIsoformExpressionMatrix);
                 double[][] tSNEMatrix = generateTSNEMatrix(cellIsoformExpressionMatrix);
                 drawTsne(cellIsoformExpressionMatrix, tSNEMatrix);
+                setTPMGradientValues(cellIsoformExpressionMatrix);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot"));
             } catch(RNAScoopException e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
@@ -228,32 +235,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
         }
 
-        private void setTPMMaxAndMinValues(double[][] cellIsoformExpressionMatrix) {
-            double[] expressionArray = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).toArray();
-            Arrays.sort(expressionArray);
-            int expressionArraySize = expressionArray.length;
-            double minTPM = expressionArray[0];
-            double maxTPM = expressionArray[expressionArraySize - 1];
-
-            double[] filteredExpressionArray = Arrays.stream(expressionArray).filter(tpm -> tpm >= 1).toArray();
-            int filteredExpressionArraySize = filteredExpressionArray.length;
-            double filteredMinTPM = filteredExpressionArray[0];
-            double filteredMaxTPM = filteredExpressionArray[filteredExpressionArraySize - 1];
-            double q1 = filteredExpressionArray[filteredExpressionArraySize / 4];
-            double q3 = filteredExpressionArray[filteredExpressionArraySize * 3/4];
-            double iqr = q3 - q1;
-            int recommendedMinTPM = (int) Double.max(q1 - 1.5 * iqr, filteredMinTPM);
-            int recommendedMaxTPM = (int) Double.min(q3 + 1.5 * iqr, filteredMaxTPM);
-
-            ControllerMediator.getInstance().setRecommendedMinTPM(recommendedMinTPM);
-            ControllerMediator.getInstance().setRecommendedMaxTPM(recommendedMaxTPM);
-            ControllerMediator.getInstance().setGradientMaxMinToRecommended();
-            ControllerMediator.getInstance().addMinTPMToGradientMinTPMLabel(minTPM);
-            ControllerMediator.getInstance().addMaxTPMToGradientMaxTPMLabel(maxTPM);
-        }
-
         /**
-         * Load t-SNE data and labels files
+         * Load t-SNE data, colour labels and isoform labels files
          */
         private void loadFiles() {
             dataFile = new File("matrix.txt");
@@ -284,7 +267,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         private void drawTsne(double[][] cellIsoformExpressionMatrix, double[][] tSNEMatrix) throws FileNotFoundException {
             createDataSet(cellIsoformExpressionMatrix, tSNEMatrix);
             DatasetSelectionExtension<XYCursor> datasetExtension
-                    = new XYDatasetSelectionExtension(newCellsInTSNEPlot);
+                    = new XYDatasetSelectionExtension(cellsInNewTSNEPlot);
             datasetExtension.addChangeListener(TSNEPlotController.this);
 
             JFreeChart chart = createPlot(datasetExtension);
@@ -292,12 +275,20 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             panel.setMouseWheelEnabled(true);
 
             addSelectionHandler(panel);
-            addSelectionManager(newCellsInTSNEPlot, datasetExtension, panel);
+            addSelectionManager(cellsInNewTSNEPlot, datasetExtension, panel);
 
-            cellsInTSNEPlot = newCellsInTSNEPlot;
+            cellsInTSNEPlot = cellsInNewTSNEPlot;
             tSNEPlot.removeAll();
             tSNEPlot.add(panel);
             tSNEPlot.validate();
+        }
+
+        private void setTPMGradientValues(double[][] cellIsoformExpressionMatrix) {
+            double[] expressionArray = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).toArray();
+            double[] filteredExpressionArray = Arrays.stream(expressionArray).filter(tpm -> tpm >= 1).toArray();
+
+            addMinMaxTPMToTPMGradientLabels(expressionArray);
+            setTPMGradientMaxMinToRecommended(filteredExpressionArray);
         }
 
         /**
@@ -316,9 +307,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 String label = colorScanner.nextLine();
                 XYSeries series = new XYSeries(label);
                 if (!dataSetHasSeries(series)) {
-                    newCellsInTSNEPlot.addSeries(series);
+                    cellsInNewTSNEPlot.addSeries(series);
                 } else {
-                    series = newCellsInTSNEPlot.getSeries(label);
+                    series = cellsInNewTSNEPlot.getSeries(label);
                 }
 
                 double cellX = tSNEMatrix[cellIndex][0];
@@ -347,7 +338,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          * @return true if dataset has a series with the same key, false otherwise
          */
         private boolean dataSetHasSeries(Series series) {
-            List<XYSeries> dataSetSeries = newCellsInTSNEPlot.getSeries();
+            List<XYSeries> dataSetSeries = cellsInNewTSNEPlot.getSeries();
             for(Series otherSeries : dataSetSeries) {
                 if (otherSeries.getKey().equals(series.getKey())) {
                     return true;
@@ -357,7 +348,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
 
         private JFreeChart createPlot(DatasetSelectionExtension<XYCursor> ext) {
-            JFreeChart chart = ChartFactory.createScatterPlot("", " ", " ", newCellsInTSNEPlot);
+            JFreeChart chart = ChartFactory.createScatterPlot("", " ", " ", cellsInNewTSNEPlot);
 
             XYPlot plot = (XYPlot) chart.getPlot();
             setPlotViewProperties(plot);
@@ -402,7 +393,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             r.setBaseShapesFilled(true);
             r.setUseFillPaint(true);
             Shape shape  = new Ellipse2D.Double(0,0,5,5);
-            for(int i = 0; i < newCellsInTSNEPlot.getSeriesCount(); i++) {
+            for(int i = 0; i < cellsInNewTSNEPlot.getSeriesCount(); i++) {
                 r.setSeriesShape(i, shape);
                 Color seriesColor = PointColor.getColor();
                 r.setSeriesFillPaint(i, seriesColor);
@@ -411,6 +402,42 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
             //add selection specific rendering
             IRSUtilities.setSelectedItemFillPaint(r, ext, Color.white);
+        }
+
+        /**
+         * Calculates the recommended gradient min and max values and sets the TPM gradient's
+         * min and max to them
+         * @param filteredExpressionArray array of all the isoform expression values > 0 for all cells in the
+         *                                t-SNE plot
+         */
+        private void setTPMGradientMaxMinToRecommended(double[] filteredExpressionArray) {
+            int filteredExpressionArraySize = filteredExpressionArray.length;
+            double filteredMinTPM = filteredExpressionArray[0];
+            double filteredMaxTPM = filteredExpressionArray[filteredExpressionArraySize - 1];
+            double q1 = filteredExpressionArray[filteredExpressionArraySize / 4];
+            double q3 = filteredExpressionArray[filteredExpressionArraySize * 3/4];
+            double iqr = q3 - q1;
+            int recommendedMinTPM = (int) Double.max(q1 - 1.5 * iqr, filteredMinTPM);
+            int recommendedMaxTPM = (int) Double.min(q3 + 1.5 * iqr, filteredMaxTPM);
+            ControllerMediator.getInstance().setRecommendedMinTPM(recommendedMinTPM);
+            ControllerMediator.getInstance().setRecommendedMaxTPM(recommendedMaxTPM);
+            ControllerMediator.getInstance().setGradientMaxMinToRecommended();
+        }
+
+        /**
+         * Adds the absolute min and max expression values in the expressionArray to the min
+         * and max labels of the TPM gradient adjuster window
+         *
+         * @param expressionArray array of all the isoform expression values for all cells in the
+         *                        t-SNE plot
+         */
+        private void addMinMaxTPMToTPMGradientLabels(double[] expressionArray) {
+            Arrays.sort(expressionArray);
+            int expressionArraySize = expressionArray.length;
+            double minTPM = expressionArray[0];
+            double maxTPM = expressionArray[expressionArraySize - 1];
+            ControllerMediator.getInstance().addMinTPMToGradientMinTPMLabel(minTPM);
+            ControllerMediator.getInstance().addMaxTPMToGradientMaxTPMLabel(maxTPM);
         }
     }
 }
