@@ -96,6 +96,10 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.clearShownGenes();
     }
 
+    public void clearAllGenes() {
+        geneSelectorController.clearAllGenes();
+    }
+
     //Display t-SNE
     public void clearTSNEPlot() {
         tsnePlotController.clearTSNEPlot();
@@ -156,6 +160,10 @@ public class ControllerMediator implements Mediator{
         return tpmGradientAdjusterController.getMaxTPMColor();
     }
 
+    public String getScale() {
+        return tpmGradientAdjusterController.getScale();
+    }
+
     public boolean isReverseComplementing() {
         return  mainController.isReverseComplementing();
     }
@@ -201,8 +209,8 @@ public class ControllerMediator implements Mediator{
     }
 
     //Setters
-    public void setPathComboBoxValue(String path) {
-        mainController.setPathComboBoxValue(path);
+    public void clearPathComboBox() {
+        mainController.clearPathComboBox();
     }
 
     public void setRecommendedMinTPM(int recommendedMinTPM) {

@@ -58,11 +58,17 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         setUpScrollPane();
     }
 
+    /**
+     * Disables all functionality
+     */
     public void disable() {
         selectGenesButton.setDisable(true);
         setTPMGradientButton.setDisable(true);
     }
 
+    /**
+     * Enables all functionality
+     */
     public void enable() {
         selectGenesButton.setDisable(false);
         setTPMGradientButton.setDisable(false);
@@ -79,13 +85,23 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * junctions, if supposed to be hiding those
      */
     public void drawGenes(Collection<Gene> genes) {
+        boolean isShowingGeneNameAndID = ControllerMediator.getInstance().isShowingGeneNameAndID();
+        boolean isShowingGeneName = ControllerMediator.getInstance().isShowingGeneName();
+        boolean isShowingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
+        boolean isShowingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
+        boolean isHidingIsoformsWithNoJunctions = ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions();
+        boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
+        boolean shouldGetCustomIsoformColor = ControllerMediator.getInstance().areCellsSelected();
+
         Collection<Gene> genesToDraw = genes;
-        if (ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions())
+        if (isHidingIsoformsWithNoJunctions)
             genesToDraw = genesToDraw.stream().filter(Gene::hasIsoformWithJunctions).collect(Collectors.toList());
+
         clearCanvas();
-        incrementCanvasHeight(genesToDraw);
+        incrementCanvasHeight(genesToDraw, isShowingIsoformID, isShowingIsoformName, isHidingIsoformsWithNoJunctions);
         for (Gene gene : genesToDraw) {
-            drawGene(gene);
+            drawGene(gene, isShowingGeneNameAndID, isShowingGeneName, isShowingIsoformID, isShowingIsoformName,
+                    isHidingIsoformsWithNoJunctions, reverseComplement, shouldGetCustomIsoformColor);
             canvasCurrY += GENE_GENE_SPACING;
         }
     }
@@ -95,18 +111,18 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Opens up gene selector window
+     * Opens up gene selector window when handle select genes button is pressed
      */
     @FXML
-    protected void handleSelectGenesButtonAction() {
+    protected void handleSelectGenesButton() {
         ControllerMediator.getInstance().displayGeneSelector();
     }
 
     /**
-     * Opens up TPM gradient adjuster window
+     * Opens up TPM gradient adjuster window when handle set TPM gradient button is pressed
      */
     @FXML
-    protected void handleSetTPMGradientButtonAction() {
+    protected void handleSetTPMGradientButton() {
         ControllerMediator.getInstance().displayTPMGradientAdjuster();
     }
 
@@ -119,7 +135,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Adds listener to resize canvas width when scroll pane width changes
      * (unless scroll pane width < MIN_CANVAS_WIDTH)
-     * Redraws canvas when resize occurs and gene is being displayed
+     * Redraws canvas when resize occurs and genes are being displayed
      */
     private void setUpScrollPane() {
         scrollPane.widthProperty().addListener((ov, oldValue, newValue) -> {
@@ -134,18 +150,19 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Sets canvas height to height necessary to display given genes
      */
-    private void incrementCanvasHeight(Collection<Gene> genes) {
+    private void incrementCanvasHeight(Collection<Gene> genes, boolean isShowingIsoformID, boolean isShowingIsoformName,
+                                       boolean isHidingIsoformsWithNoJunctions) {
         int numGenes = genes.size();
         if (numGenes > 0) {
             double newHeight = canvas.getHeight();
             newHeight += (numGenes - 1) * GENE_GENE_SPACING;
             newHeight += numGenes * (GENE_FONT_HEIGHT + GENE_ISOFORM_SPACING);
             for (Gene gene : genes) {
-                Collection<Isoform> isoforms = getIsoformsToDraw(gene);
+                Collection<Isoform> isoforms = getIsoformsToDraw(gene, isHidingIsoformsWithNoJunctions);
 
                 int numIsoforms = isoforms.size();
                 newHeight += numIsoforms * (2 * ISOFORM_SPACING + EXON_HEIGHT);
-                newHeight += getHeightForIsoformLabels(isoforms);
+                newHeight += getHeightForIsoformLabels(isoforms, isShowingIsoformID, isShowingIsoformName);
             }
             // there is no label below the last isoform
             newHeight -= ISOFORM_SPACING;
@@ -159,19 +176,20 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * Draws and labels all isoforms of the given gene
      * @param gene gene to draw
      */
-    private void drawGene(Gene gene) {
-        drawGeneLabel(gene);
+    private void drawGene(Gene gene, boolean isShowingGeneNameAndID, boolean isShowingGeneName, boolean isShowingIsoformID,
+                          boolean isShowingIsoformName, boolean isHidingIsoformsWithJunctions, boolean reverseComplement, boolean shouldGetCustomIsoformColor) {
+        drawGeneLabel(gene, isShowingGeneNameAndID, isShowingGeneName, reverseComplement);
         canvasCurrY += GENE_ISOFORM_SPACING;
-        drawAllIsoforms(gene);
+        drawAllIsoforms(gene, isShowingIsoformID, isShowingIsoformName, isHidingIsoformsWithJunctions, reverseComplement, shouldGetCustomIsoformColor);
     }
 
     /**
-     * Returns isoforms of given gene that should be drawn
+     * Returns isoforms of given gene that should be drawn (isoforms with no junctions are excluded
+     * if are hiding isoforms with no junctions
      */
-    private Collection<Isoform> getIsoformsToDraw(Gene gene) {
+    private Collection<Isoform> getIsoformsToDraw(Gene gene, boolean isHidingIsoformsWithNoJunctions) {
         Collection<Isoform> isoforms;
-        boolean hidingIsoformsWithNoJunctions = ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions();
-        if (hidingIsoformsWithNoJunctions)
+        if (isHidingIsoformsWithNoJunctions)
             isoforms = gene.getIsoformsWithJunctions();
         else
             isoforms = gene.getIsoforms();
@@ -181,14 +199,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Returns combined height of all the labels of the given isoforms
      */
-    private double getHeightForIsoformLabels(Collection<Isoform> isoforms) {
-        boolean isShowingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
-        boolean isShowingGeneNameAndID = ControllerMediator.getInstance().isShowingGeneNameAndID();
-        boolean isShowingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
+    private double getHeightForIsoformLabels(Collection<Isoform> isoforms, boolean isShowingIsoformID, boolean isShowingIsoformName) {
         int numIsoforms = isoforms.size();
         double height = 0;
 
-        if (isShowingIsoformID || isShowingGeneNameAndID) {
+        if (isShowingIsoformID) {
             height += numIsoforms * ISOFORM_FONT_HEIGHT;
         }
         else {
@@ -205,35 +220,32 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Draws label for gene
      */
-    private void drawGeneLabel(Gene gene) {
+    private void drawGeneLabel(Gene gene, boolean isShowingGeneNameAndID, boolean isShowingGeneName, boolean reverseComplement) {
         canvasCurrY += GENE_FONT_HEIGHT;
         gc.setFill(FONT_COLOUR);
         gc.setFont(GENE_FONT);
 
-        String label = makeGeneLabelText(gene);
+        String label = makeGeneLabelText(gene, isShowingGeneNameAndID, isShowingGeneName, reverseComplement);
 
         gc.fillText(label, GENE_ID_X_OFFSET, canvasCurrY);
     }
 
     /**
      * Makes gene label text:
-     *   - if show gene name toggle is selected, label includes gene name
-     *   - if show gene ID toggle is selected, label includes gene ID
-     *   - if show gene name and ID toggle is selected, label includes gene ID first, followed
+     *   - if are showing gene name, label includes gene name
+     *   - if are showing gene ID, label includes gene ID
+     *   - if are showing gene name and ID, label includes gene ID first, followed
      *     by gene name in brackets
-     *   - if reverse complement toggle is selected, label includes strand gene is on
+     *   - if are reverse complementing genes on (-) strand, label includes strand gene is on
      */
-    private String makeGeneLabelText(Gene gene) {
+    private String makeGeneLabelText(Gene gene, boolean isShowingGeneNameAndID, boolean isShowingGeneName, boolean reverseComplement) {
         String label = "";
-        boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
-        boolean showingGeneNameAndID = ControllerMediator.getInstance().isShowingGeneNameAndID();
-        boolean showingGeneName = ControllerMediator.getInstance().isShowingGeneName();
         String geneID = gene.getId();
         String geneName = gene.getName();
 
-        if (showingGeneNameAndID && geneName != null)
+        if (isShowingGeneNameAndID && geneName != null)
             label += geneID + " (" + geneName + ")";
-        else if (showingGeneName && geneName != null)
+        else if (isShowingGeneName && geneName != null)
             label += geneName;
         else
             label += geneID;
@@ -248,20 +260,21 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Labels and draws each isoform of given gene
      */
-    private void drawAllIsoforms(Gene gene) {
+    private void drawAllIsoforms(Gene gene, boolean isShowingIsoformID, boolean isShowingIsoformName, boolean isHidingIsoformsWithNoJunctions,
+                                 boolean reverseComplement, boolean shouldGetCustomIsoformColor) {
         int geneStart = gene.getStartNucleotide();
         int geneEnd = gene.getEndNucleotide();
         double pixelsPerNucleotide = (canvas.getWidth() - ISOFORM_X_OFFSET)/(geneEnd- geneStart + 1);
         Collection<String> isoformsID = gene.getIsoformsMap().keySet();
         List<String> sortedIsoformsIDs = asSortedList(isoformsID);
-        boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
-        boolean shouldGetCustomIsoformColor = ControllerMediator.getInstance().areCellsSelected();
 
         for (String isoformID : sortedIsoformsIDs) {
             Isoform isoform = gene.getIsoform(isoformID);
-            if (shouldDrawIsoform(isoform)) {
-                if (shouldDrawIsoformLabel(isoform))
-                    drawIsoformLabel(isoform, isoformID);
+            boolean shouldDrawIsoform = !(isHidingIsoformsWithNoJunctions && !isoform.hasExonJunctions());
+            if (shouldDrawIsoform) {
+                boolean shouldDrawIsoformLabel = (isShowingIsoformName && isoform.getName() != null) || isShowingIsoformID;
+                if (shouldDrawIsoformLabel)
+                    drawIsoformLabel(isoform, isoformID, isShowingIsoformID, isShowingIsoformName);
                 canvasCurrY += ISOFORM_SPACING;
                 Color isoformColor = DEFAULT_EXON_COLOUR;
                 if (shouldGetCustomIsoformColor)
@@ -276,12 +289,61 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
     }
 
+    /**
+     * Draws label for isoforms
+     */
+    private void drawIsoformLabel(Isoform isoform, String isoformID, boolean isShowingIsoformID, boolean isShowingIsoformName) {
+        canvasCurrY += ISOFORM_FONT_HEIGHT;
+        String label = makeIsoformLabelText(isoform, isoformID, isShowingIsoformID, isShowingIsoformName);
+        gc.setFont(TRANSCRIPT_FONT);
+        gc.setFill(FONT_COLOUR);
+        gc.fillText(label, ISOFORM_X_OFFSET, canvasCurrY);
+    }
+
+    /**
+     * Makes isoform label text:
+     *   - if are showing isoform name, label includes gene name
+     *   - if are showing isoform ID, label includes isoform ID
+     *   - if are showing isoform name and isoform ID, label includes isoform ID
+     *     first, followed by isoform name in brackets
+     *   - if are showing neither, returns an empty string
+     */
+    private String makeIsoformLabelText(Isoform isoform, String isoformID, boolean isShowingIsoformID, boolean isShowingIsoformName) {
+        String label = "";
+        String isoformName = isoform.getName();
+
+        if (isShowingIsoformID && isShowingIsoformName && isoformName != null)
+            label += isoformID + " (" +isoformName + ")";
+        else if (isShowingIsoformName && isoformName != null)
+            label += isoformName;
+        else
+            label += isoformID;
+
+        return label;
+    }
+
+    /**
+     * Returns custom isoform color for isoform with given ID based on the isoform's expression
+     * level and where is lies in the TPM gradient
+     */
     private Color getCustomIsoformColor(String isoformID) {
         double isoformExpression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoformID);
         double minTPM = ControllerMediator.getInstance().getGradientMinTPM();
         double maxTPM = ControllerMediator.getInstance().getGradientMaxTPM();
         Color minTPMColor = ControllerMediator.getInstance().getMinTPMColor();
         Color maxTPMColor = ControllerMediator.getInstance().getMaxTPMColor();
+        String scale = ControllerMediator.getInstance().getScale();
+
+        if (scale.equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION))
+            return getLinearScaleColor(isoformExpression, minTPM, maxTPM, minTPMColor, maxTPMColor);
+        else
+            return getExponentialScaleColor(isoformExpression, minTPM, maxTPM, minTPMColor, maxTPMColor);
+    }
+
+    /**
+     * Gets color for isoform with given expression based on TPM gradient using a linear scale
+     */
+    private Color getLinearScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
         double t;
         if (isoformExpression <= minTPM)
             t = 0;
@@ -293,57 +355,24 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Returns false if isoform has no exon junctions and are hiding isoforms with
-     * no junctions, else returns true
+     * Gets color for isoform with given expression based on TPM gradient using an exponential scale. To get the color
+     * on an exponential scale we use the formula y = 1/b * (logx - loga), where  b =  log (y1/y2) / (x1-x2) and
+     * a = y1 / e^(bx1), where x1 = y1 = minTPM and x2 = y2 = maxTPM
      */
-    private boolean shouldDrawIsoform(Isoform isoform) {
-        boolean isHidingIsoformsWithNoJunctions = ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions();
-        return !(isHidingIsoformsWithNoJunctions && !isoform.hasExonJunctions());
-    }
+    private Color getExponentialScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
+        double b = Math.log(minTPM / maxTPM) / (minTPM - maxTPM);
+        double a = minTPM / Math.exp(b * minTPM);
 
-    /**
-     * Returns true if are showing isoform name and the given isoform has a name, or if
-     * are showing isoform ID, else returns false
-     */
-    private boolean shouldDrawIsoformLabel(Isoform isoform) {
-        boolean isShowingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
-        boolean isShowingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
-        return (isShowingIsoformName && isoform.getName() != null) || isShowingIsoformID;
-    }
-
-    /**
-     * Draws label for isoforms
-     */
-    private void drawIsoformLabel(Isoform isoform, String isoformID) {
-        canvasCurrY += ISOFORM_FONT_HEIGHT;
-        String label = makeIsoformLabelText(isoform, isoformID);
-        gc.setFont(TRANSCRIPT_FONT);
-        gc.setFill(FONT_COLOUR);
-        gc.fillText(label, ISOFORM_X_OFFSET, canvasCurrY);
-    }
-
-    /**
-     * Makes isoform label text:
-     *   - if show isoform name toggle is selected, label includes gene name
-     *   - if show isoform ID toggle is selected, label includes gene ID
-     *   - if show isoform name and show isoform ID toggles are selected, label includes isoform ID
-     *     first, followed by isoform name in brackets
-     *   - if neither toggle is selected, returns an empty string
-     */
-    private String makeIsoformLabelText(Isoform isoform, String isoformID) {
-        String label = "";
-        boolean isShowingIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
-        boolean isShowingIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
-        String isoformName = isoform.getName();
-
-        if (isShowingIsoformID && isShowingIsoformName && isoformName != null)
-            label += isoformID + " (" +isoformName + ")";
-        else if (isShowingIsoformName && isoformName != null)
-            label += isoformName;
-        else
-            label += isoformID;
-
-        return label;
+        double t;
+        if (isoformExpression <= minTPM)
+            t = 0;
+        else if (isoformExpression >= maxTPM)
+            t = 1;
+        else {
+            double exponentialExpression = 1/b * (Math.log(isoformExpression) - Math.log(a));
+            t = (exponentialExpression - minTPM)/ (maxTPM - minTPM);
+        }
+        return minTPMColor.interpolate(maxTPMColor, t);
     }
 
     /**

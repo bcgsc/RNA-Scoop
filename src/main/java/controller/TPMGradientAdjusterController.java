@@ -7,6 +7,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -29,12 +30,14 @@ import java.util.ResourceBundle;
 
 public class TPMGradientAdjusterController implements Initializable, InteractiveElementController {
 
-    private static final float TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR = 0.15f;
+    private static final float TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR = 0.25f;
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR = 0.4f;
     private static final Color DEFAULT_MIN_TPM_COLOR = Color.color(1.000, 1.000,1.000);
     private static final Color DEFAULT_MAX_TPM_COLOR = Color.color(0.000, 0.608, 0.969);
-    public static final int DEFAULT_RECOMMENDED_MIN_TPM = 1;
-    public static final int DEFAULT_RECOMMENDED_MAX_TPM = 10000;
+    private static final int DEFAULT_RECOMMENDED_MIN_TPM = 1;
+    private static final int DEFAULT_RECOMMENDED_MAX_TPM = 10000;
+    public static final String SCALE_CHOOSER_LINEAR_OPTION = "Linear";
+    public static final String SCALE_CHOOSER_EXPONENTIAL_OPTION = "Exponential";
 
     @FXML private VBox tpmGradientAdjuster;
     @FXML private GridPane gridPane;
@@ -46,18 +49,20 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     @FXML private Text maxGradientTPMLabel;
     @FXML private ColorPicker minTPMColorPicker;
     @FXML private ColorPicker maxTPMColorPicker;
+    @FXML private ComboBox scaleChooser;
 
     private Stage window;
     private int recommendedMinTPM;
     private int recommendedMaxTPM;
 
     /**
-     * Sets up grid pane, TPM gradient and the window
+     * Sets up grid pane, TPM gradient, scale chooser and the window
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpGridPane();
         setUpTPMGradient();
+        setUpScaleChooser();
         setUpWindow();
     }
 
@@ -130,8 +135,16 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         return maxTPMColorPicker.getValue();
     }
 
+    public String getScale() {
+        return (String) scaleChooser.getValue();
+    }
+
+    /**
+     * When TPM gradient max/min values or scale being used changes, redraws
+     * the genes being shown
+     */
     @FXML
-    protected void handleChangedTPMMinMax() {
+    protected void handleChangedTPMGradientScale() {
         redrawShownGenes();
     }
 
@@ -211,6 +224,12 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         setGradientMaxMinToRecommended();
         drawTPMGradient();
     }
+
+    private void setUpScaleChooser() {
+        scaleChooser.setValue(SCALE_CHOOSER_LINEAR_OPTION);
+        scaleChooser.getItems().addAll(SCALE_CHOOSER_LINEAR_OPTION, SCALE_CHOOSER_EXPONENTIAL_OPTION);
+    }
+
     /**
      * Sets up TPM gradient adjuster window
      * Makes it so window is hidden when X button is pressed

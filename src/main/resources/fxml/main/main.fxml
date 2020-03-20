@@ -14,6 +14,7 @@
                 <Menu fx:id="fileMenu" text="File">
                     <MenuItem onAction="#handleSaveSessionButton" text="Save Session"/>
                     <MenuItem onAction="#handleLoadSessionButton" text="Load Previous Session"/>
+                    <MenuItem onAction="#handleResetSessionButton" text="Reset Session"/>
                 </Menu>
                 <Menu text="View" fx:id="viewMenu">
                     <Menu text="Isoform Plot">

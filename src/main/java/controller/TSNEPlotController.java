@@ -1,13 +1,13 @@
 package controller;
 
 import annotation.Gene;
-import com.jujutsu.tsne.TSneConfiguration;
+import com.jujutsu.tsne.*;
 import com.jujutsu.tsne.barneshut.BHTSne;
-import com.jujutsu.tsne.barneshut.BarnesHutTSne;
 import com.jujutsu.utils.MatrixUtils;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
 import exceptions.TSNEInvalidPerplexityException;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -65,10 +65,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        tSNEPlot = new JPanel(new GridLayout(1, 2));
-        tSNEPlot.setPreferredSize(new Dimension(500, 1000));
-        tSNEPlot.setBackground(Color.WHITE);
-        tSNEPlot.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
+        setUpTSNEPlot();
         swingNode.setContent(tSNEPlot);
         cellsInTSNEPlot = new XYSeriesCollection();
         selectedCells = new ArrayList<>();
@@ -78,11 +75,17 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         return tSNEPlotPanel;
     }
 
+    /**
+     * Disables all functionality
+     */
     public void disable() {
         drawTSNEButton.setDisable(true);
         perplexity.setDisable(true);
     }
 
+    /**
+     * Enables all functionality
+     */
     public void enable() {
         drawTSNEButton.setDisable(false);
         perplexity.setDisable(false);
@@ -92,7 +95,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         cellsInTSNEPlot.removeAllSeries();
         selectedCells.clear();
         tSNEPlot.removeAll();
-        tSNEPlot.validate();
+        tSNEPlot.revalidate();
+        tSNEPlot.repaint();
     }
 
     public boolean isTSNEPlotCleared() {
@@ -203,6 +207,30 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
     }
 
+    /**
+     * Creates box where t-SNE plot is drawn (box is white with grey border)
+     * Makes sure t-SNE plot resizes when t-SNE plot panel resizes (height doesn't
+     * change on Windows when t-SNE plot panel height changes, so added code to fix
+     * this)
+     */
+    private void setUpTSNEPlot() {
+        tSNEPlot = new JPanel(new GridLayout(1, 2));
+        tSNEPlot.setBackground(Color.WHITE);
+        // the preferred width does not matter (will automatically be set to right width), but
+        // if preferred height is too small will not take up all of t-SNE plot panel, which is why
+        // the preferred height is set to a large number
+        tSNEPlot.setPreferredSize(new Dimension(500, Integer.MAX_VALUE));
+        tSNEPlot.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
+        tSNEPlotPanel.heightProperty().addListener((ov, oldValue, newValue) -> {
+            // resetting preferred size and repainting and revalidating t-SNE plot (after short delay)
+            // results in t-SNE plot resizing on Windows
+            Platform.runLater(() -> {
+                tSNEPlot.revalidate();
+                tSNEPlot.repaint();
+            });
+        });
+    }
+
     private class TSNEPlotMaker implements Runnable {
         private File dataFile;
         private File colorsFile;
@@ -255,9 +283,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 throw new TSNEInvalidPerplexityException();
 
             int initial_dims = 55;
-            BarnesHutTSne tsne = new BHTSne();
+            BHTSne tSNE = new BHTSne();
             TSneConfiguration config = TSneUtils.buildConfig(cellIsoformExpressionMatrix, 2, initial_dims, perplexityValue, 1000);
-            return tsne.tsne(config);
+            return tSNE.tsne(config);
         }
 
 
@@ -280,11 +308,13 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             cellsInTSNEPlot = cellsInNewTSNEPlot;
             tSNEPlot.removeAll();
             tSNEPlot.add(panel);
-            tSNEPlot.validate();
+            tSNEPlot.revalidate();
+            tSNEPlot.repaint();
         }
 
         private void setTPMGradientValues(double[][] cellIsoformExpressionMatrix) {
             double[] expressionArray = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).toArray();
+            Arrays.sort(expressionArray);
             double[] filteredExpressionArray = Arrays.stream(expressionArray).filter(tpm -> tpm >= 1).toArray();
 
             addMinMaxTPMToTPMGradientLabels(expressionArray);
@@ -405,9 +435,24 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
 
         /**
+         * Adds the absolute min and max expression values in the expressionArray to the min
+         * and max labels of the TPM gradient adjuster window
+         *
+         * @param expressionArray sorted array of all the isoform expression values for all cells in the
+         *                        t-SNE plot
+         */
+        private void addMinMaxTPMToTPMGradientLabels(double[] expressionArray) {
+            int expressionArraySize = expressionArray.length;
+            double minTPM = expressionArray[0];
+            double maxTPM = expressionArray[expressionArraySize - 1];
+            ControllerMediator.getInstance().addMinTPMToGradientMinTPMLabel(minTPM);
+            ControllerMediator.getInstance().addMaxTPMToGradientMaxTPMLabel(maxTPM);
+        }
+
+        /**
          * Calculates the recommended gradient min and max values and sets the TPM gradient's
          * min and max to them
-         * @param filteredExpressionArray array of all the isoform expression values > 0 for all cells in the
+         * @param filteredExpressionArray sorted array of all the isoform expression values > 0 for all cells in the
          *                                t-SNE plot
          */
         private void setTPMGradientMaxMinToRecommended(double[] filteredExpressionArray) {
@@ -422,22 +467,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             ControllerMediator.getInstance().setRecommendedMinTPM(recommendedMinTPM);
             ControllerMediator.getInstance().setRecommendedMaxTPM(recommendedMaxTPM);
             ControllerMediator.getInstance().setGradientMaxMinToRecommended();
-        }
-
-        /**
-         * Adds the absolute min and max expression values in the expressionArray to the min
-         * and max labels of the TPM gradient adjuster window
-         *
-         * @param expressionArray array of all the isoform expression values for all cells in the
-         *                        t-SNE plot
-         */
-        private void addMinMaxTPMToTPMGradientLabels(double[] expressionArray) {
-            Arrays.sort(expressionArray);
-            int expressionArraySize = expressionArray.length;
-            double minTPM = expressionArray[0];
-            double maxTPM = expressionArray[expressionArraySize - 1];
-            ControllerMediator.getInstance().addMinTPMToGradientMinTPMLabel(minTPM);
-            ControllerMediator.getInstance().addMaxTPMToGradientMaxTPMLabel(maxTPM);
         }
     }
 }

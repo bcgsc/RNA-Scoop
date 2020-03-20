@@ -4,6 +4,7 @@ import annotation.Gene;
 import exceptions.RNAScoopException;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -33,6 +34,15 @@ import static javafx.application.Platform.runLater;
 
 public class MainController implements InteractiveElementController {
     private static final float MAIN_SCALE_FACTOR = 0.7f;
+    // default isoform plot setting toggles
+    // NOTE: for the gene name/id settings at least one should be true
+    private static final boolean DEFAULT_REVERSE_COMPLEMENT_SETTING = false;
+    private static final boolean DEFAULT_HIDE_ISOFORMS_WITH_NO_JUNCTIONS_SETTING = false;
+    private static final boolean DEFAULT_SHOW_GENE_NAME_AND_ID_SETTING = false;
+    private static final boolean DEFAULT_SHOW_GENE_NAME_SETTING = true;
+    private static final boolean DEFAULT_SHOW_GENE_ID_SETTING = false;
+    private static final boolean DEFAULT_SHOW_ISOFORM_ID_SETTING = false;
+    private static final boolean DEFAULT_SHOW_ISOFORM_NAME_SETTING = false;
 
     @FXML private BorderPane borderPane;
     @FXML private ComboBox pathComboBox;
@@ -64,9 +74,13 @@ public class MainController implements InteractiveElementController {
         fileChooser = new FileChooser();
         setUpWindow();
         addPanels(console, isoformPlot, tSNEPlot);
+        setIsoformPlotSettingsToDefault();
         setUpPathComboBox();
     }
 
+    /**
+     * Disables all functionality
+     */
     public void disable() {
         fileMenu.setDisable(true);
         viewMenu.setDisable(true);
@@ -74,6 +88,9 @@ public class MainController implements InteractiveElementController {
         pathComboBox.setDisable(true);
     }
 
+    /**
+     * Enables all functionality
+     */
     public void enable() {
         fileMenu.setDisable(false);
         viewMenu.setDisable(false);
@@ -130,8 +147,22 @@ public class MainController implements InteractiveElementController {
         }
     }
 
-    public void setPathComboBoxValue(String path) {
-        pathComboBox.setValue(path);
+    /**
+     * Clears path combo box's list of paths, current loaded path, and path
+     * combo box value
+     */
+    public void clearPathComboBox() {
+        pathComboBox.getItems().clear();
+        currentLoadedPath = null;
+        pathComboBox.setValue(null);
+    }
+
+    public void restoreMainFromJSON(Map settings) {
+        restoreIsoformPlotFromJSON(settings);
+        restoreTSNEPlotFromJSON(settings);
+        restoreConsoleFromJSON(settings);
+        restorePathComboBoxFromJSON(settings);
+        restoreIsoformPlotSettingsTogglesFromJSON(settings);
     }
 
     public boolean isTSNEPlotOpen() {
@@ -178,14 +209,6 @@ public class MainController implements InteractiveElementController {
         return showIsoformIDToggle.isSelected();
     }
 
-    public void restoreMainFromJSON(Map settings) {
-        restoreIsoformPlotFromJSON(settings);
-        restoreTSNEPlotFromJSON(settings);
-        restoreConsoleFromJSON(settings);
-        restorePathComboBoxFromJSON(settings);
-        restoreIsoformPlotSettingsTogglesFromJSON(settings);
-    }
-
     @FXML
     protected void handleSaveSessionButton() {
         File file = getSavedFileFromFileChooser();
@@ -208,6 +231,24 @@ public class MainController implements InteractiveElementController {
                 ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading session from path: " + file.getPath());
             }
         }
+    }
+
+    /**
+     * Resets the current session to have all the default settings. Opens all panels,
+     * resets isoform plot settings to default, clears isoform plot, gene selector, t-SNE
+     * plot, console, path combo box (basically sets screen so it's as if you're opening RNA-Scoop
+     * for the first time)
+     */
+    @FXML
+    protected void handleResetSessionButton() {
+        openIsoformPlot();
+        openTSNEPlot();
+        openConsole();
+        setIsoformPlotSettingsToDefault();
+        ControllerMediator.getInstance().clearAllGenes();
+        ControllerMediator.getInstance().clearTSNEPlot();
+        ControllerMediator.getInstance().clearConsole();
+        clearPathComboBox();
     }
 
     /**
@@ -339,12 +380,14 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * If the loaded path from the previous session has been saved, sets the path combo box's value
-     * to it
+     * Clears path combo box, then if the loaded path from the previous session has been saved,
+     * sets the path combo box's value and saved current loaded path to it
      */
     private void restorePathComboBoxFromJSON(Map settings) {
-        if(settings.containsKey(SessionMaker.PATH_KEY))
-            ControllerMediator.getInstance().setPathComboBoxValue((String) settings.get(SessionMaker.PATH_KEY));
+        if(settings.containsKey(SessionMaker.PATH_KEY)) {
+            currentLoadedPath = (String) settings.get(SessionMaker.PATH_KEY);
+            pathComboBox.setValue(currentLoadedPath);
+        }
     }
 
     /**
@@ -410,6 +453,16 @@ public class MainController implements InteractiveElementController {
             showIsoformIDToggle.setSelected(false);
     }
 
+    private void setIsoformPlotSettingsToDefault() {
+        revComplementToggle.setSelected(DEFAULT_REVERSE_COMPLEMENT_SETTING);
+        hideIsoformsWithNoJunctionsToggle.setSelected(DEFAULT_HIDE_ISOFORMS_WITH_NO_JUNCTIONS_SETTING);
+        showGeneNameAndIDToggle.setSelected(DEFAULT_SHOW_GENE_NAME_AND_ID_SETTING);
+        showGeneNameToggle.setSelected(DEFAULT_SHOW_GENE_NAME_SETTING);
+        showGeneIDToggle.setSelected(DEFAULT_SHOW_GENE_ID_SETTING);
+        showIsoformNameToggle.setSelected(DEFAULT_SHOW_ISOFORM_NAME_SETTING);
+        showIsoformIDToggle.setSelected(DEFAULT_SHOW_ISOFORM_ID_SETTING);
+    }
+
     private File getFileFromFileChooser() {
         ControllerMediator.getInstance().disableGeneSelector();
         File file = fileChooser.showOpenDialog(window);
@@ -425,13 +478,15 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Clears t-SNE plot, all genes being shown in isoform plot, and disables associated functionality
+     * Clears t-SNE plot, all genes being shown in isoform plot, genes in gene selector tables,
+     * current loaded path (as will be updated), disables associated functionality
      * Loads file from path in path combo box on different thread
      * Displays error (and successful completion) messages in console
      */
     private void loadFile() {
-        ControllerMediator.getInstance().clearShownGenes();
+        ControllerMediator.getInstance().clearAllGenes();
         ControllerMediator.getInstance().clearTSNEPlot();
+        currentLoadedPath = null;
         disableAssociatedFunctionality();
         try {
             Thread fileLoaderThread = new Thread(new FileLoaderThread());
@@ -476,21 +531,19 @@ public class MainController implements InteractiveElementController {
                 runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + filePath));
                 Parser.readFile(filePath);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + filePath));
+                runLater(() -> ControllerMediator.getInstance().updateGenes());
                 currentLoadedPath = filePath;
                 runLater(MainController.this::addLoadedPath);
             } catch (RNAScoopException e){
                 Parser.removeParsedGenes();
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
-                currentLoadedPath = null;
             } catch (FileNotFoundException e) {
+                Parser.removeParsedGenes();
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage("Could not find file at path: " + pathComboBox.getValue()));
-                currentLoadedPath = null;
             } catch (Exception e) {
                 Parser.removeParsedGenes();
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("reading file from path: " + pathComboBox.getValue()));
-                currentLoadedPath = null;
             } finally {
-                runLater(() -> ControllerMediator.getInstance().updateGenes());
                 runLater(MainController.this::enableAssociatedFunctionality);
             }
         }

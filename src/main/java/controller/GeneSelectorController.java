@@ -89,6 +89,15 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     }
 
     /**
+     * Clears all genes in genes table, shown genes table, and clears the isoform plot
+     */
+    public void clearAllGenes() {
+        genes.clear();
+        shownGenes.clear();
+        ControllerMediator.getInstance().clearIsoformPlot();
+    }
+
+    /**
      * Clears all genes in shown genes table, and clears the isoform plot
      */
     public void clearShownGenes() {

@@ -79,7 +79,7 @@ public class SessionIO {
             ControllerMediator.getInstance().updateGenes();
             ControllerMediator.getInstance().clearShownGenes();
             ControllerMediator.getInstance().clearTSNEPlot();
-            ControllerMediator.getInstance().setPathComboBoxValue(null);
+            ControllerMediator.getInstance().clearPathComboBox();
         }
 
     }
