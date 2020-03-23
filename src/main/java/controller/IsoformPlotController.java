@@ -344,35 +344,29 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * Gets color for isoform with given expression based on TPM gradient using a linear scale
      */
     private Color getLinearScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
-        double t;
         if (isoformExpression <= minTPM)
-            t = 0;
+            return minTPMColor;
         else if (isoformExpression >= maxTPM)
-            t = 1;
-        else
-            t = (isoformExpression - minTPM) / (maxTPM - minTPM);
-        return minTPMColor.interpolate(maxTPMColor, t);
+            return maxTPMColor;
+        else {
+            double t = (isoformExpression - minTPM) / (maxTPM - minTPM);
+            return minTPMColor.interpolate(maxTPMColor, t);
+        }
     }
 
     /**
-     * Gets color for isoform with given expression based on TPM gradient using an exponential scale. To get the color
-     * on an exponential scale we use the formula y = 1/b * (logx - loga), where  b =  log (y1/y2) / (x1-x2) and
-     * a = y1 / e^(bx1), where x1 = y1 = minTPM and x2 = y2 = maxTPM
+     * Gets color for isoform with given expression based on TPM gradient using an exponential scale
      */
     private Color getExponentialScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
-        double b = Math.log(minTPM / maxTPM) / (minTPM - maxTPM);
-        double a = minTPM / Math.exp(b * minTPM);
-
-        double t;
         if (isoformExpression <= minTPM)
-            t = 0;
+            return minTPMColor;
         else if (isoformExpression >= maxTPM)
-            t = 1;
+            return  maxTPMColor;
         else {
-            double exponentialExpression = 1/b * (Math.log(isoformExpression) - Math.log(a));
-            t = (exponentialExpression - minTPM)/ (maxTPM - minTPM);
+            double linearT = (isoformExpression - minTPM) / (maxTPM - minTPM);
+            double t = Math.log10(linearT * 100D + 1D - linearT)/Math.log10(100D);
+            return minTPMColor.interpolate(maxTPMColor, t);
         }
-        return minTPMColor.interpolate(maxTPMColor, t);
     }
 
     /**

@@ -6,6 +6,10 @@ package exceptions;
 public abstract class RNAScoopException extends Exception {
     protected String message;
 
+    public void addToMessage(String addedMessage) {
+        message += addedMessage;
+    }
+
     @Override
     public String getMessage() {
         return message;

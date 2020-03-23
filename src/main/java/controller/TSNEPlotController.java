@@ -7,6 +7,8 @@ import com.jujutsu.utils.MatrixUtils;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
 import exceptions.TSNEInvalidPerplexityException;
+import exceptions.TSNEMatrixSizeZeroException;
+import exceptions.TSNENegativeExpressionInMatrixException;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
@@ -144,6 +146,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     @FXML
     protected void handleDrawTSNEButtonAction() {
+        clearTSNEPlot();
         disableAssociatedFunctionality();
         try {
             Thread tSNEPlotMaker = new Thread(new TSNEPlotMaker());
@@ -243,12 +246,11 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          */
         @Override
         public void run() {
-            clearTSNEPlot();
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing t-SNE plot..."));
             try {
                 loadFiles();
                 cellsInNewTSNEPlot = new XYSeriesCollection();
-                double [][] cellIsoformExpressionMatrix = MatrixUtils.simpleRead2DMatrix(dataFile, "\t");
+                double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix();
                 double[][] tSNEMatrix = generateTSNEMatrix(cellIsoformExpressionMatrix);
                 drawTsne(cellIsoformExpressionMatrix, tSNEMatrix);
                 setTPMGradientValues(cellIsoformExpressionMatrix);
@@ -270,6 +272,23 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             dataFile = new File("matrix.txt");
             isoformLabelsFile = new File("isoform_labels.txt");
             colorsFile = new File("mnist200_labels_int.txt");
+        }
+
+        /**
+         * Creates a cell isoform expression matrix by reading the given data file
+         * Throws exceptions if size of the matrix is 0, or if the matrix contains negative
+         * expression values
+         */
+        private double[][] getCellIsoformExpressionMatrix() throws TSNEMatrixSizeZeroException, TSNENegativeExpressionInMatrixException {
+            double[][] cellIsoformExpressionMatrix = MatrixUtils.simpleRead2DMatrix(dataFile, "\t");
+            if (cellIsoformExpressionMatrix.length == 0)
+                throw new TSNEMatrixSizeZeroException();
+
+            double[] negativeExpressions = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).filter(expression -> expression < 0).toArray();
+            if (negativeExpressions.length > 0)
+                throw new TSNENegativeExpressionInMatrixException();
+
+            return cellIsoformExpressionMatrix;
         }
 
         private double [][] generateTSNEMatrix(double[][] cellIsoformExpressionMatrix) throws TSNEInvalidPerplexityException {
@@ -452,21 +471,36 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         /**
          * Calculates the recommended gradient min and max values and sets the TPM gradient's
          * min and max to them
+         *
+         * If the size of the filteredExpressionArray is 0, sets the recommended min to 0 and the
+         * recommended max to 1
+         *
+         * If, according to the calculations, the recommended max and min are the same, adds 1 to the
+         * recommended max
+         *
          * @param filteredExpressionArray sorted array of all the isoform expression values > 0 for all cells in the
          *                                t-SNE plot
          */
         private void setTPMGradientMaxMinToRecommended(double[] filteredExpressionArray) {
-            int filteredExpressionArraySize = filteredExpressionArray.length;
-            double filteredMinTPM = filteredExpressionArray[0];
-            double filteredMaxTPM = filteredExpressionArray[filteredExpressionArraySize - 1];
-            double q1 = filteredExpressionArray[filteredExpressionArraySize / 4];
-            double q3 = filteredExpressionArray[filteredExpressionArraySize * 3/4];
-            double iqr = q3 - q1;
-            int recommendedMinTPM = (int) Double.max(q1 - 1.5 * iqr, filteredMinTPM);
-            int recommendedMaxTPM = (int) Double.min(q3 + 1.5 * iqr, filteredMaxTPM);
-            ControllerMediator.getInstance().setRecommendedMinTPM(recommendedMinTPM);
-            ControllerMediator.getInstance().setRecommendedMaxTPM(recommendedMaxTPM);
-            ControllerMediator.getInstance().setGradientMaxMinToRecommended();
+            if (filteredExpressionArray.length != 0) {
+                int filteredExpressionArraySize = filteredExpressionArray.length;
+                double filteredMinTPM = filteredExpressionArray[0];
+                double filteredMaxTPM = filteredExpressionArray[filteredExpressionArraySize - 1];
+                double q1 = filteredExpressionArray[filteredExpressionArraySize / 4];
+                double q3 = filteredExpressionArray[filteredExpressionArraySize * 3/4];
+                double iqr = q3 - q1;
+                int recommendedMinTPM = (int) Double.max(q1 - 1.5 * iqr, filteredMinTPM);
+                int recommendedMaxTPM = (int) Double.min(q3 + 1.5 * iqr, filteredMaxTPM);
+                if (recommendedMaxTPM == recommendedMinTPM)
+                    recommendedMaxTPM += 1;
+                ControllerMediator.getInstance().setRecommendedMinTPM(recommendedMinTPM);
+                ControllerMediator.getInstance().setRecommendedMaxTPM(recommendedMaxTPM);
+                ControllerMediator.getInstance().setGradientMaxMinToRecommended();
+            } else {
+                ControllerMediator.getInstance().setRecommendedMinTPM(0);
+                ControllerMediator.getInstance().setRecommendedMaxTPM(1);
+                ControllerMediator.getInstance().setGradientMaxMinToRecommended();
+            }
         }
     }
 }

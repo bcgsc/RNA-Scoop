@@ -25,7 +25,7 @@
                     <Insets bottom="6"/>
                 </HBox.margin>
             </Text>
-            <TextField fx:id="gradientMinTPM" onAction="#handleChangedTPMGradientScale" prefWidth="75"/>
+            <TextField fx:id="gradientMinTPMField" onAction="#handleChangedGradientMaxMinTPM" prefWidth="75"/>
         </HBox>
         <HBox alignment="BOTTOM_RIGHT" GridPane.columnIndex="2" GridPane.rowIndex="0">
             <GridPane.margin>
@@ -36,7 +36,7 @@
                     <Insets bottom="6" left="10"/>
                 </HBox.margin>
             </Text>
-            <TextField fx:id="gradientMaxTPM" onAction="#handleChangedTPMGradientScale" prefWidth="75"/>
+            <TextField fx:id="gradientMaxTPMField" onAction="#handleChangedGradientMaxMinTPM" prefWidth="75"/>
         </HBox>
         <HBox alignment="BOTTOM_CENTER" GridPane.columnIndex="1" GridPane.rowIndex="0">
             <Button fx:id="useRecommendedMaxMinButton" onAction="#handleUseRecommendedMaxMinButton" text="Use Recommended Max/Min"/>
