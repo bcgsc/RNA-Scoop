@@ -23,12 +23,17 @@
         <VBox.margin>
             <Insets topRightBottomLeft="10"/>
         </VBox.margin>
-        <VBox alignment="CENTER">
-            <Canvas fx:id="canvas">
-                <VBox.margin>
+        <StackPane>
+            <Canvas fx:id="isoformCanvas">
+                <StackPane.margin>
                     <Insets topRightBottomLeft="15"/>
-                </VBox.margin>
+                </StackPane.margin>
             </Canvas>
-        </VBox>
+            <Canvas fx:id="selectionCanvas">
+                <StackPane.margin>
+                    <Insets topRightBottomLeft="15"/>
+                </StackPane.margin>
+            </Canvas>
+        </StackPane>
     </ScrollPane>
 </VBox>

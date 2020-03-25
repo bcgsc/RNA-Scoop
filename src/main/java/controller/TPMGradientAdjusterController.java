@@ -52,7 +52,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     @FXML private Text maxGradientTPMLabel;
     @FXML private ColorPicker minTPMColorPicker;
     @FXML private ColorPicker maxTPMColorPicker;
-    @FXML private ComboBox scaleChooser;
+    @FXML private ComboBox<String> scaleChooser;
 
     private Stage window;
     private int recommendedMinTPM;
@@ -145,12 +145,15 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     }
 
     public String getScale() {
-        return (String) scaleChooser.getValue();
+        return scaleChooser.getValue();
     }
 
     /**
-     * When TPM gradient scale changes (ex. from linear to exponential) redraws
-     * the genes being shown
+     * When TPM gradient max/min changes updates the stored max/min values
+     * (if new values are valid). Redraws the genes
+     *
+     * If user inputted values are invalid, adds a message to the console saying so,
+     * and changes max/min values in the fields to the last valid ones stored
      */
     @FXML
     protected void handleChangedGradientMaxMinTPM() {
@@ -158,23 +161,19 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
             updateTPMGradientMaxMin();
             redrawShownGenes();
         } catch (RNAScoopException e) {
-            handleErrorInUpdatingTPMGradientMaxMin(e);
+            gradientMinTPMField.setText(String.valueOf(gradientMinTPM));
+            gradientMaxTPMField.setText(String.valueOf(gradientMaxTPM));
+            e.addToMessage(". Changed TPM gradient max and min back to previous values");
+            ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
         }
     }
 
     /**
      * When a new color for the gradient is picked, redraws the gradient
      * and the shown genes
-     *
-     * Checks if TPM gradient max/min values have changed first
      */
     @FXML
     protected void handleTPMColorPicker() {
-        try {
-            updateTPMGradientMaxMin();
-        } catch (RNAScoopException e) {
-            handleErrorInUpdatingTPMGradientMaxMin(e);
-        }
         drawTPMGradient();
         redrawShownGenes();
     }
@@ -182,16 +181,9 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     /**
      * When TPM gradient scale changes (ex. from linear to exponential) redraws
      * the genes being shown
-     *
-     * Checks if TPM gradient max/min values have changed first
      */
     @FXML
     protected void handleChangedTPMGradientScale() {
-        try {
-            updateTPMGradientMaxMin();
-        } catch (RNAScoopException e) {
-            handleErrorInUpdatingTPMGradientMaxMin(e);
-        }
         redrawShownGenes();
     }
 
@@ -240,8 +232,9 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
 
     /**
      * Makes TPM gradient resize when window resizes
+     * Makes TPM gradient check if user's inputted max/min values are valid
      * Sets TPM gradient to default colors
-     * Sets recommended TPM gradient max and min to defaault values, and sets
+     * Sets recommended TPM gradient max and min to defaalt values, and sets
      * the gradient's max and min to those values
      * Draws the TPM gradient
      */
@@ -253,6 +246,16 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         gridPane.widthProperty().addListener((ov, oldValue, newValue) -> {
             tpmGradient.setWidth(newValue.doubleValue() - 25);
             drawTPMGradient();
+        });
+        gradientMinTPMField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
+            if (!newValue) { //when focus lost
+                handleChangedGradientMaxMinTPM();
+            }
+        });
+        gradientMaxTPMField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
+            if (!newValue) { //when focus lost
+                handleChangedGradientMaxMinTPM();
+            }
         });
         minTPMColorPicker.setValue(DEFAULT_MIN_TPM_COLOR);
         maxTPMColorPicker.setValue(DEFAULT_MAX_TPM_COLOR);
@@ -289,11 +292,11 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
 
     /**
      * Attempts to update TPM gradient min and max values by setting them to values in TPM gradient max and
-     * min fields.
+     * min fields
      *
      * If there is a problem with the values in the TPM gradient max and min fields (are
-     * non-numeric, negative, min >= max), throws the appropriate exception and does not update the TPM
-     * gradient max and min values.
+     * non-numeric, negative, min >= max), throws the appropriate exception and does not update the
+     * stored TPM gradient max and min values
      */
     private void updateTPMGradientMaxMin() throws TPMGradientInvalidMaxMinException, TPMGradientMinGreaterEqualMaxException {
         double newGradientMin;
@@ -313,18 +316,6 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
 
         gradientMinTPM = newGradientMin;
         gradientMaxTPM = newGradientMax;
-    }
-
-    /**
-     * If an exception was thrown while updating TPM gradient max and min values, restores text in TPM
-     * gradient max and min fields to the saved gradient max and min values, and adds an error message
-     * to the console explaining what happened
-     */
-    private void handleErrorInUpdatingTPMGradientMaxMin(RNAScoopException e) {
-        gradientMinTPMField.setText(String.valueOf(gradientMinTPM));
-        gradientMaxTPMField.setText(String.valueOf(gradientMaxTPM));
-        e.addToMessage(". Changed TPM gradient max and min back to previous values");
-        ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
     }
 
     private double roundToOneDecimal (double value) {
