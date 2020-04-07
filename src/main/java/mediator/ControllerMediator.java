@@ -5,9 +5,12 @@ import controller.*;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.paint.Color;
+import org.jfree.data.xy.XYDataItem;
+import org.jfree.data.xy.XYSeries;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class ControllerMediator implements Mediator{
@@ -80,16 +83,36 @@ public class ControllerMediator implements Mediator{
         tpmGradientAdjusterController.display();
     }
 
+    public void addGenesToIsoformPlot(Collection<Gene> genes) {
+        isoformPlotController.addGenes(genes);
+    }
+
+    public void removeGenesFromIsoformPlot(Collection<Gene> genes) {
+        isoformPlotController.removeGenes(genes);
+    }
+
+    public void redrawIsoformGraphics() {
+        isoformPlotController.redrawIsoformGraphics();
+    }
+
+    public void updateGeneReverseComplementStatus() {
+        isoformPlotController.updateGeneReverseComplementStatus();
+    }
+
+    public void updateHideIsoformsNoJunctionsStatus() {
+        isoformPlotController.updateHideIsoformsNoJunctionsStatus();
+    }
+
+    public void updateGeneLabels() {
+        isoformPlotController.updateGeneLabels();
+    }
+
+    public void updateIsoformLabels() {
+        isoformPlotController.updateIsoformLabels();
+    }
+
     public void updateGenes() {
         geneSelectorController.updateGenes();
-    }
-
-    public void clearIsoformPlot() {
-        isoformPlotController.clearCanvas();
-    }
-
-    public void drawGenes(Collection<Gene> genes) {
-        isoformPlotController.drawGenes(genes);
     }
 
     public void clearShownGenes() {
@@ -100,9 +123,17 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.clearAllGenes();
     }
 
+    public void deselectAllIsoforms() {
+        isoformPlotController.deselectAllIsoforms();
+    }
+
     //Display t-SNE
     public void clearTSNEPlot() {
         tsnePlotController.clearTSNEPlot();
+    }
+
+    public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
+        tsnePlotController.selectCellsIsoformsExpressedIn(isoformIDs);
     }
 
     //Load from JSON
@@ -126,6 +157,10 @@ public class ControllerMediator implements Mediator{
 
     public Node getIsoformPlot() {
         return isoformPlotController.getIsoformPlot();
+    }
+
+    public String getCurrentLoadedPath() {
+        return mainController.getCurrentLoadedPath();
     }
 
     public ArrayList<ConsoleController.Message> getConsoleMessages() {
@@ -204,8 +239,8 @@ public class ControllerMediator implements Mediator{
         return mainController.isTSNEPlotOpen();
     }
 
-    public String getCurrentLoadedPath() {
-        return mainController.getCurrentLoadedPath();
+    public boolean isTSNEPlotCleared() {
+        return tsnePlotController.isTSNEPlotCleared();
     }
 
     //Setters

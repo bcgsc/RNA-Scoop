@@ -23,12 +23,12 @@ import parser.Parser;
 import ui.Main;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class GeneSelectorController implements Initializable, InteractiveElementController {
-
     private static final float GENE_SELECTOR_SCALE_FACTOR = 0.40f;
 
     @FXML private VBox geneSelector;
@@ -92,17 +92,17 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      * Clears all genes in genes table, shown genes table, and clears the isoform plot
      */
     public void clearAllGenes() {
+        ControllerMediator.getInstance().removeGenesFromIsoformPlot(shownGenes);
         genes.clear();
         shownGenes.clear();
-        ControllerMediator.getInstance().clearIsoformPlot();
     }
 
     /**
      * Clears all genes in shown genes table, and clears the isoform plot
      */
     public void clearShownGenes() {
+        ControllerMediator.getInstance().removeGenesFromIsoformPlot(shownGenes);
         shownGenes.clear();
-        ControllerMediator.getInstance().clearIsoformPlot();
     }
 
     public Collection<Gene> getShownGenes() {
@@ -125,35 +125,36 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     protected void handleAddSelectedButtonAction() {
         disableAssociatedFunctionality();
         try {
-            ObservableList<Gene> genesToAdd = genesTable.getSelectionModel().getSelectedItems();
-            for (Gene gene : genesToAdd) {
-                if (!shownGenes.contains(gene))
+            ObservableList<Gene> selectedGenes = genesTable.getSelectionModel().getSelectedItems();
+            Collection<Gene> genesToAdd = new ArrayList<>();
+            for (Gene gene : selectedGenes) {
+                if (!shownGenes.contains(gene)) {
                     shownGenes.add(gene);
+                    genesToAdd.add(gene);
+                }
             }
-            shownGenes.sort(Gene::compareTo);
-            ControllerMediator.getInstance().drawGenes(shownGenes);
+            if (genesToAdd.size() > 0)
+                ControllerMediator.getInstance().addGenesToIsoformPlot(genesToAdd);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding selected genes");
-            e.printStackTrace();
         } finally {
             enableAssociatedFunctionality();
         }
     }
 
     /**
-     * Removes genes selected in shown genes table from shown genes table,
-     * and redraws the isoform plot
+     * Removes genes selected in shown genes table from shown genes table and
+     * from isoform plot
      */
     @FXML
     protected void handleRemoveSelectedButtonAction() {
         disableAssociatedFunctionality();
         try {
             ObservableList<Gene> genesToRemove = shownGenesTable.getSelectionModel().getSelectedItems();
+            ControllerMediator.getInstance().removeGenesFromIsoformPlot(genesToRemove);
             shownGenes.removeAll(genesToRemove);
-            ControllerMediator.getInstance().drawGenes(shownGenes);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("removing selected genes");
-            e.printStackTrace();
         } finally {
             enableAssociatedFunctionality();
         }
@@ -166,14 +167,13 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             clearShownGenes();
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("clearing shown genes");
-            e.printStackTrace();
         } finally {
             enableAssociatedFunctionality();
         }
     }
 
     /**
-     * Adds all genes to shown genes table and draws them
+     * Adds all genes to shown genes table and isoform plot
      */
     @FXML
     protected void handleAddAllButtonAction() {
@@ -181,10 +181,9 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         try {
             shownGenes.clear();
             shownGenes.addAll(genes);
-            ControllerMediator.getInstance().drawGenes(shownGenes);
+            ControllerMediator.getInstance().addGenesToIsoformPlot(shownGenes);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding all genes");
-            e.printStackTrace();
         } finally {
             enableAssociatedFunctionality();
         }

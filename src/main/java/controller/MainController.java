@@ -1,10 +1,8 @@
 package controller;
 
-import annotation.Gene;
 import exceptions.RNAScoopException;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -27,7 +25,6 @@ import ui.Main;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
 
 import static javafx.application.Platform.runLater;
@@ -54,12 +51,13 @@ public class MainController implements InteractiveElementController {
     @FXML private MenuItem consoleToggle;
     @FXML private SplitPane verticalSplitPane;
     @FXML private SplitPane horizontalSplitPane;
-    //isoform plot setting toggles
     @FXML private CheckMenuItem hideIsoformsWithNoJunctionsToggle;
     @FXML private CheckMenuItem revComplementToggle;
+    // gene label toggles
     @FXML private RadioMenuItem showGeneNameAndIDToggle;
     @FXML private RadioMenuItem showGeneNameToggle;
     @FXML private RadioMenuItem showGeneIDToggle;
+    // isoform label toggles
     @FXML private CheckMenuItem showIsoformNameToggle;
     @FXML private CheckMenuItem showIsoformIDToggle;
 
@@ -209,24 +207,34 @@ public class MainController implements InteractiveElementController {
         return showIsoformIDToggle.isSelected();
     }
 
+    /**
+     * Saves current session to file chosen by user through file chooser and adds
+     * error/success messages to console
+     */
     @FXML
     protected void handleSaveSessionButton() {
         File file = getSavedFileFromFileChooser();
         if (file != null) {
             try {
                 SessionIO.saveSessionAtPath(file.getPath());
+                ControllerMediator.getInstance().addConsoleMessage("Successfully saved session");
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("saving session at path: " + file.getPath());
             }
         }
     }
 
+    /**
+     * Loads session user selects from file chooser and adds error/success messages to
+     * console
+     */
     @FXML
     protected void handleLoadSessionButton() {
         File file = getFileFromFileChooser();
         if (file != null) {
             try {
                 SessionIO.loadSessionAtPath(file.getPath());
+                ControllerMediator.getInstance().addConsoleMessage("Successfully loaded session");
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading session from path: " + file.getPath());
             }
@@ -252,13 +260,39 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Redraws genes when one of the isoform plot setting toggles (reverse complement,
-     * show gene name, show gene ID, show isoform name, show isoform ID) changes state
+     * When reverse complement toggle is selected/deselected changes whether genes in
+     * isoform plot are reverse complemented, accordingly.
      */
     @FXML
-    protected void handleIsoformPlotSettingToggle() {
-        Collection<Gene> genes = ControllerMediator.getInstance().getShownGenes();
-        ControllerMediator.getInstance().drawGenes(genes);
+    protected void handleReverseComplementToggle() {
+        ControllerMediator.getInstance().updateGeneReverseComplementStatus();
+    }
+
+    /**
+     * When hide isoforms with no junctions toggle is selected/deselected changes whether
+     * isoforms without junctions in isoform plot are hidden, accordingly
+     */
+    @FXML
+    protected void handleHideIsoformsWithNoJunctionsToggle() {
+        ControllerMediator.getInstance().updateHideIsoformsNoJunctionsStatus();
+    }
+
+    /**
+     * When one of the gene label toggles is selected/deselected updates the gene labels
+     * of all the genes in the isoform plot
+     */
+    @FXML
+    protected void handleGeneLabelToggle() {
+        ControllerMediator.getInstance().updateGeneLabels();
+    }
+
+    /**
+     * When one of the isoform label toggles is selected/deselected updates the isoform labels
+     * of all the genes in the isoform plot
+     */
+    @FXML
+    protected void handleIsoformLabelToggle() {
+        ControllerMediator.getInstance().updateIsoformLabels();
     }
 
     /**

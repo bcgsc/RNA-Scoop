@@ -19,17 +19,17 @@
                 <Menu text="View" fx:id="viewMenu">
                     <Menu text="Isoform Plot">
                         <fx:define>
-                            <ToggleGroup fx:id="geneLabelSettings"/>
+                            <ToggleGroup fx:id="geneLabelToggles"/>
                         </fx:define>
-                        <CheckMenuItem fx:id="revComplementToggle" onAction="#handleIsoformPlotSettingToggle" text="Reverse Complement (-) Strand"/>
-                        <CheckMenuItem fx:id="hideIsoformsWithNoJunctionsToggle" onAction="#handleIsoformPlotSettingToggle" text="Hide Isoforms with No Exon Junctions"/>
+                        <CheckMenuItem fx:id="revComplementToggle" onAction="#handleReverseComplementToggle" text="Reverse Complement (-) Strand"/>
+                        <CheckMenuItem fx:id="hideIsoformsWithNoJunctionsToggle" onAction="#handleHideIsoformsWithNoJunctionsToggle" text="Hide Isoforms with No Exon Junctions"/>
                         <SeparatorMenuItem/>
-                        <RadioMenuItem fx:id="showGeneNameAndIDToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene Name and ID"/>
-                        <RadioMenuItem fx:id="showGeneNameToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene Name" selected="true"/>
-                        <RadioMenuItem fx:id="showGeneIDToggle" toggleGroup="$geneLabelSettings" onAction="#handleIsoformPlotSettingToggle" text="Show Gene ID"/>
+                        <RadioMenuItem fx:id="showGeneNameAndIDToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show Gene Name and ID"/>
+                        <RadioMenuItem fx:id="showGeneNameToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show Gene Name" selected="true"/>
+                        <RadioMenuItem fx:id="showGeneIDToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show Gene ID"/>
                         <SeparatorMenuItem/>
-                        <CheckMenuItem fx:id="showIsoformNameToggle" onAction="#handleIsoformPlotSettingToggle" text="Show Isoform Name"/>
-                        <CheckMenuItem fx:id="showIsoformIDToggle" onAction="#handleIsoformPlotSettingToggle" text="Show Isoform ID"/>
+                        <CheckMenuItem fx:id="showIsoformNameToggle" onAction="#handleIsoformLabelToggle" text="Show Isoform Name"/>
+                        <CheckMenuItem fx:id="showIsoformIDToggle" onAction="#handleIsoformLabelToggle" text="Show Isoform ID"/>
                         <SeparatorMenuItem/>
                         <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close Isoform Plot"/>
                     </Menu>

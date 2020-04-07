@@ -1,6 +1,5 @@
 package controller;
 
-import annotation.Gene;
 import exceptions.RNAScoopException;
 import exceptions.TPMGradientInvalidMaxMinException;
 import exceptions.TPMGradientMinGreaterEqualMaxException;
@@ -28,11 +27,9 @@ import mediator.ControllerMediator;
 import ui.Main;
 
 import java.net.URL;
-import java.util.Collection;
 import java.util.ResourceBundle;
 
 public class TPMGradientAdjusterController implements Initializable, InteractiveElementController {
-
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR = 0.25f;
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR = 0.4f;
     private static final Color DEFAULT_MIN_TPM_COLOR = Color.color(1.000, 1.000,1.000);
@@ -40,7 +37,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     private static final int DEFAULT_RECOMMENDED_MIN_TPM = 1;
     private static final int DEFAULT_RECOMMENDED_MAX_TPM = 10000;
     public static final String SCALE_CHOOSER_LINEAR_OPTION = "Linear";
-    public static final String SCALE_CHOOSER_EXPONENTIAL_OPTION = "Exponential";
+    public static final String SCALE_CHOOSER_EXPONENTIAL_OPTION = "Logarithmic";
 
     @FXML private VBox tpmGradientAdjuster;
     @FXML private GridPane gridPane;
@@ -159,7 +156,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     protected void handleChangedGradientMaxMinTPM() {
         try {
             updateTPMGradientMaxMin();
-            redrawShownGenes();
+            ControllerMediator.getInstance().redrawIsoformGraphics();
         } catch (RNAScoopException e) {
             gradientMinTPMField.setText(String.valueOf(gradientMinTPM));
             gradientMaxTPMField.setText(String.valueOf(gradientMaxTPM));
@@ -175,26 +172,26 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     @FXML
     protected void handleTPMColorPicker() {
         drawTPMGradient();
-        redrawShownGenes();
+        ControllerMediator.getInstance().redrawIsoformGraphics();
     }
 
     /**
      * When TPM gradient scale changes (ex. from linear to exponential) redraws
-     * the genes being shown
+     * the genes in the isoform plot
      */
     @FXML
     protected void handleChangedTPMGradientScale() {
-        redrawShownGenes();
+        ControllerMediator.getInstance().redrawIsoformGraphics();
     }
 
     /**
      * Sets the gradient max and min to the recommended values and redraws the
-     * shown genes
+     * genes in the isoform plot
      */
     @FXML
     protected void handleUseRecommendedMaxMinButton() {
         setGradientMaxMinToRecommended();
-        redrawShownGenes();
+        ControllerMediator.getInstance().redrawIsoformGraphics();
     }
 
     private void drawTPMGradient() {
@@ -203,11 +200,6 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(1, maxTPMColor)};
         LinearGradient gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
         tpmGradient.setFill(gradient);
-    }
-
-    private void redrawShownGenes() {
-        Collection<Gene> shownGenes = ControllerMediator.getInstance().getShownGenes();
-        ControllerMediator.getInstance().drawGenes(shownGenes);
     }
 
     /**

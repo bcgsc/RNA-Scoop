@@ -23,12 +23,14 @@
         <VBox.margin>
             <Insets topRightBottomLeft="10"/>
         </VBox.margin>
-        <VBox alignment="CENTER">
-            <Canvas fx:id="canvas">
-                <VBox.margin>
-                    <Insets topRightBottomLeft="15"/>
-                </VBox.margin>
-            </Canvas>
-        </VBox>
+        <Pane fx:id="isoformPlot">
+            <VBox>
+                <VBox fx:id="geneGroups">
+                    <VBox.margin>
+                        <Insets topRightBottomLeft="10"/>
+                    </VBox.margin>
+                </VBox>
+            </VBox>
+        </Pane>
     </ScrollPane>
 </VBox>

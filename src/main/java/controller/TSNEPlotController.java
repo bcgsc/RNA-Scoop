@@ -1,6 +1,5 @@
 package controller;
 
-import annotation.Gene;
 import com.jujutsu.tsne.*;
 import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.utils.MatrixUtils;
@@ -21,13 +20,15 @@ import mediator.ControllerMediator;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.panel.selectionhandler.EntitySelectionManager;
-import org.jfree.chart.panel.selectionhandler.FreeRegionSelectionHandler;
-import org.jfree.chart.panel.selectionhandler.MouseClickSelectionHandler;
-import org.jfree.chart.panel.selectionhandler.RegionSelectionHandler;
+import org.jfree.chart.entity.ChartEntity;
+import org.jfree.chart.entity.DataItemEntity;
+import org.jfree.chart.entity.EntityCollection;
+import org.jfree.chart.entity.XYItemEntity;
+import org.jfree.chart.panel.selectionhandler.*;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.item.IRSUtilities;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.extension.DatasetCursor;
 import org.jfree.data.extension.DatasetIterator;
 import org.jfree.data.extension.DatasetSelectionExtension;
 import org.jfree.data.extension.impl.DatasetExtensionManager;
@@ -44,7 +45,8 @@ import ui.PointColor;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
+import java.awt.event.MouseEvent;
+import java.awt.geom.*;
 import java.io.*;
 import java.net.URL;
 import java.util.List;
@@ -58,19 +60,19 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     @FXML private TextField perplexity;
     @FXML private SwingNode swingNode;
 
-    private JPanel tSNEPlot;
+    private JPanel tSNEPlotHolder;
+    private ChartPanel tSNEPlot;
+    private CellSelectionManager cellSelectionManager;
     private XYSeriesCollection cellsInTSNEPlot;
-    private ArrayList<CellDataItem> selectedCells;
 
     /**
      * Sets up pane in which t-SNE plot is displayed
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        setUpTSNEPlot();
-        swingNode.setContent(tSNEPlot);
+        setUpTSNEPlotHolder();
+        swingNode.setContent(tSNEPlotHolder);
         cellsInTSNEPlot = new XYSeriesCollection();
-        selectedCells = new ArrayList<>();
     }
 
     public Node getTSNEPlot() {
@@ -94,11 +96,15 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     public void clearTSNEPlot() {
-        cellsInTSNEPlot.removeAllSeries();
-        selectedCells.clear();
-        tSNEPlot.removeAll();
-        tSNEPlot.revalidate();
-        tSNEPlot.repaint();
+        if (!isTSNEPlotCleared()) {
+            ControllerMediator.getInstance().deselectAllIsoforms();
+            tSNEPlotHolder.remove(tSNEPlot);
+            tSNEPlot = null;
+            cellSelectionManager = null;
+            cellsInTSNEPlot.removeAllSeries();
+            tSNEPlotHolder.revalidate();
+            tSNEPlotHolder.repaint();
+        }
     }
 
     public boolean isTSNEPlotCleared() {
@@ -106,7 +112,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     public boolean areCellsSelected() {
-        return selectedCells.size() > 0;
+        if (cellSelectionManager != null)
+            return cellSelectionManager.getSelectedCells().size() > 0;
+        return false;
     }
 
     /**
@@ -115,30 +123,35 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     public double getIsoformExpressionLevel(String isoformID) {
         double isoformExpressionSum = 0;
+        ArrayList<CellDataItem> selectedCells = cellSelectionManager.getSelectedCells();
         int numSelected = selectedCells.size();
         for (CellDataItem selectedCell : selectedCells)
             isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
         return isoformExpressionSum / numSelected;
     }
 
+    public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
+        List<XYSeries> cellGroups = cellsInTSNEPlot.getSeries();
+        cellSelectionManager.muteAll();
+        cellSelectionManager.clearSelection();
+        for (XYSeries cellGroup : cellGroups) {
+            for (XYDataItem dataItem : cellGroup.getItems()) {
+                CellDataItem cell = (CellDataItem) dataItem;
+                if (shouldSelectCell(cell, isoformIDs))
+                    cellSelectionManager.selectCell(cell);
+            }
+        }
+        cellSelectionManager.unmuteAndTrigger();
+        tSNEPlot.repaint();
+    }
+
     /**
      * When the cells selected in the t-SNE plot changes, unless the change was clearing the
-     * t-SNE plot, stores which cells are selected and redraws the genes currently shown
+     * t-SNE plot, stores which cells are selected and redraws the genes in isoform plot
      */
     @Override
     public void selectionChanged(SelectionChangeEvent<XYCursor> selectionChangeEvent) {
-        if (!isTSNEPlotCleared()) {
-            XYDatasetSelectionExtension ext = (XYDatasetSelectionExtension) selectionChangeEvent.getSelectionExtension();
-            DatasetIterator<XYCursor> selectionIterator = ext.getSelectionIterator(true);
-            selectedCells.clear();
-            while (selectionIterator.hasNext()) {
-                XYCursor dc = selectionIterator.next();
-                CellDataItem selectedCell = (CellDataItem) cellsInTSNEPlot.getSeries(dc.series).getDataItem(dc.item);
-                selectedCells.add(selectedCell);
-            }
-            Collection<Gene> shownGenes = ControllerMediator.getInstance().getShownGenes();
-            ControllerMediator.getInstance().drawGenes(shownGenes);
-        }
+        ControllerMediator.getInstance().redrawIsoformGraphics();
     }
 
     /**
@@ -171,6 +184,37 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
+    }
+
+    private boolean shouldSelectCell(CellDataItem cell, Collection<String> isoformIDs) {
+        for (String isoformID : isoformIDs) {
+            if (cell.getIsoformExpressionLevel(isoformID) > 0)
+                return true;
+        }
+        return false;
+    }
+    /**
+     * Creates box where t-SNE plot is drawn (box is white with grey border)
+     * Makes sure t-SNE plot resizes when t-SNE plot panel resizes (height doesn't
+     * change on Windows when t-SNE plot panel height changes, so added code to fix
+     * this)
+     */
+    private void setUpTSNEPlotHolder() {
+        tSNEPlotHolder = new JPanel(new GridLayout(1, 2));
+        tSNEPlotHolder.setBackground(Color.WHITE);
+        // the preferred width does not matter (will automatically resize to right width), but
+        // if preferred height is too small will not take up all of t-SNE plot panel, which is why
+        // the preferred height is set to a large number
+        tSNEPlotHolder.setPreferredSize(new Dimension(500, Integer.MAX_VALUE));
+        tSNEPlotHolder.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
+        tSNEPlotPanel.heightProperty().addListener((ov, oldValue, newValue) -> {
+            // resetting preferred size and repainting and revalidating t-SNE plot (after short delay)
+            // results in t-SNE plot resizing on Windows
+            Platform.runLater(() -> {
+                tSNEPlotHolder.revalidate();
+                tSNEPlotHolder.repaint();
+            });
+        });
     }
 
     /**
@@ -210,28 +254,126 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
     }
 
-    /**
-     * Creates box where t-SNE plot is drawn (box is white with grey border)
-     * Makes sure t-SNE plot resizes when t-SNE plot panel resizes (height doesn't
-     * change on Windows when t-SNE plot panel height changes, so added code to fix
-     * this)
-     */
-    private void setUpTSNEPlot() {
-        tSNEPlot = new JPanel(new GridLayout(1, 2));
-        tSNEPlot.setBackground(Color.WHITE);
-        // the preferred width does not matter (will automatically be set to right width), but
-        // if preferred height is too small will not take up all of t-SNE plot panel, which is why
-        // the preferred height is set to a large number
-        tSNEPlot.setPreferredSize(new Dimension(500, Integer.MAX_VALUE));
-        tSNEPlot.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
-        tSNEPlotPanel.heightProperty().addListener((ov, oldValue, newValue) -> {
-            // resetting preferred size and repainting and revalidating t-SNE plot (after short delay)
-            // results in t-SNE plot resizing on Windows
-            Platform.runLater(() -> {
-                tSNEPlot.revalidate();
-                tSNEPlot.repaint();
-            });
-        });
+    private class TSNEPlotFreeRegionSelectionHandler extends FreeRegionSelectionHandler {
+        @Override
+        public void mousePressed(MouseEvent e) {
+            super.mousePressed(e);
+            ControllerMediator.getInstance().deselectAllIsoforms();
+            ControllerMediator.getInstance().redrawIsoformGraphics();
+        }
+    }
+
+    private class CellSelectionManager implements SelectionManager {
+        private DatasetExtensionManager extensionManager;
+        private ArrayList<CellDataItem> selectedCells;
+
+        public CellSelectionManager(DatasetExtensionManager extensionManager) {
+            selectedCells = new ArrayList<>();
+            this.extensionManager = extensionManager;
+        }
+
+        @Override
+        public void select(double x, double y) {
+            double scaleX = tSNEPlot.getScaleX();
+            double scaleY = tSNEPlot.getScaleY();
+            if (scaleX != 1.0D || scaleY != 1.0D) {
+                x /= scaleX;
+                y /= scaleY;
+            }
+            EntityCollection entities = tSNEPlot.getChartRenderingInfo().getEntityCollection();
+            for (ChartEntity chartEntity : entities.getEntities())
+                if (chartEntity instanceof DataItemEntity) {
+                    XYItemEntity xyItemEntity = (XYItemEntity) chartEntity;
+                    if (xyItemEntity.getArea().contains(new Point2D.Double(x, y))) {
+                        select(xyItemEntity);
+                    }
+                }
+            }
+
+        @Override
+        public void select(GeneralPath pathSelection) {
+            double scaleX = tSNEPlot.getScaleX();
+            double scaleY = tSNEPlot.getScaleY();
+            GeneralPath selection;
+            if (scaleX == 1.0D && scaleY == 1.0D) {
+                selection = pathSelection;
+            } else {
+                AffineTransform st = AffineTransform.getScaleInstance(1.0D / scaleX, 1.0D / scaleY);
+                Area selectionArea = new Area(pathSelection);
+                selectionArea.transform(st);
+                selection = new GeneralPath(selectionArea);
+            }
+            muteAll();
+            EntityCollection entities = tSNEPlot.getChartRenderingInfo().getEntityCollection();
+            for (ChartEntity chartEntity : entities.getEntities()) {
+                if (chartEntity instanceof XYItemEntity) {
+                    XYItemEntity xyItemEntity = (XYItemEntity) chartEntity;
+                    Area selectionShape = new Area(selection);
+                    Area entityShape = new Area(xyItemEntity.getArea());
+                    if (selectionShape.contains(entityShape.getBounds())) {
+                        this.select(xyItemEntity);
+                    } else {
+                        entityShape.subtract(selectionShape);
+                        if (entityShape.isEmpty()) {
+                            this.select(xyItemEntity);
+                        }
+                    }
+                }
+            }
+            unmuteAndTrigger();
+        }
+
+        @Override
+        public void select(Rectangle2D rectangle2D) {}
+
+        @Override
+        public void clearSelection() {
+            if (extensionManager.supports(cellsInTSNEPlot, DatasetSelectionExtension.class)) {
+                DatasetSelectionExtension<?> selectionExtension = extensionManager.getExtension(cellsInTSNEPlot, DatasetSelectionExtension.class);
+                selectionExtension.clearSelection();
+                selectedCells.clear();
+            }
+        }
+
+        public void selectCell(CellDataItem cell) {
+            EntityCollection entities = tSNEPlot.getChartRenderingInfo().getEntityCollection();
+            for (ChartEntity chartEntity : entities.getEntities()) {
+                if (chartEntity instanceof XYItemEntity) {
+                    XYItemEntity xyItemEntity = (XYItemEntity) chartEntity;
+                    CellDataItem xyItemEntityCell = (CellDataItem) cellsInTSNEPlot.getSeries(xyItemEntity.getSeriesIndex()).getItems().get(xyItemEntity.getItem());
+                    if (cell == xyItemEntityCell)
+                        select(xyItemEntity);
+                }
+            }
+        }
+
+
+        public void muteAll() {
+            this.setNotifyOnListenerExtensions(false);
+        }
+
+        public void unmuteAndTrigger() {
+            this.setNotifyOnListenerExtensions(true);
+        }
+
+        public ArrayList<CellDataItem> getSelectedCells() {
+            return selectedCells;
+        }
+
+        private void select(XYItemEntity xyItemEntity) {
+            if (cellsInTSNEPlot.equals(xyItemEntity.getGeneralDataset()) && extensionManager.supports(xyItemEntity.getGeneralDataset(), DatasetSelectionExtension.class)) {
+                DatasetCursor cursor = xyItemEntity.getItemCursor();
+                DatasetSelectionExtension selectionExtension = extensionManager.getExtension(xyItemEntity.getGeneralDataset(), DatasetSelectionExtension.class);
+                selectionExtension.setSelected(cursor, true);
+                CellDataItem cell = (CellDataItem) cellsInTSNEPlot.getSeries(xyItemEntity.getSeriesIndex()).getItems().get(xyItemEntity.getItem());
+                selectedCells.add(cell);
+            }
+        }
+
+        private void setNotifyOnListenerExtensions(boolean notify) {
+            DatasetSelectionExtension<?> selectionExtension = (DatasetSelectionExtension) extensionManager.getExtension(cellsInTSNEPlot, DatasetSelectionExtension.class);
+            selectionExtension.setNotify(notify);
+        }
     }
 
     private class TSNEPlotMaker implements Runnable {
@@ -323,12 +465,13 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
             addSelectionHandler(panel);
             addSelectionManager(cellsInNewTSNEPlot, datasetExtension, panel);
+            tSNEPlot = panel;
 
             cellsInTSNEPlot = cellsInNewTSNEPlot;
-            tSNEPlot.removeAll();
-            tSNEPlot.add(panel);
-            tSNEPlot.revalidate();
-            tSNEPlot.repaint();
+            tSNEPlotHolder.removeAll();
+            tSNEPlotHolder.add(panel);
+            tSNEPlotHolder.revalidate();
+            tSNEPlotHolder.repaint();
         }
 
         private void setTPMGradientValues(double[][] cellIsoformExpressionMatrix) {
@@ -354,18 +497,17 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             int cellIndex = 0;
             while (colorScanner.hasNextLine()) {
                 String label = colorScanner.nextLine();
-                XYSeries series = new XYSeries(label);
-                if (!dataSetHasSeries(series)) {
-                    cellsInNewTSNEPlot.addSeries(series);
+                XYSeries cellGroup = new XYSeries(label);
+                if (!dataSetHasSeries(cellGroup)) {
+                    cellsInNewTSNEPlot.addSeries(cellGroup);
                 } else {
-                    series = cellsInNewTSNEPlot.getSeries(label);
+                    cellGroup = cellsInNewTSNEPlot.getSeries(label);
                 }
 
                 double cellX = tSNEMatrix[cellIndex][0];
                 double cellY = tSNEMatrix[cellIndex][1];
-
                 CellDataItem cellDataItem = new CellDataItem(cellX, cellY, cellIsoformExpressionMatrix[cellIndex], isoformIndexMap);
-                series.add(cellDataItem);
+                cellGroup.add(cellDataItem);
                 cellIndex++;
             }
             colorScanner.close();
@@ -412,12 +554,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         private void addSelectionManager(XYSeriesCollection dataset, DatasetSelectionExtension<XYCursor> datasetExtension, ChartPanel panel) {
             DatasetExtensionManager dExManager = new DatasetExtensionManager();
             dExManager.registerDatasetExtension(datasetExtension);
-            panel.setSelectionManager(new EntitySelectionManager(panel,
-                    new Dataset[] { dataset }, dExManager));
+            cellSelectionManager = new CellSelectionManager(dExManager);
+            panel.setSelectionManager(cellSelectionManager);
         }
 
         private void addSelectionHandler(ChartPanel panel) {
-            RegionSelectionHandler selectionHandler = new FreeRegionSelectionHandler();
+            RegionSelectionHandler selectionHandler = new TSNEPlotFreeRegionSelectionHandler();
             panel.addMouseHandler(selectionHandler);
             panel.addMouseHandler(new MouseClickSelectionHandler());
             panel.removeMouseHandler(panel.getZoomHandler());

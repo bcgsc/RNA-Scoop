@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.*?>
-<?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.Button?>
@@ -23,17 +22,14 @@
         <VBox.margin>
             <Insets topRightBottomLeft="10"/>
         </VBox.margin>
-        <StackPane>
-            <Canvas fx:id="isoformCanvas">
-                <StackPane.margin>
-                    <Insets topRightBottomLeft="15"/>
-                </StackPane.margin>
-            </Canvas>
-            <Canvas fx:id="selectionCanvas">
-                <StackPane.margin>
-                    <Insets topRightBottomLeft="15"/>
-                </StackPane.margin>
-            </Canvas>
-        </StackPane>
+        <Pane fx:id="isoformPlot">
+            <VBox>
+                <VBox fx:id="geneGroups">
+                    <VBox.margin>
+                        <Insets topRightBottomLeft="10"/>
+                    </VBox.margin>
+                </VBox>
+            </VBox>
+        </Pane>
     </ScrollPane>
 </VBox>
