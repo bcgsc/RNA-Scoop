@@ -24,7 +24,7 @@
         </VBox.margin>
         <Pane fx:id="isoformPlot">
             <VBox>
-                <VBox fx:id="geneGroups">
+                <VBox fx:id="geneGroups" fillWidth="false">
                     <VBox.margin>
                         <Insets topRightBottomLeft="10"/>
                     </VBox.margin>

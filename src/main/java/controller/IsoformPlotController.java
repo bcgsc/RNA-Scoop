@@ -12,6 +12,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -270,13 +271,16 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     private String getGeneLabelText(Gene gene, boolean showGeneNameAndID, boolean showGeneName, boolean reverseComplement) {
-        String labelText = "";
-        if (showGeneNameAndID)
-            labelText += gene.getId() + " (" + gene.getName() + ")";
-        else if (showGeneName)
-            labelText +=gene.getName();
+        String labelText;
+        String geneName = gene.getName();
+        String geneID = gene.getId();
+
+        if (showGeneNameAndID && geneName != null)
+            labelText = geneID + " (" + geneName + ")";
+        else if (showGeneName && geneName != null)
+            labelText = geneName;
         else
-            labelText += gene.getId();
+            labelText = geneID;
 
         if (reverseComplement) {
             if (gene.isOnPositiveStrand())
@@ -301,7 +305,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             Color isoformColor = DEFAULT_EXON_COLOR;
             if (shoudGetCustomIsoformColor)
                 isoformColor = getCustomIsoformColor(isoformID);
-            if (!hideIsoformsWithNoJunctions || (hideIsoformsWithNoJunctions && isoform.hasExonJunctions())) {
+            if (!hideIsoformsWithNoJunctions || isoform.hasExonJunctions()) {
                 IsoformGroup isoformGroup = makeIsoformGroup(showIsoformName, showIsoformID, reverseComplement, geneStart,
                                                              isOnPositiveStrand, geneEnd, pixelsPerNucleotide, isoformColor, isoform);
                 geneGroup.addIsoform(isoform, isoformGroup);
@@ -379,12 +383,15 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     private String getIsoformLabelText(Isoform isoform, boolean showIsoformName, boolean showIsoformID) {
-        if (showIsoformName && showIsoformID)
-            return isoform.getId() + " (" + isoform.getName() + ")";
-        else if (showIsoformName)
-            return isoform.getName();
+        String isoformName = isoform.getName();
+        String isoformID = isoform.getId();
+
+        if (showIsoformName && showIsoformID && isoformName != null)
+            return isoformID + " (" + isoformName + ")";
+        else if (showIsoformName && isoformName != null)
+            return isoformName;
         else if (showIsoformID)
-            return isoform.getId();
+            return isoformID;
         else
             return "";
     }
@@ -536,14 +543,15 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     private class GeneGroup extends VBox {
-        private Text label;
+        private SelectableText label;
         private HashMap<Isoform, IsoformGroup> isoformsIsoformGroupMap;
 
         public GeneGroup(String labelText) {
-            label = new Text();
+            setFillWidth(false);
+            label = new SelectableText();
             label.setFont(GENE_FONT);
-            label.setText(labelText);
             getChildren().add(label);
+            label.setTextAndFitWidthToText(labelText);
             isoformsIsoformGroupMap = new HashMap<>();
         }
 
@@ -559,7 +567,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         public void changeLabel(String newLabel) {
-            label.setText(newLabel);
+            label.setTextAndFitWidthToText(newLabel);
         }
 
         public Collection<Isoform> getIsoforms() {
@@ -576,10 +584,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     private class IsoformGroup extends VBox {
-        private Text label;
+        private SelectableText label;
         private Canvas isoformGraphic;
 
         public IsoformGroup(Canvas isoformGraphic) {
+            setFillWidth(false);
             this.label = null;
             this.isoformGraphic = isoformGraphic;
             getChildren().add(isoformGraphic);
@@ -589,7 +598,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             if (label == null)
                 createLabel(newLabelText);
             else
-                label.setText(newLabelText);
+                label.setTextAndFitWidthToText(newLabelText);
         }
 
         public void removeLabel() {
@@ -604,14 +613,36 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         private void createLabel(String newLabel) {
-            label = new Text();
+            label = new SelectableText();
             label.setFont(ISOFORM_FONT);
             VBox.setMargin(label, new Insets(0, 0, 0, ISOFORM_OFFSET));
             getChildren().add(0, label);
-            label.setText(newLabel);
+            label.setTextAndFitWidthToText(newLabel);
         }
     }
 
+    private class SelectableText extends TextField {
+
+        public SelectableText() {
+            super();
+            setEditable(false);
+            setStyle("-fx-background-color: transparent;" +
+                     "-fx-background-insets: 0;" +
+                     "-fx-padding: 1 3 1 0;");
+        }
+
+        public void setTextAndFitWidthToText(String text) {
+            setText(text);
+            setPrefWidth(getTextWidth());
+        }
+
+        private float getTextWidth() {
+            Text text = new Text(getText());
+            text.setFont(getFont());
+            return (float) text.getLayoutBounds().getWidth() + 5;
+        }
+
+    }
     public class SelectionModel {
         private Set<Canvas> selection = new HashSet<>();
 
