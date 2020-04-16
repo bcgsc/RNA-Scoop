@@ -563,7 +563,7 @@ public class MainController implements InteractiveElementController {
             try {
                 String filePath = (String) pathComboBox.getValue();
                 runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + filePath));
-                Parser.readFile(filePath);
+                Parser.loadFiles(filePath);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + filePath));
                 runLater(() -> ControllerMediator.getInstance().updateGenes());
                 currentLoadedPath = filePath;
@@ -591,9 +591,7 @@ public class MainController implements InteractiveElementController {
         window.setTitle("RNA-Scoop");
         window.getIcons().add(Main.RNA_SCOOP_LOGO);
         setWindowSize();
-        window.setOnCloseRequest(event -> {
-            Platform.exit();
-        });
+        window.setOnCloseRequest(event -> Platform.exit());
         window.show();
     }
 

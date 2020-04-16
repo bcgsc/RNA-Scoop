@@ -2,6 +2,7 @@ package controller;
 
 import com.jujutsu.tsne.*;
 import com.jujutsu.tsne.barneshut.BHTSne;
+import com.jujutsu.utils.MatrixOps;
 import com.jujutsu.utils.MatrixUtils;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
@@ -58,6 +59,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     @FXML private TextField perplexity;
     @FXML private SwingNode swingNode;
 
+    private TSNEPlotInfo tSNEPlotInfo;
     private JPanel tSNEPlotHolder;
     private ChartPanel tSNEPlot;
     private CellSelectionManager cellSelectionManager;
@@ -91,6 +93,11 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     public void enable() {
         drawTSNEButton.setDisable(false);
         perplexity.setDisable(false);
+    }
+
+    public void setTSNEPlotInfo(double[][] cellIsoformMatrix, HashMap<String, Integer> isoformIndexMap,
+                                ArrayList<String> cellLabels) {
+        tSNEPlotInfo = new TSNEPlotInfo(cellIsoformMatrix, isoformIndexMap, cellLabels);
     }
 
     public void clearTSNEPlot() {
@@ -198,26 +205,58 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     /**
+     * Holds all the information to generate the t-SNE plot
+     */
+    private static class TSNEPlotInfo {
+        /**
+         * Matrix in which each row represents a cell, each column an isoform
+         * and each number the level of expression of that isoform in the particular
+         * cell
+         */
+        private double[][] cellIsoformMatrix;
+        /**
+         * Maps each isoform ID to its column number in the matrix (e.g. if the
+         * first column represents IsoformA, IsoformA's ID will be mapped to 0)
+         */
+        private HashMap<String, Integer> isoformIndexMap;
+        /**
+         * Group each cell in matrix belongs to. If cell represented by the first
+         * row in the matrix is in group "T Cells", cellLabels[0] = "T Cells"
+         */
+        private ArrayList<String> cellLabels;
+
+        public TSNEPlotInfo(double[][] cellIsoformMatrix, HashMap<String, Integer> isoformIndexMap,
+                            ArrayList<String> cellLabels) {
+            this.cellIsoformMatrix = cellIsoformMatrix;
+            this.isoformIndexMap = isoformIndexMap;
+            this.cellLabels = cellLabels;
+        }
+
+        public double[][] getCellIsoformMatrix() {
+            return cellIsoformMatrix;
+        }
+
+        public HashMap<String, Integer> getIsoformIndexMap() {
+            return isoformIndexMap;
+        }
+
+        public ArrayList<String> getCellLabels() {
+            return cellLabels;
+        }
+    }
+
+    /**
      * Represents a cell in the t-SNE plot
      */
-    private static class CellDataItem extends XYDataItem {
+    private class CellDataItem extends XYDataItem {
         /**
          * Each number is the level of expression of some isoform in this cell.
          */
         private double[] isoformExpressionLevels;
-        /**
-         * Map which stores the index in isoformExpressionLevels where an isoform's
-         * expression level in this cell is stored
-         *
-         * Key is isoform ID, value is the index where that isoform's expression
-         * level is stored
-         */
-        HashMap<String, Integer> isoformIndexMap;
 
-        public CellDataItem(Number x, Number y, double[] isoformExpressionLevels, HashMap<String, Integer> isoformIndexMap) {
+        public CellDataItem(Number x, Number y, double[] isoformExpressionLevels) {
             super(x, y);
             this.isoformExpressionLevels = isoformExpressionLevels;
-            this.isoformIndexMap = isoformIndexMap;
         }
 
         /**
@@ -225,7 +264,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          * in this cell. Returns 0 if that information isn't stored
          */
         public double getIsoformExpressionLevel(String isoformID) {
-            Integer isoformIndex = isoformIndexMap.get(isoformID);
+            Integer isoformIndex = tSNEPlotInfo.getIsoformIndexMap().get(isoformID);
             if (isoformIndex != null) {
                 return isoformExpressionLevels[isoformIndex];
             }
@@ -413,10 +452,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     private class TSNEPlotMaker implements Runnable {
-        private File dataFile;
-        private File colorsFile;
-        private File isoformLabelsFile;
-
         private XYSeriesCollection cellsInNewTSNEPlot;
 
         /**
@@ -426,50 +461,21 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         public void run() {
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing t-SNE plot..."));
             try {
-                loadFiles();
                 cellsInNewTSNEPlot = new XYSeriesCollection();
-                double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix();
-                double[][] tSNEMatrix = generateTSNEMatrix(cellIsoformExpressionMatrix);
-                drawTsne(cellIsoformExpressionMatrix, tSNEMatrix);
-                setTPMGradientValues(cellIsoformExpressionMatrix);
+                double[][] tSNEMatrix = generateTSNEMatrix();
+                drawTsne(tSNEMatrix);
+                setTPMGradientValues();
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot"));
             } catch(RNAScoopException e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
             } catch (Exception e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the t-SNE plot"));
-                e.printStackTrace();
             } finally {
                 runLater(TSNEPlotController.this::enableAssociatedFunctionality);
             }
         }
 
-        /**
-         * Load t-SNE data, colour labels and isoform labels files
-         */
-        private void loadFiles() {
-            dataFile = new File("matrix.txt");
-            isoformLabelsFile = new File("isoform_labels.txt");
-            colorsFile = new File("mnist200_labels_int.txt");
-        }
-
-        /**
-         * Creates a cell isoform expression matrix by reading the given data file
-         * Throws exceptions if size of the matrix is 0, or if the matrix contains negative
-         * expression values
-         */
-        private double[][] getCellIsoformExpressionMatrix() throws TSNEMatrixSizeZeroException, TSNENegativeExpressionInMatrixException {
-            double[][] cellIsoformExpressionMatrix = MatrixUtils.simpleRead2DMatrix(dataFile, "\t");
-            if (cellIsoformExpressionMatrix.length == 0)
-                throw new TSNEMatrixSizeZeroException();
-
-            double[] negativeExpressions = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).filter(expression -> expression < 0).toArray();
-            if (negativeExpressions.length > 0)
-                throw new TSNENegativeExpressionInMatrixException();
-
-            return cellIsoformExpressionMatrix;
-        }
-
-        private double [][] generateTSNEMatrix(double[][] cellIsoformExpressionMatrix) throws TSNEInvalidPerplexityException {
+        private double [][] generateTSNEMatrix() throws TSNEInvalidPerplexityException {
             double perplexityValue;
             try {
                 perplexityValue = Double.parseDouble(perplexity.getText());
@@ -481,7 +487,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
             int initial_dims = 55;
             BHTSne tSNE = new BHTSne();
-            TSneConfiguration config = TSneUtils.buildConfig(cellIsoformExpressionMatrix, 2, initial_dims, perplexityValue, 1000);
+            double[][] matrix = tSNEPlotInfo.getCellIsoformMatrix();
+            int numRows = matrix.length;
+            int numColumns = matrix[0].length;
+            if (numColumns > numRows)
+                matrix = MatrixOps.transposeSerial(matrix);
+            TSneConfiguration config = TSneUtils.buildConfig(matrix, 2, initial_dims, perplexityValue, 1000);
             return tSNE.tsne(config);
         }
 
@@ -489,8 +500,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         /**
          * Plots given t-SNE matrix
          */
-        private void drawTsne(double[][] cellIsoformExpressionMatrix, double[][] tSNEMatrix) throws FileNotFoundException {
-            createDataSet(cellIsoformExpressionMatrix, tSNEMatrix);
+        private void drawTsne(double[][] tSNEMatrix) {
+            createDataSet(tSNEMatrix);
             DatasetSelectionExtension<XYCursor> datasetExtension
                     = new XYDatasetSelectionExtension(cellsInNewTSNEPlot);
             datasetExtension.addChangeListener(TSNEPlotController.this);
@@ -509,8 +520,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             tSNEPlotHolder.repaint();
         }
 
-        private void setTPMGradientValues(double[][] cellIsoformExpressionMatrix) {
-            double[] expressionArray = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).toArray();
+        private void setTPMGradientValues() {
+            double[] expressionArray = Arrays.stream(tSNEPlotInfo.getCellIsoformMatrix()).flatMapToDouble(Arrays::stream).toArray();
             Arrays.sort(expressionArray);
             double[] filteredExpressionArray = Arrays.stream(expressionArray).filter(tpm -> tpm >= 1).toArray();
 
@@ -525,13 +536,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          * NOTE: if labels file does not have a label on a separate line for every cell,
          * cells will be left out of the data set!
          */
-        private void createDataSet(double[][] cellIsoformExpressionMatrix, double[][] tSNEMatrix) throws FileNotFoundException {
-
-            Scanner colorScanner = new Scanner(colorsFile);
-            HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap();
+        private void createDataSet(double[][] tSNEMatrix) {
             int cellIndex = 0;
-            while (colorScanner.hasNextLine()) {
-                String label = colorScanner.nextLine();
+            for (String label : tSNEPlotInfo.getCellLabels()) {
                 XYSeries cellGroup = new XYSeries(label);
                 if (!dataSetHasSeries(cellGroup)) {
                     cellsInNewTSNEPlot.addSeries(cellGroup);
@@ -541,23 +548,10 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
                 double cellX = tSNEMatrix[cellIndex][0];
                 double cellY = tSNEMatrix[cellIndex][1];
-                CellDataItem cellDataItem = new CellDataItem(cellX, cellY, cellIsoformExpressionMatrix[cellIndex], isoformIndexMap);
+                CellDataItem cellDataItem = new CellDataItem(cellX, cellY, tSNEPlotInfo.getCellIsoformMatrix()[cellIndex]);
                 cellGroup.add(cellDataItem);
                 cellIndex++;
             }
-            colorScanner.close();
-        }
-
-        private HashMap<String, Integer> getIsoformIndexMap() throws FileNotFoundException {
-            Scanner isoformLabelsScanner = new Scanner(isoformLabelsFile);
-            HashMap<String, Integer> isoformIndexMap = new HashMap<>();
-            int index = 0;
-            while (isoformLabelsScanner.hasNextLine()) {
-                String isoformLabel = isoformLabelsScanner.nextLine();
-                isoformIndexMap.put(isoformLabel, index);
-                index++;
-            }
-            return isoformIndexMap;
         }
 
         /**

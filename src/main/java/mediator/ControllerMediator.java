@@ -8,10 +8,7 @@ import javafx.scene.paint.Color;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ControllerMediator implements Mediator{
     private MainController mainController;
@@ -55,6 +52,10 @@ public class ControllerMediator implements Mediator{
     // Change Main Display
     public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
         mainController.initializeMain(console, isoformPlot, tSNEPlot);
+    }
+
+    public void clearPathComboBox() {
+        mainController.clearPathComboBox();
     }
 
     // Console Functions
@@ -244,8 +245,9 @@ public class ControllerMediator implements Mediator{
     }
 
     //Setters
-    public void clearPathComboBox() {
-        mainController.clearPathComboBox();
+    public void setTSNEPlotInfo(double[][] cellIsoformMatrix, HashMap<String, Integer> isoformIndexMap,
+                                ArrayList<String> cellLabels) {
+        tsnePlotController.setTSNEPlotInfo(cellIsoformMatrix, isoformIndexMap, cellLabels);
     }
 
     public void setRecommendedMinTPM(int recommendedMinTPM) {

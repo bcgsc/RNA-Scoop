@@ -35,7 +35,7 @@ public class ParserTests {
     @BeforeAll
     public static void setUp() {
         try {
-            Parser.readFile(FILE_PATH);
+            Parser.loadFiles(FILE_PATH);
         } catch (Exception e) {
             e.printStackTrace();
         }
