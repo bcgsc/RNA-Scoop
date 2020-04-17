@@ -333,7 +333,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         if (scale.equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION))
             return getLinearScaleColor(isoformExpression, minTPM, maxTPM, minTPMColor, maxTPMColor);
         else
-            return getExponentialScaleColor(isoformExpression, minTPM, maxTPM, minTPMColor, maxTPMColor);
+            return getLogarithmicScaleColor(isoformExpression, minTPM, maxTPM, minTPMColor, maxTPMColor);
     }
 
     /**
@@ -351,16 +351,18 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Gets color for isoform with given expression based on TPM gradient using an exponential scale
+     * Gets color for isoform with given expression based on TPM gradient using a logarithmic scale
      */
-    private Color getExponentialScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
+    private Color getLogarithmicScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
         if (isoformExpression <= minTPM)
             return minTPMColor;
         else if (isoformExpression >= maxTPM)
             return  maxTPMColor;
         else {
-            double linearT = (isoformExpression - minTPM) / (maxTPM - minTPM);
-            double t = Math.log10(linearT * 100D + 1D - linearT)/Math.log10(100D);
+            double logIsoformExpression = Math.log10(isoformExpression + Double.MIN_VALUE);
+            double logMinTPM = Math.log10(minTPM + Double.MIN_VALUE);
+            double logMaxTPM = Math.log10(maxTPM + Double.MIN_VALUE);
+            double t = (logIsoformExpression- logMinTPM)/(logMaxTPM - logMinTPM);
             return minTPMColor.interpolate(maxTPMColor, t);
         }
     }
