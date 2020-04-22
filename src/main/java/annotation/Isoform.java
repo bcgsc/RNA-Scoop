@@ -4,12 +4,14 @@ import java.util.ArrayList;
 
 public class Isoform {
 
+    private Gene gene;
     private ArrayList<Exon> exons;
     private String id;
     private String name;
     private boolean hasExonJunctions;
 
-    public Isoform(String id) {
+    public Isoform(String id, Gene gene) {
+        this.gene = gene;
         this.id = id;
         exons = new ArrayList<>();
         name = null;
@@ -39,6 +41,10 @@ public class Isoform {
 
     public ArrayList<Exon> getExons() {
         return exons;
+    }
+
+    public Gene getGene() {
+        return gene;
     }
 
     public boolean hasExonJunctions() {return hasExonJunctions;}

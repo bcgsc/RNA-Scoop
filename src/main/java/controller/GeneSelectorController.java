@@ -137,6 +137,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
                 ControllerMediator.getInstance().addGenesToIsoformPlot(genesToAdd);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding selected genes");
+            e.printStackTrace();
         } finally {
             enableAssociatedFunctionality();
         }

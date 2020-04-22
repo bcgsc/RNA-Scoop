@@ -11,6 +11,7 @@ import exceptions.TSNEMatrixSizeZeroException;
 import exceptions.TSNENegativeExpressionInMatrixException;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -127,10 +128,11 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     public double getIsoformExpressionLevel(String isoformID) {
         double isoformExpressionSum = 0;
-        ArrayList<CellDataItem> selectedCells = cellSelectionManager.getSelectedCells();
+        HashMap<XYSeries, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
         int numSelected = selectedCells.size();
-        for (CellDataItem selectedCell : selectedCells)
-            isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
+        for (ArrayList<CellDataItem> selectedCellGroup : selectedCells.values())
+            for (CellDataItem selectedCell : selectedCellGroup)
+                isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
         return isoformExpressionSum / numSelected;
     }
 
@@ -290,10 +292,10 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     private class CellSelectionManager implements SelectionManager {
         private DatasetExtensionManager extensionManager;
-        private ArrayList<CellDataItem> selectedCells;
+        private HashMap<XYSeries, ArrayList<CellDataItem>> selectedCells;
 
         public CellSelectionManager(DatasetExtensionManager extensionManager) {
-            selectedCells = new ArrayList<>();
+            selectedCells = new HashMap<>();
             this.extensionManager = extensionManager;
         }
 
@@ -391,7 +393,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
         }
 
-        public ArrayList<CellDataItem> getSelectedCells() {
+        public HashMap<XYSeries, ArrayList<CellDataItem>> getSelectedCells() {
             return selectedCells;
         }
 
@@ -425,8 +427,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          */
         private void select(XYItemEntity xyItemEntity) {
             if (cellsInTSNEPlot.equals(xyItemEntity.getGeneralDataset()) && extensionManager.supports(xyItemEntity.getGeneralDataset(), DatasetSelectionExtension.class)) {
-                CellDataItem cell = (CellDataItem) cellsInTSNEPlot.getSeries(xyItemEntity.getSeriesIndex()).getItems().get(xyItemEntity.getItem());
-                selectedCells.add(cell);
+                XYSeries cellSeries = cellsInTSNEPlot.getSeries(xyItemEntity.getSeriesIndex());
+                CellDataItem cell = (CellDataItem) cellSeries.getItems().get(xyItemEntity.getItem());
+                addCellToSelectedCells(cellSeries, cell);
                 DatasetCursor cursor = xyItemEntity.getItemCursor();
                 DatasetSelectionExtension selectionExtension = extensionManager.getExtension(xyItemEntity.getGeneralDataset(), DatasetSelectionExtension.class);
                 selectionExtension.setSelected(cursor, true);
@@ -448,6 +451,17 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         private void setNotifyOnListenerExtensions(boolean notify) {
             DatasetSelectionExtension<?> selectionExtension = (DatasetSelectionExtension) extensionManager.getExtension(cellsInTSNEPlot, DatasetSelectionExtension.class);
             selectionExtension.setNotify(notify);
+        }
+
+        private void addCellToSelectedCells(XYSeries cellSeries, CellDataItem cell) {
+            if (selectedCells.containsKey(cellSeries)) {
+                ArrayList<CellDataItem> selectedCellsOfSameSeries =  selectedCells.get(cellSeries);
+                selectedCellsOfSameSeries.add(cell);
+            } else {
+                ArrayList<CellDataItem> selectedCellsOfSameSeries = new ArrayList<>();
+                selectedCellsOfSameSeries.add(cell);
+                selectedCells.put(cellSeries, selectedCellsOfSameSeries);
+            }
         }
     }
 

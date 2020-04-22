@@ -198,7 +198,7 @@ public class Parser {
                 if(gene.hasIsoform(isoformID)) {
                     isoform = gene.getIsoform(isoformID);
                 } else {
-                    isoform = new Isoform(isoformID);
+                    isoform = new Isoform(isoformID, gene);
                     gene.addIsoform(isoformID, isoform);
                 }
                 exon = new Exon(startNucleotide, endNucleotide);
