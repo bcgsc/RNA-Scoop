@@ -5,8 +5,6 @@ import controller.*;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.paint.Color;
-import org.jfree.data.xy.XYDataItem;
-import org.jfree.data.xy.XYSeries;
 
 import java.util.*;
 
@@ -93,7 +91,7 @@ public class ControllerMediator implements Mediator{
     }
 
     public void redrawIsoformGraphics() {
-        isoformPlotController.redrawIsoformGraphics();
+        isoformPlotController.redrawGraphics();
     }
 
     public void updateGeneReverseComplementStatus() {
@@ -178,6 +176,22 @@ public class ControllerMediator implements Mediator{
 
     public double getIsoformExpressionLevel(String isoformID) {
         return tsnePlotController.getIsoformExpressionLevel(isoformID);
+    }
+
+    public double getIsoformExpressionLevelInCluster(String isoformID, int clusterNumber) {
+        return  tsnePlotController.getIsoformExpressionLevelInCluster(isoformID, clusterNumber);
+    }
+
+    public Set<Integer> getSelectedClusterNumbers() {
+        return tsnePlotController.getSelectedClusterNumbers();
+    }
+
+    public HashMap<Integer, Color> getSelectedClusterColors() {
+        return tsnePlotController.getSelectedClusterColors();
+    }
+
+    public double getFractionOfExpressingCells(String isoformID, int clusterNumber) {
+        return tsnePlotController.getFractionOfExpressingCells(isoformID, clusterNumber);
     }
 
     public double getGradientMinTPM() {

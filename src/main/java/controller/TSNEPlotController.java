@@ -3,15 +3,11 @@ package controller;
 import com.jujutsu.tsne.*;
 import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.utils.MatrixOps;
-import com.jujutsu.utils.MatrixUtils;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
 import exceptions.TSNEInvalidPerplexityException;
-import exceptions.TSNEMatrixSizeZeroException;
-import exceptions.TSNENegativeExpressionInMatrixException;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -37,7 +33,6 @@ import org.jfree.data.extension.impl.XYCursor;
 import org.jfree.data.extension.impl.XYDatasetSelectionExtension;
 import org.jfree.data.general.SelectionChangeEvent;
 import org.jfree.data.general.SelectionChangeListener;
-import org.jfree.data.general.Series;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -47,7 +42,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.*;
-import java.io.*;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
@@ -128,12 +122,57 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     public double getIsoformExpressionLevel(String isoformID) {
         double isoformExpressionSum = 0;
-        HashMap<XYSeries, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
-        int numSelected = selectedCells.size();
-        for (ArrayList<CellDataItem> selectedCellGroup : selectedCells.values())
-            for (CellDataItem selectedCell : selectedCellGroup)
+        int numSelected = 0;
+        HashMap<Integer, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
+        for (ArrayList<CellDataItem> selectedCellsInCluster : selectedCells.values()) {
+            numSelected += selectedCellsInCluster.size();
+            for (CellDataItem selectedCell : selectedCellsInCluster)
                 isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
+        }
         return isoformExpressionSum / numSelected;
+    }
+
+    public double getIsoformExpressionLevelInCluster(String isoformID, int clusterNumber) {
+        double isoformExpressionSum = 0;
+        HashMap<Integer, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
+        ArrayList<CellDataItem> selectedCellsInCluster = selectedCells.get(clusterNumber);
+        int numSelected = selectedCellsInCluster.size();
+        for (CellDataItem selectedCell : selectedCellsInCluster)
+            isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
+        return isoformExpressionSum / numSelected;
+    }
+
+    public Set<Integer> getSelectedClusterNumbers() {
+        if (cellSelectionManager != null)
+            return cellSelectionManager.getSelectedCells().keySet();
+        else
+            return new HashSet<>();
+    }
+
+    public HashMap<Integer, javafx.scene.paint.Color> getSelectedClusterColors() {
+        HashMap<Integer, javafx.scene.paint.Color> clusterColorMap = new HashMap<>();
+        XYPlot plot = (XYPlot) tSNEPlot.getChart().getPlot();
+        XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+        for (Integer clusterNumber : getSelectedClusterNumbers()) {
+            Color color = (Color) renderer.getSeriesFillPaint(clusterNumber - 1);
+            clusterColorMap.put(clusterNumber, new javafx.scene.paint.Color((double) color.getRed() / 255,
+                                                                          (double) color.getGreen() / 255,
+                                                                           (double) color.getBlue() / 255,
+                                                                         (double) color.getAlpha() / 255));
+        }
+        return clusterColorMap;
+    }
+
+    public double getFractionOfExpressingCells(String isoformID, int clusterNumber) {
+        double numExpressingCells = 0;
+        HashMap<Integer, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
+        ArrayList<CellDataItem> selectedCellsInCluster = selectedCells.get(clusterNumber);
+        int numSelected = selectedCellsInCluster.size();
+        for (CellDataItem selectedCell : selectedCellsInCluster) {
+            if (selectedCell.getIsoformExpressionLevel(isoformID) > 0)
+                numExpressingCells++;
+        }
+        return numExpressingCells / numSelected;
     }
 
     public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
@@ -247,6 +286,23 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
     }
 
+    private static class Cluster extends XYSeries {
+        private int clusterNumber;
+
+        public Cluster(String label, int clusterNumber) {
+            super(getClusterKey(clusterNumber, label));
+            this.clusterNumber = clusterNumber;
+        }
+
+        public static Comparable getClusterKey(int clusterNumber, String label) {
+                return "(" + clusterNumber + ") " + label;
+        }
+
+        public int getClusterNumber() {
+            return clusterNumber;
+        }
+    }
+
     /**
      * Represents a cell in the t-SNE plot
      */
@@ -292,7 +348,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     private class CellSelectionManager implements SelectionManager {
         private DatasetExtensionManager extensionManager;
-        private HashMap<XYSeries, ArrayList<CellDataItem>> selectedCells;
+        private HashMap<Integer, ArrayList<CellDataItem>> selectedCells;
 
         public CellSelectionManager(DatasetExtensionManager extensionManager) {
             selectedCells = new HashMap<>();
@@ -393,7 +449,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
         }
 
-        public HashMap<XYSeries, ArrayList<CellDataItem>> getSelectedCells() {
+        public HashMap<Integer, ArrayList<CellDataItem>> getSelectedCells() {
             return selectedCells;
         }
 
@@ -427,9 +483,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          */
         private void select(XYItemEntity xyItemEntity) {
             if (cellsInTSNEPlot.equals(xyItemEntity.getGeneralDataset()) && extensionManager.supports(xyItemEntity.getGeneralDataset(), DatasetSelectionExtension.class)) {
-                XYSeries cellSeries = cellsInTSNEPlot.getSeries(xyItemEntity.getSeriesIndex());
-                CellDataItem cell = (CellDataItem) cellSeries.getItems().get(xyItemEntity.getItem());
-                addCellToSelectedCells(cellSeries, cell);
+                Cluster cluster = (Cluster) cellsInTSNEPlot.getSeries(xyItemEntity.getSeriesIndex());
+                CellDataItem cell = (CellDataItem) cluster.getItems().get(xyItemEntity.getItem());
+                addCellToSelectedCells(cluster, cell);
                 DatasetCursor cursor = xyItemEntity.getItemCursor();
                 DatasetSelectionExtension selectionExtension = extensionManager.getExtension(xyItemEntity.getGeneralDataset(), DatasetSelectionExtension.class);
                 selectionExtension.setSelected(cursor, true);
@@ -453,14 +509,15 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             selectionExtension.setNotify(notify);
         }
 
-        private void addCellToSelectedCells(XYSeries cellSeries, CellDataItem cell) {
-            if (selectedCells.containsKey(cellSeries)) {
-                ArrayList<CellDataItem> selectedCellsOfSameSeries =  selectedCells.get(cellSeries);
-                selectedCellsOfSameSeries.add(cell);
+        private void addCellToSelectedCells(Cluster cluster, CellDataItem cell) {
+            int clusterNumber = cluster.getClusterNumber();
+            if (selectedCells.containsKey(clusterNumber)) {
+                ArrayList<CellDataItem> selectedCellsOfSameCluster =  selectedCells.get(clusterNumber);
+                selectedCellsOfSameCluster.add(cell);
             } else {
-                ArrayList<CellDataItem> selectedCellsOfSameSeries = new ArrayList<>();
-                selectedCellsOfSameSeries.add(cell);
-                selectedCells.put(cellSeries, selectedCellsOfSameSeries);
+                ArrayList<CellDataItem> selectedCellsOfSameCluster = new ArrayList<>();
+                selectedCellsOfSameCluster.add(cell);
+                selectedCells.put(clusterNumber, selectedCellsOfSameCluster);
             }
         }
     }
@@ -484,6 +541,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
             } catch (Exception e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the t-SNE plot"));
+                e.printStackTrace();
             } finally {
                 runLater(TSNEPlotController.this::enableAssociatedFunctionality);
             }
@@ -552,33 +610,25 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          */
         private void createDataSet(double[][] tSNEMatrix) {
             int cellIndex = 0;
+            int clusterNumber = 0;
+            HashSet<String> clusterLabels = new HashSet<>();
             for (String label : tSNEPlotInfo.getCellLabels()) {
-                XYSeries cellGroup = new XYSeries(label);
-                if (!dataSetHasSeries(cellGroup)) {
-                    cellsInNewTSNEPlot.addSeries(cellGroup);
+                Cluster cluster;
+                if (!clusterLabels.contains(label)) {
+                    clusterNumber++;
+                    cluster = new Cluster(label, clusterNumber);
+                    cellsInNewTSNEPlot.addSeries(cluster);
+                    clusterLabels.add(label);
                 } else {
-                    cellGroup = cellsInNewTSNEPlot.getSeries(label);
+                    cluster = (Cluster) cellsInNewTSNEPlot.getSeries(Cluster.getClusterKey(clusterNumber, label));
                 }
 
                 double cellX = tSNEMatrix[cellIndex][0];
                 double cellY = tSNEMatrix[cellIndex][1];
                 CellDataItem cellDataItem = new CellDataItem(cellX, cellY, tSNEPlotInfo.getCellIsoformMatrix()[cellIndex]);
-                cellGroup.add(cellDataItem);
+                cluster.add(cellDataItem);
                 cellIndex++;
             }
-        }
-
-        /**
-         * @return true if dataset has a series with the same key, false otherwise
-         */
-        private boolean dataSetHasSeries(Series series) {
-            List<XYSeries> dataSetSeries = cellsInNewTSNEPlot.getSeries();
-            for(Series otherSeries : dataSetSeries) {
-                if (otherSeries.getKey().equals(series.getKey())) {
-                    return true;
-                }
-            }
-            return false;
         }
 
         private JFreeChart createPlot(DatasetSelectionExtension<XYCursor> ext) {
@@ -622,20 +672,20 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
 
         private void adjustPlotPointRendering(DatasetSelectionExtension<XYCursor> ext, XYPlot plot) {
-            XYLineAndShapeRenderer r = (XYLineAndShapeRenderer) plot.getRenderer();
-            r.setBaseShapesVisible(true);
-            r.setBaseShapesFilled(true);
-            r.setUseFillPaint(true);
+            XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+            renderer.setBaseShapesVisible(true);
+            renderer.setBaseShapesFilled(true);
+            renderer.setUseFillPaint(true);
             Shape shape  = new Ellipse2D.Double(0,0,5,5);
             for(int i = 0; i < cellsInNewTSNEPlot.getSeriesCount(); i++) {
-                r.setSeriesShape(i, shape);
+                renderer.setSeriesShape(i, shape);
                 Color seriesColor = PointColor.getColor();
-                r.setSeriesFillPaint(i, seriesColor);
-                r.setSeriesPaint(i, seriesColor);
-                r.setSeriesOutlinePaint(i, seriesColor);
+                renderer.setSeriesFillPaint(i, seriesColor);
+                renderer.setSeriesPaint(i, seriesColor);
+                renderer.setSeriesOutlinePaint(i, seriesColor);
             }
             //add selection specific rendering
-            IRSUtilities.setSelectedItemFillPaint(r, ext, Color.white);
+            IRSUtilities.setSelectedItemFillPaint(renderer, ext, Color.white);
         }
 
         /**
