@@ -4,6 +4,7 @@ import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -39,6 +40,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     @FXML private ScrollPane scrollPane;
     @FXML private Pane isoformPlot;
     @FXML private VBox geneGroups;
+    private GeneGroup firstGeneGroup;
 
     private static SelectionModel selectionModel;
     private static RectangularSelection rectangularSelection;
@@ -93,6 +95,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                                                     hideIsoformsWithNoJunctions, reverseComplement, cellsSelected);
                 geneGroups.getChildren().add(geneGroup);
                 geneGeneGroupMap.put(gene, geneGroup);
+                if (firstGeneGroup == null)
+                    updateFirstGeneGroup();
             }
         }
     }
@@ -101,14 +105,21 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * Removes all given genes that are in the isoform plot
      */
     public void removeGenes(Collection<Gene> genes) {
+        boolean removedFirstGeneGroup = false;
         for (Gene gene : genes) {
             if (geneGeneGroupMap.containsKey(gene)) {
                 GeneGroup geneGroup = geneGeneGroupMap.get(gene);
                 geneGroup.makeUnselectable();
                 geneGroups.getChildren().remove(geneGroup);
                 geneGeneGroupMap.remove(gene, geneGroup);
+                if (firstGeneGroup == geneGroup) {
+                    updateFirstGeneGroup();
+                    removedFirstGeneGroup = true;
+                }
             }
         }
+        if (removedFirstGeneGroup && firstGeneGroup != null)
+            firstGeneGroup.addDotPlotLegend();
     }
 
     public void redrawGraphics() {
@@ -239,6 +250,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         geneGroups.setSpacing(10);
     }
 
+    private void updateFirstGeneGroup() {
+        ObservableList<Node> geneGroupsList = geneGroups.getChildren();
+        if (geneGroupsList.size() > 0)
+            firstGeneGroup = (GeneGroup) geneGroupsList.get(0);
+        else
+            firstGeneGroup = null;
+    }
+
     private class GeneGroup extends VBox {
         private final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
 
@@ -256,8 +275,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             setSpacing(7.5);
         }
 
-        public void addIsoform(Isoform isoform, IsoformGroup isoformGroup) {
-            isoformsIsoformGroupMap.put(isoform, isoformGroup);
+        public void addIsoform(IsoformGroup isoformGroup) {
+            isoformsIsoformGroupMap.put(isoformGroup.getIsoform(), isoformGroup);
             getChildren().add(isoformGroup);
             if (isFirstIsoformGroup(isoformGroup) && isFirstGeneGroup() && ControllerMediator.getInstance().areCellsSelected())
                 isoformGroup.addDotPlotLegend();
@@ -295,7 +314,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         public void redrawDotPlot(boolean cellsSelected) {
             for (IsoformGroup isoformGroup : isoformsIsoformGroupMap.values())
                 isoformGroup.redrawDotPlot(cellsSelected);
-            if (isFirstGeneGroup() && getNumIsoformGroups() > 0) {
+            if (firstGeneGroup == this && getNumIsoformGroups() > 0) {
                 IsoformGroup isoformGroup = (IsoformGroup) getChildren().get(1);
                 isoformGroup.redrawDotPlotLegend(cellsSelected);
             }
@@ -324,9 +343,13 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 if (!isoform.hasExonJunctions()) {
                     IsoformGroup isoformGroup = new IsoformGroup(isoform, pixelsPerNucleotide, showIsoformName, showIsoformID,
                                                                  reverseComplement, cellsSelected);
-                    addIsoform(isoform, isoformGroup);
+                    addIsoform(isoformGroup);
                 }
             }
+        }
+
+        public void addDotPlotLegend() {
+            getFirstIsoformGroup().addDotPlotLegend();
         }
 
         private void addLabel(boolean showGeneNameAndID, boolean showGeneName, boolean reverseComplement) {
@@ -370,17 +393,21 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 if (!hideIsoformsWithNoJunctions || isoform.hasExonJunctions()) {
                     IsoformGroup isoformGroup = new IsoformGroup(isoform, pixelsPerNucleotide, showIsoformName,
                                                                  showIsoformID, reverseComplement, cellsSelected);
-                    addIsoform(isoform, isoformGroup);
+                    addIsoform(isoformGroup);
                 }
             }
         }
 
         private boolean isFirstGeneGroup() {
-            return geneGroups.getChildren().size() == 0 || geneGroups.getChildren().get(0) == this;
+            return firstGeneGroup == this || firstGeneGroup == null;
+        }
+
+        private IsoformGroup getFirstIsoformGroup() {
+            return (IsoformGroup) getChildren().get(1);
         }
 
         private boolean isFirstIsoformGroup(IsoformGroup isoformGroup) {
-            return isoformGroup == getChildren().get(1);
+            return isoformGroup == getFirstIsoformGroup();
         }
 
         private int getNumIsoformGroups() {
@@ -414,6 +441,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         private Isoform isoform;
         private SelectableText label;
+        private BorderPane labelAndLegendHolder;
         private BorderPane graphicsHolder;
         private Canvas isoformGraphic;
         private Canvas dotPlot;
@@ -423,12 +451,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                             boolean showIsoformID, boolean reverseComplement, boolean cellsSelected) {
             this.isoform = isoform;
             graphicsHolder = new BorderPane();
-            getChildren().add(graphicsHolder);
+            labelAndLegendHolder = new BorderPane();
+            VBox.setMargin(labelAndLegendHolder, new Insets(0, 0, 0, ISOFORM_OFFSET));
+            getChildren().addAll(labelAndLegendHolder, graphicsHolder);
             if (shouldHaveLabel(showIsoformName, showIsoformID))
-                createLabel(getIsoformLabelText(showIsoformName, showIsoformID));
+                addLabel(getIsoformLabelText(showIsoformName, showIsoformID));
+            addIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellsSelected);
             if (cellsSelected)
                 addDotPlot();
-            addIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellsSelected);
             setSpacing(5);
         }
 
@@ -436,7 +466,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             if (shouldHaveLabel(showIsoformName, showIsoformID)) {
                 String isoformLabelText = getIsoformLabelText(showIsoformName, showIsoformID);
                 if (label == null)
-                    createLabel(isoformLabelText);
+                    addLabel(isoformLabelText);
                 else
                     label.setTextAndFitWidthToText(isoformLabelText);
             } else {
@@ -447,13 +477,17 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         public void removeLabel() {
             if (label != null) {
                 label = null;
-                getChildren().remove(0);
+                labelAndLegendHolder.setLeft(null);
             }
         }
 
         public void makeIsoformGraphicNonSelectable() {
             selectionModel.removeSelectedIsoformGraphic(isoformGraphic);
             rectangularSelection.removeSelectableIsoformGraphic(isoformGraphic);
+        }
+
+        public Isoform getIsoform() {
+            return isoform;
         }
 
         public void redrawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean cellsSelected) {
@@ -497,14 +531,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private void addDotPlot() {
             double dotPlotWidth = getDotPlotWidth();
             dotPlot = new Canvas(dotPlotWidth, DOT_PLOT_ROW_HEIGHT + GRAPHIC_SPACING);
-            Platform.runLater(() ->graphicsHolder.setRight(dotPlot));
+            Platform.runLater(() -> graphicsHolder.setRight(dotPlot));
             drawDotPlot();
         }
 
         public void addDotPlotLegend() {
             double dotPlotWidth = getDotPlotWidth();
             dotPlotLegend = new Canvas(dotPlotWidth, DOT_PLOT_ROW_HEIGHT + GRAPHIC_SPACING);
-            Platform.runLater(() -> graphicsHolder.setTop(dotPlotLegend));
+            Platform.runLater(() -> labelAndLegendHolder.setRight(dotPlotLegend));
             BorderPane.setAlignment(dotPlotLegend, Pos.CENTER_RIGHT);
             BorderPane.setMargin(dotPlotLegend, new Insets(0, 0, 5, 0));
             drawDotPlotLegend();
@@ -514,11 +548,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return (showIsoformName && isoform.getName() != null)|| showIsoformID;
         }
 
-        private void createLabel(String newLabel) {
+        private void addLabel(String newLabel) {
             label = new SelectableText();
             label.setFont(ISOFORM_FONT);
-            VBox.setMargin(label, new Insets(0, 0, 0, ISOFORM_OFFSET));
-            getChildren().add(0, label);
+            labelAndLegendHolder.setLeft(label);
             label.setTextAndFitWidthToText(newLabel);
         }
 
@@ -557,7 +590,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         private void removeDotPlotLegend() {
-            Platform.runLater(() -> graphicsHolder.setTop(null));
+            Platform.runLater(() -> labelAndLegendHolder.setRight(null));
             dotPlotLegend = null;
         }
 
