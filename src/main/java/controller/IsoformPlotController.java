@@ -3,6 +3,7 @@ package controller;
 import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
+import com.sun.media.jfxmedia.events.PlayerEvent;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -40,11 +41,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     @FXML private ScrollPane scrollPane;
     @FXML private Pane isoformPlot;
     @FXML private VBox geneGroups;
-    private GeneGroup firstGeneGroup;
+    private static GeneGroup firstGeneGroup;
 
     private static SelectionModel selectionModel;
     private static RectangularSelection rectangularSelection;
-    private HashMap<Gene, GeneGroup> geneGeneGroupMap;
+    private static HashMap<Gene, GeneGroup> geneGeneGroupMap;
     private double scrollPaneWidthSpacing;
 
     @Override
@@ -95,40 +96,37 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                                                     hideIsoformsWithNoJunctions, reverseComplement, cellsSelected);
                 geneGroups.getChildren().add(geneGroup);
                 geneGeneGroupMap.put(gene, geneGroup);
+                DotPlot.addDotPlotRowsIfShould(geneGroup);
                 if (firstGeneGroup == null)
                     updateFirstGeneGroup();
             }
         }
+        DotPlot.updateDotPlotLegend(cellsSelected, false);
     }
 
     /**
      * Removes all given genes that are in the isoform plot
      */
     public void removeGenes(Collection<Gene> genes) {
-        boolean removedFirstGeneGroup = false;
         for (Gene gene : genes) {
             if (geneGeneGroupMap.containsKey(gene)) {
                 GeneGroup geneGroup = geneGeneGroupMap.get(gene);
                 geneGroup.makeUnselectable();
                 geneGroups.getChildren().remove(geneGroup);
                 geneGeneGroupMap.remove(gene, geneGroup);
-                if (firstGeneGroup == geneGroup) {
+                if (firstGeneGroup == geneGroup)
                     updateFirstGeneGroup();
-                    removedFirstGeneGroup = true;
-                }
             }
         }
-        if (removedFirstGeneGroup && firstGeneGroup != null)
-            firstGeneGroup.addDotPlotLegend();
+        DotPlot.updateDotPlotLegend(ControllerMediator.getInstance().areCellsSelected(), false);
     }
 
     public void redrawGraphics() {
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
         boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
-        for(GeneGroup geneGroup : geneGeneGroupMap.values()) {
+        for(GeneGroup geneGroup : geneGeneGroupMap.values())
             geneGroup.redrawIsoformGraphics(reverseComplement, cellsSelected);
-            geneGroup.redrawDotPlot(cellsSelected);
-        }
+        DotPlot.redrawDotPlot();
     }
 
     public void deselectAllIsoforms() {
@@ -186,6 +184,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     }
 
+    public static Collection<GeneGroup> getGeneGroups() {
+        return geneGeneGroupMap.values();
+    }
+
     /**
      * Opens up gene selector window when handle select genes button is pressed
      */
@@ -214,6 +216,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
         if (genesToRemove.size() > 0)
             removeGenes(genesToRemove);
+        DotPlot.updateDotPlotLegend(ControllerMediator.getInstance().areCellsSelected(), false);
     }
 
     private void showIsoformsNoJunctions() {
@@ -258,12 +261,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             firstGeneGroup = null;
     }
 
+
     private class GeneGroup extends VBox {
         private final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
 
         private Gene gene;
         private SelectableText label;
         private HashMap<Isoform, IsoformGroup> isoformsIsoformGroupMap;
+        private IsoformGroup firstIsoformGroup;
 
         public GeneGroup(Gene gene, boolean showGeneNameAndID, boolean showGeneName, boolean showIsoformID,
                          boolean showIsoformName, boolean hideIsoformsWithNoJunctions, boolean reverseComplement,
@@ -278,19 +283,17 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         public void addIsoform(IsoformGroup isoformGroup) {
             isoformsIsoformGroupMap.put(isoformGroup.getIsoform(), isoformGroup);
             getChildren().add(isoformGroup);
-            if (isFirstIsoformGroup(isoformGroup) && isFirstGeneGroup() && ControllerMediator.getInstance().areCellsSelected())
-                isoformGroup.addDotPlotLegend();
+            if (firstIsoformGroup == null)
+                updateFirstIsoformGroup();
         }
 
         public void removeIsoform(Isoform isoform) {
             IsoformGroup isoformGroup = isoformsIsoformGroupMap.get(isoform);
             isoformGroup.makeIsoformGraphicNonSelectable();
-            if (isFirstIsoformGroup(isoformGroup) && getNumIsoformGroups() > 1 && ControllerMediator.getInstance().areCellsSelected()) {
-                IsoformGroup newFirstIsoformGroup = (IsoformGroup) getChildren().get(2);
-                newFirstIsoformGroup.addDotPlotLegend();
-            }
             getChildren().remove(isoformGroup);
             isoformsIsoformGroupMap.remove(isoform, isoformGroup);
+            if (firstIsoformGroup == isoformGroup)
+                updateFirstIsoformGroup();
         }
 
         public void updateLabel(boolean showGeneNameAndID, boolean showGeneName, boolean reverseComplement) {
@@ -302,6 +305,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 isoformGroup.makeIsoformGraphicNonSelectable();
         }
 
+        public Collection<IsoformGroup> getIsoformGroups() {
+            return isoformsIsoformGroupMap.values();
+        }
+
+        private IsoformGroup getFirstIsoformGroup() {
+            return firstIsoformGroup;
+        }
+
         public void redrawIsoformGraphics(boolean reverseComplement, boolean cellsSelected) {
             int geneStart = gene.getStartNucleotide();
             int geneEnd = gene.getEndNucleotide();
@@ -309,15 +320,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             for (IsoformGroup isoformGroup : isoformsIsoformGroupMap.values())
                 isoformGroup.redrawIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellsSelected);
 
-        }
-
-        public void redrawDotPlot(boolean cellsSelected) {
-            for (IsoformGroup isoformGroup : isoformsIsoformGroupMap.values())
-                isoformGroup.redrawDotPlot(cellsSelected);
-            if (firstGeneGroup == this && getNumIsoformGroups() > 0) {
-                IsoformGroup isoformGroup = (IsoformGroup) getChildren().get(1);
-                isoformGroup.redrawDotPlotLegend(cellsSelected);
-            }
         }
 
         public void updateIsoformLabels(boolean showIsoformName, boolean showIsoformID) {
@@ -346,10 +348,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                     addIsoform(isoformGroup);
                 }
             }
-        }
-
-        public void addDotPlotLegend() {
-            getFirstIsoformGroup().addDotPlotLegend();
         }
 
         private void addLabel(boolean showGeneNameAndID, boolean showGeneName, boolean reverseComplement) {
@@ -398,44 +396,29 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
         }
 
-        private boolean isFirstGeneGroup() {
-            return firstGeneGroup == this || firstGeneGroup == null;
-        }
-
-        private IsoformGroup getFirstIsoformGroup() {
-            return (IsoformGroup) getChildren().get(1);
-        }
-
-        private boolean isFirstIsoformGroup(IsoformGroup isoformGroup) {
-            return isoformGroup == getFirstIsoformGroup();
-        }
-
-        private int getNumIsoformGroups() {
-            return getChildren().size() - 1;
+        private void updateFirstIsoformGroup() {
+            ObservableList<Node> isoformGroupsList = getChildren();
+            if (isoformGroupsList.size() > 1)
+                firstIsoformGroup = (IsoformGroup) isoformGroupsList.get(1);
+            else
+                firstIsoformGroup = null;
         }
 
         private double getPixelsPerNucleotide(int geneStart, int geneEnd) {
             return (scrollPane.getWidth() - IsoformGroup.ISOFORM_OFFSET - scrollPaneWidthSpacing - SCROLLBAR_WIDTH -
-                    IsoformGroup.GRAPHIC_SPACING - IsoformGroup.getDotPlotSpacing()) /
+                    IsoformGroup.ISOFORM_GRAPHIC_SPACING - IsoformGroup.getDotPlotSpacing()) /
                     (geneEnd - geneStart + 1);
         }
     }
 
     private static class IsoformGroup extends VBox {
-        public final Color DEFAULT_EXON_COLOR = Color.color(0.929, 0.929, 0.929);
+        public static final Color DEFAULT_EXON_COLOR = Color.color(0.929, 0.929, 0.929);
         public static final int ISOFORM_OFFSET = 10;
         public static final int EXON_HEIGHT = 10;
         public final Color OUTLINE_COLOUR = Color.BLACK;
-        // objects on which graphics (isoform graphic and dot plot) are drawn have a padding of
+        // objects on which isoform graphic is drawn have a padding of
         // GRAPHIC_SPACING / 2 all around
-        public static final double GRAPHIC_SPACING = 2;
-        private static final double DOT_PLOT_COLUMN_WIDTH = 14.5;
-        private static final double DOT_PLOT_ROW_HEIGHT = 14.5;
-        private static final int DOT_PLOT_COLUMN_SPACING = 3;
-        private static final double QUARTER_EXPRESS_DOT_SIZE = 4;
-        private static final double HALF_EXPRESS_DOT_SIZE = 7.5;
-        private static final double THREE_QUARTERS_EXPRESS_DOT_SIZE = 11;
-        private static final double ALL_EXPRESS_DOT_SIZE = 14.5;
+        public static final double ISOFORM_GRAPHIC_SPACING = 2;
         private final Font ISOFORM_FONT = Font.font("Verdana",12);
         private static final int ISOFORM_GRAPHIC_DOT_PLOT_SPACING = 5;
 
@@ -444,7 +427,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private BorderPane labelAndLegendHolder;
         private BorderPane graphicsHolder;
         private Canvas isoformGraphic;
-        private Canvas dotPlot;
+        private Canvas dotPlotRow;
         private Canvas dotPlotLegend;
 
         public IsoformGroup(Isoform isoform, double pixelsPerNucleotide, boolean showIsoformName,
@@ -457,8 +440,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             if (shouldHaveLabel(showIsoformName, showIsoformID))
                 addLabel(getIsoformLabelText(showIsoformName, showIsoformID));
             addIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellsSelected);
-            if (cellsSelected)
-                addDotPlot();
             setSpacing(5);
         }
 
@@ -474,6 +455,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
         }
 
+        public void redrawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean cellsSelected) {
+            setIsoformGraphicWidth(pixelsPerNucleotide);
+            clearGraphic(isoformGraphic);
+            drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellsSelected);
+        }
+
         public void removeLabel() {
             if (label != null) {
                 label = null;
@@ -486,63 +473,49 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             rectangularSelection.removeSelectableIsoformGraphic(isoformGraphic);
         }
 
+
+        public void setDotPlotRow(Canvas dotPlotRow) {
+            this.dotPlotRow = dotPlotRow;
+            Platform.runLater(() -> graphicsHolder.setRight(dotPlotRow));
+        }
+
+        public void setDotPlotLegend(Canvas dotPlotLegend) {
+            if (dotPlotLegend != null) {
+                BorderPane.setAlignment(dotPlotLegend, Pos.CENTER_RIGHT);
+                BorderPane.setMargin(dotPlotLegend, new Insets(0, 0, 5, 0));
+            }
+            this.dotPlotLegend = dotPlotLegend;
+            Platform.runLater(() -> labelAndLegendHolder.setRight(dotPlotLegend));
+        }
+
         public Isoform getIsoform() {
             return isoform;
         }
 
-        public void redrawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean cellsSelected) {
-            setIsoformGraphicWidth(pixelsPerNucleotide);
-            clearGraphic(isoformGraphic);
-            drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellsSelected);
+        public Canvas getDotPlotRow() {
+            return dotPlotRow;
         }
 
-        public void redrawDotPlot(boolean cellsSelected) {
-            if (cellsSelected && dotPlot == null) {
-                addDotPlot();
-            } else if (cellsSelected) {
-                setWidthToDotPlotWidth(dotPlot);
-                clearGraphic(dotPlot);
-                drawDotPlot();
-            } else {
-                removeDotPlot();
-            }
+        public Canvas getDotPlotLegend() {
+            return dotPlotLegend;
         }
 
-        private void redrawDotPlotLegend(boolean cellsSelected) {
-            if (cellsSelected && dotPlotLegend == null) {
-                addDotPlotLegend();
-            } else if (cellsSelected) {
-                setWidthToDotPlotWidth(dotPlotLegend);
-                clearGraphic(dotPlotLegend);
-                drawDotPlotLegend();
-            } else {
-                removeDotPlotLegend();
-            }
+        public static double getDotPlotSpacing() {
+            double dotPlotWidth = DotPlot.getDotPlotWidth();
+            if (dotPlotWidth == 0)
+                return 0;
+            else
+                return dotPlotWidth + ISOFORM_GRAPHIC_DOT_PLOT_SPACING;
         }
 
         private void addIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean cellsSelected) {
             double isoformGraphicWidth = getIsoformGraphicWidth(pixelsPerNucleotide);
-            isoformGraphic = new Canvas(isoformGraphicWidth, EXON_HEIGHT + GRAPHIC_SPACING);
+            isoformGraphic = new Canvas(isoformGraphicWidth, EXON_HEIGHT + ISOFORM_GRAPHIC_SPACING);
             graphicsHolder.setLeft(isoformGraphic);
             rectangularSelection.addSelectableIsoformGraphic(isoformGraphic, isoform.getId());
             drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellsSelected);
         }
 
-        private void addDotPlot() {
-            double dotPlotWidth = getDotPlotWidth();
-            dotPlot = new Canvas(dotPlotWidth, DOT_PLOT_ROW_HEIGHT + GRAPHIC_SPACING);
-            Platform.runLater(() -> graphicsHolder.setRight(dotPlot));
-            drawDotPlot();
-        }
-
-        public void addDotPlotLegend() {
-            double dotPlotWidth = getDotPlotWidth();
-            dotPlotLegend = new Canvas(dotPlotWidth, DOT_PLOT_ROW_HEIGHT + GRAPHIC_SPACING);
-            Platform.runLater(() -> labelAndLegendHolder.setRight(dotPlotLegend));
-            BorderPane.setAlignment(dotPlotLegend, Pos.CENTER_RIGHT);
-            BorderPane.setMargin(dotPlotLegend, new Insets(0, 0, 5, 0));
-            drawDotPlotLegend();
-        }
 
         private boolean shouldHaveLabel(boolean showIsoformName, boolean showIsoformID) {
             return (showIsoformName && isoform.getName() != null)|| showIsoformID;
@@ -579,24 +552,9 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             graphicsContext.clearRect(0, 0, graphic.getWidth(), graphic.getHeight());
         }
 
-        private void setWidthToDotPlotWidth(Canvas graphic) {
-            double dotPlotWidth = getDotPlotWidth();
-            graphic.setWidth(dotPlotWidth);
-        }
-
-        private void removeDotPlot() {
-            Platform.runLater(() -> graphicsHolder.setRight(null));
-            dotPlot = null;
-        }
-
-        private void removeDotPlotLegend() {
-            Platform.runLater(() -> labelAndLegendHolder.setRight(null));
-            dotPlotLegend = null;
-        }
-
         private double getIsoformGraphicWidth(double pixelsPerNucleotide) {
             double isoformWidth = (isoform.getEndNucleotide() - isoform.getStartNucleotide() + 1) * pixelsPerNucleotide;
-            return isoformWidth + GRAPHIC_SPACING;
+            return isoformWidth + ISOFORM_GRAPHIC_SPACING;
         }
 
 
@@ -623,89 +581,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
         }
 
-        private void drawDotPlot() {
-            GraphicsContext graphicsContext = dotPlot.getGraphicsContext2D();
-            double dotX = DOT_PLOT_COLUMN_WIDTH / 2 + GRAPHIC_SPACING / 2;
-            double dotY = DOT_PLOT_ROW_HEIGHT / 2 + GRAPHIC_SPACING / 2;
-
-            for (int clusterNumber : ControllerMediator.getInstance().getSelectedClusterNumbers()) {
-                double isoformExpression = ControllerMediator.getInstance().getIsoformExpressionLevelInCluster(isoform.getId(), clusterNumber);
-                Color dotColor = getColorFromTPMGradient(isoformExpression);
-                double dotSize = getDotSize(clusterNumber);
-                graphicsContext.setFill(dotColor);
-                graphicsContext.fillOval(dotX - dotSize / 2, dotY -dotSize / 2, dotSize, dotSize);
-                graphicsContext.setFill(Color.BLACK);
-                graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
-                dotX += (DOT_PLOT_COLUMN_WIDTH + DOT_PLOT_COLUMN_SPACING);
-            }
-        }
-
-        private void drawDotPlotLegend() {
-            GraphicsContext graphicsContext = dotPlotLegend.getGraphicsContext2D();
-            HashMap<Integer, Color> clusterColorMap = ControllerMediator.getInstance().getSelectedClusterColors();
-            double dotX = DOT_PLOT_COLUMN_WIDTH / 2 + GRAPHIC_SPACING / 2;
-            double dotY = DOT_PLOT_ROW_HEIGHT / 2 + GRAPHIC_SPACING / 2;
-            double dotSize = ALL_EXPRESS_DOT_SIZE;
-            for (int clusterNumber : ControllerMediator.getInstance().getSelectedClusterNumbers()) {
-                Color dotColor = clusterColorMap.get(clusterNumber);
-                graphicsContext.setFill(dotColor);
-                graphicsContext.fillOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
-                graphicsContext.setFill(Color.BLACK);
-                graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
-                graphicsContext.setFill(getLegendLabelColor(dotColor));
-                graphicsContext.fillText(String.valueOf(clusterNumber), dotX - 3, dotY + 4);
-                dotX += (DOT_PLOT_COLUMN_WIDTH + DOT_PLOT_COLUMN_SPACING);
-            }
-        }
-
-        private Paint getLegendLabelColor(Color dotColor) {
-            if (getLuminence(dotColor) > 60)
-                return Color.BLACK;
-            else
-                return Color.WHITE;
-        }
-
-        private double getLuminence(Color color) {
-            double r = color.getRed();
-            double g = color.getGreen();
-            double b = color.getBlue();
-
-            //	Minimum and Maximum RGB values are used in the HSL calculations
-            double min = Math.min(r, Math.min(g, b));
-            double max = Math.max(r, Math.max(g, b));
-
-            return (max + min) / 2;
-        }
-
-        private static double getDotPlotSpacing() {
-            double dotPlotWidth = getDotPlotWidth();
-            if (dotPlotWidth == 0)
-                return 0;
-            else
-                return dotPlotWidth + ISOFORM_GRAPHIC_DOT_PLOT_SPACING;
-        }
-
-        private static double getDotPlotWidth() {
-            int numSelectedClusters = ControllerMediator.getInstance().getSelectedClusterNumbers().size();
-            return numSelectedClusters * DOT_PLOT_COLUMN_WIDTH + (numSelectedClusters - 1) * DOT_PLOT_COLUMN_SPACING + GRAPHIC_SPACING;
-        }
-
-        private double getDotSize(int clusterNumber) {
-            double fractionExpressingCells = ControllerMediator.getInstance().getFractionOfExpressingCells(isoform.getId(), clusterNumber);
-            if (fractionExpressingCells <= 0.25)
-                return QUARTER_EXPRESS_DOT_SIZE;
-            else if (fractionExpressingCells <= 0.5)
-                return HALF_EXPRESS_DOT_SIZE;
-            else if (fractionExpressingCells <= 0.75)
-                return THREE_QUARTERS_EXPRESS_DOT_SIZE;
-            else
-                return ALL_EXPRESS_DOT_SIZE;
-        }
-
         private Color getIsoformColor(boolean shouldGetCustomIsoformColor) {
             Color isoformColor = DEFAULT_EXON_COLOR;
             if (shouldGetCustomIsoformColor)
-                isoformColor = getCustomIsoformColor();
+                isoformColor = getColorFromTPMGradient();
             return isoformColor;
         }
 
@@ -713,12 +592,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
          * Returns custom isoform color for isoform associated with this isoform group based on the isoform's
          * expression level and where is lies in the TPM gradient
          */
-        private Color getCustomIsoformColor() {
+        public Color getColorFromTPMGradient() {
             double isoformExpression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoform.getId());
-            return getColorFromTPMGradient(isoformExpression);
-        }
-
-        private Color getColorFromTPMGradient(double isoformExpression) {
             double minTPM = ControllerMediator.getInstance().getGradientMinTPM();
             double maxTPM = ControllerMediator.getInstance().getGradientMaxTPM();
             Color minTPMColor = ControllerMediator.getInstance().getMinTPMColor();
@@ -788,7 +663,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                               GraphicsContext graphicsContext) {
             int exonStart = exons.get(i).getStartNucleotide();
             int exonEnd = exons.get(i).getEndNucleotide();
-            double startX = (exonStart - isoformStart) * pixelsPerNucleotide + GRAPHIC_SPACING / 2;
+            double startX = (exonStart - isoformStart) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
             double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
             drawExonGraphic(startX, width, isoformColor, graphicsContext);
         }
@@ -800,8 +675,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                                 GraphicsContext graphicsContext) {
             int exonStart = exons.get(i).getStartNucleotide() ;
             int prevExonEnd = exons.get(i - 1).getEndNucleotide();
-            double startX = (prevExonEnd - isoformStart + 1) * pixelsPerNucleotide + GRAPHIC_SPACING / 2;
-            double endX = (exonStart - isoformStart) * pixelsPerNucleotide + GRAPHIC_SPACING / 2;
+            double startX = (prevExonEnd - isoformStart + 1) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
+            double endX = (exonStart - isoformStart) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
             drawIntronGraphic(startX, endX, graphicsContext);
         }
 
@@ -809,7 +684,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                                                GraphicsContext graphicsContext) {
             int exonStart = exons.get(i).getStartNucleotide();
             int exonEnd = exons.get(i).getEndNucleotide();
-            double startX = (isoformEnd - exonEnd) * pixelsPerNucleotide + GRAPHIC_SPACING / 2;
+            double startX = (isoformEnd - exonEnd) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
             double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
             drawExonGraphic(startX, width, isoformColor, graphicsContext);
         }
@@ -821,21 +696,174 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                                                  GraphicsContext graphicsContext) {
             int exonStart = exons.get(i).getStartNucleotide() ;
             int prevExonEnd = exons.get(i - 1).getEndNucleotide();
-            double startX = (isoformEnd - exonStart + 1) * pixelsPerNucleotide + GRAPHIC_SPACING / 2;
-            double endX = (isoformEnd - prevExonEnd) * pixelsPerNucleotide + GRAPHIC_SPACING / 2;
+            double startX = (isoformEnd - exonStart + 1) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
+            double endX = (isoformEnd - prevExonEnd) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
             drawIntronGraphic(startX, endX, graphicsContext);
         }
 
         private void drawExonGraphic(double startX, double width, Color isoformColor, GraphicsContext graphicsContext) {
             graphicsContext.setFill(isoformColor);
-            graphicsContext.fillRect(startX, GRAPHIC_SPACING / 2, width, EXON_HEIGHT);
+            graphicsContext.fillRect(startX, ISOFORM_GRAPHIC_SPACING / 2, width, EXON_HEIGHT);
             graphicsContext.setFill(OUTLINE_COLOUR);
-            graphicsContext.strokeRect(startX, GRAPHIC_SPACING / 2, width, EXON_HEIGHT);
+            graphicsContext.strokeRect(startX, ISOFORM_GRAPHIC_SPACING / 2, width, EXON_HEIGHT);
         }
 
         private void drawIntronGraphic(double startX, double endX, GraphicsContext graphicsContext) {
             graphicsContext.setFill(OUTLINE_COLOUR);
             graphicsContext.strokeLine(startX, EXON_HEIGHT / 2, endX, EXON_HEIGHT / 2);
+        }
+    }
+
+    private static class DotPlot {
+        public static final double GRAPHIC_SPACING = 2;
+        private static final double DOT_PLOT_COLUMN_WIDTH = 14.5;
+        private static final double DOT_PLOT_ROW_HEIGHT = 14.5;
+        private static final int DOT_PLOT_COLUMN_SPACING = 3;
+        private static final double QUARTER_EXPRESS_DOT_SIZE = 4;
+        private static final double HALF_EXPRESS_DOT_SIZE = 7.5;
+        private static final double THREE_QUARTERS_EXPRESS_DOT_SIZE = 11;
+        private static final double ALL_EXPRESS_DOT_SIZE = 14.5;
+
+        public static void addDotPlotRowsIfShould(GeneGroup geneGroup) {
+            if (ControllerMediator.getInstance().areCellsSelected()) {
+                for (IsoformGroup isoformGroup : geneGroup.getIsoformGroups())
+                    isoformGroup.setDotPlotRow(createDotPlotRow(isoformGroup));
+            }
+        }
+
+        public static void updateDotPlotLegend(boolean cellsSelected, boolean redraw){
+            if (firstGeneGroup != null) {
+                IsoformGroup firstIsoformGroup = firstGeneGroup.getFirstIsoformGroup();
+                Canvas dotPlotLegend = firstIsoformGroup.getDotPlotLegend();
+                if (dotPlotLegend == null && cellsSelected) {
+                    dotPlotLegend = createDotPlotLegend();
+                    firstIsoformGroup.setDotPlotLegend(dotPlotLegend);
+                } else if (cellsSelected && redraw) {
+                    setWidthToDotPlotWidth(dotPlotLegend);
+                    clearGraphic(dotPlotLegend);
+                    drawDotPlotLegend(dotPlotLegend);
+                    firstIsoformGroup.setDotPlotLegend(dotPlotLegend);
+                } else if (dotPlotLegend != null && !cellsSelected) {
+                    firstIsoformGroup.setDotPlotLegend(null);
+                }
+            }
+        }
+
+        public static void redrawDotPlot() {
+            boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
+            for (GeneGroup geneGroup : getGeneGroups()) {
+                for (IsoformGroup isoformGroup : geneGroup.getIsoformGroups())
+                    updateDotPlotRow(cellsSelected, isoformGroup);
+            }
+            updateDotPlotLegend(cellsSelected, true);
+        }
+
+        private static void updateDotPlotRow(boolean cellsSelected, IsoformGroup isoformGroup) {
+            Canvas dotPlotRow = isoformGroup.getDotPlotRow();
+            if (cellsSelected && dotPlotRow == null) {
+                isoformGroup.setDotPlotRow(createDotPlotRow(isoformGroup));
+            } else if (cellsSelected) {
+                setWidthToDotPlotWidth(dotPlotRow);
+                clearGraphic(dotPlotRow);
+                drawDotPlotRow(dotPlotRow, isoformGroup);
+            } else if (dotPlotRow != null){
+                isoformGroup.setDotPlotRow(null);
+            }
+        }
+
+
+        private static Canvas createDotPlotRow(IsoformGroup isoformGroup) {
+            double dotPlotWidth = getDotPlotWidth();
+            Canvas dotPlotRow = new Canvas(dotPlotWidth, DOT_PLOT_ROW_HEIGHT + GRAPHIC_SPACING);
+            drawDotPlotRow(dotPlotRow, isoformGroup);
+            return dotPlotRow;
+        }
+
+        private static void setWidthToDotPlotWidth(Canvas graphic) {
+            double dotPlotWidth = getDotPlotWidth();
+            graphic.setWidth(dotPlotWidth);
+        }
+
+        private static void clearGraphic(Canvas graphic) {
+            GraphicsContext graphicsContext = graphic.getGraphicsContext2D();
+            graphicsContext.clearRect(0, 0, graphic.getWidth(), graphic.getHeight());
+        }
+
+        private static Canvas createDotPlotLegend() {
+            double dotPlotWidth = getDotPlotWidth();
+            Canvas dotPlotLegend = new Canvas(dotPlotWidth, DOT_PLOT_ROW_HEIGHT + GRAPHIC_SPACING);
+            drawDotPlotLegend(dotPlotLegend);
+            return dotPlotLegend;
+        }
+
+        private static double getDotPlotWidth() {
+            int numSelectedClusters = ControllerMediator.getInstance().getSelectedClusterNumbers().size();
+            return numSelectedClusters * DOT_PLOT_COLUMN_WIDTH + (numSelectedClusters - 1) * DOT_PLOT_COLUMN_SPACING + GRAPHIC_SPACING;
+        }
+
+        private static void drawDotPlotLegend(Canvas dotPlotLegend) {
+            GraphicsContext graphicsContext = dotPlotLegend.getGraphicsContext2D();
+            HashMap<Integer, Color> clusterColorMap = ControllerMediator.getInstance().getSelectedClusterColors();
+            double dotX = DOT_PLOT_COLUMN_WIDTH / 2 + GRAPHIC_SPACING / 2;
+            double dotY = DOT_PLOT_ROW_HEIGHT / 2 + GRAPHIC_SPACING / 2;
+            double dotSize = ALL_EXPRESS_DOT_SIZE;
+            for (int clusterNumber : ControllerMediator.getInstance().getSelectedClusterNumbers()) {
+                Color dotColor = clusterColorMap.get(clusterNumber);
+                graphicsContext.setFill(dotColor);
+                graphicsContext.fillOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+                graphicsContext.setFill(Color.BLACK);
+                graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+                graphicsContext.setFill(getLegendLabelColor(dotColor));
+                graphicsContext.fillText(String.valueOf(clusterNumber), dotX - 3, dotY + 4);
+                dotX += (DOT_PLOT_COLUMN_WIDTH + DOT_PLOT_COLUMN_SPACING);
+            }
+        }
+
+        private static void drawDotPlotRow(Canvas dotPlotRow, IsoformGroup isoformGroup) {
+            GraphicsContext graphicsContext = dotPlotRow.getGraphicsContext2D();
+            double dotX = DOT_PLOT_COLUMN_WIDTH / 2 + GRAPHIC_SPACING / 2;
+            double dotY = DOT_PLOT_ROW_HEIGHT / 2 + GRAPHIC_SPACING / 2;
+
+            for (int clusterNumber : ControllerMediator.getInstance().getSelectedClusterNumbers()) {
+                Color dotColor = isoformGroup.getColorFromTPMGradient();
+                double dotSize = getDotSize(clusterNumber, isoformGroup);
+                graphicsContext.setFill(dotColor);
+                graphicsContext.fillOval(dotX - dotSize / 2, dotY -dotSize / 2, dotSize, dotSize);
+                graphicsContext.setFill(Color.BLACK);
+                graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+                dotX += (DOT_PLOT_COLUMN_WIDTH + DOT_PLOT_COLUMN_SPACING);
+            }
+        }
+
+        private static Paint getLegendLabelColor(Color dotColor) {
+            if (getLuminence(dotColor) > 60)
+                return Color.BLACK;
+            else
+                return Color.WHITE;
+        }
+
+        private static double getDotSize(int clusterNumber, IsoformGroup isoformGroup) {
+            double fractionExpressingCells = ControllerMediator.getInstance().getFractionOfExpressingCells(isoformGroup.getIsoform().getId(), clusterNumber);
+            if (fractionExpressingCells <= 0.25)
+                return QUARTER_EXPRESS_DOT_SIZE;
+            else if (fractionExpressingCells <= 0.5)
+                return HALF_EXPRESS_DOT_SIZE;
+            else if (fractionExpressingCells <= 0.75)
+                return THREE_QUARTERS_EXPRESS_DOT_SIZE;
+            else
+                return ALL_EXPRESS_DOT_SIZE;
+        }
+
+        private static double getLuminence(Color color) {
+            double r = color.getRed();
+            double g = color.getGreen();
+            double b = color.getBlue();
+
+            //	Minimum and Maximum RGB values are used in the HSL calculations
+            double min = Math.min(r, Math.min(g, b));
+            double max = Math.max(r, Math.max(g, b));
+
+            return (max + min) / 2;
         }
     }
 
