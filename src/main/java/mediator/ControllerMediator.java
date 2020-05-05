@@ -178,40 +178,20 @@ public class ControllerMediator implements Mediator{
         return tsnePlotController.getIsoformExpressionLevel(isoformID);
     }
 
-    public double getIsoformExpressionLevelInCluster(String isoformID, int clusterNumber) {
-        return  tsnePlotController.getIsoformExpressionLevelInCluster(isoformID, clusterNumber);
+    public Color getColorFromTPMGradient(double expression) {
+        return tpmGradientAdjusterController.getColorFromTPMGradient(expression);
     }
 
-    public Set<Integer> getSelectedClusterNumbers() {
-        return tsnePlotController.getSelectedClusterNumbers();
+    public double getIsoformExpressionLevelInCluster(String isoformID, TSNEPlotController.Cluster cluster) {
+        return  tsnePlotController.getIsoformExpressionLevelInCluster(isoformID, cluster);
     }
 
-    public HashMap<Integer, Color> getSelectedClusterColors() {
-        return tsnePlotController.getSelectedClusterColors();
+    public Collection<TSNEPlotController.Cluster> getClusters(boolean onlySelected) {
+        return tsnePlotController.getClusters(onlySelected);
     }
 
-    public double getFractionOfExpressingCells(String isoformID, int clusterNumber) {
-        return tsnePlotController.getFractionOfExpressingCells(isoformID, clusterNumber);
-    }
-
-    public double getGradientMinTPM() {
-        return tpmGradientAdjusterController.getGradientMinTPM();
-    }
-
-    public double getGradientMaxTPM() {
-        return tpmGradientAdjusterController.getGradientMaxTPM();
-    }
-
-    public Color getMinTPMColor() {
-        return tpmGradientAdjusterController.getMinTPMColor();
-    }
-
-    public Color getMaxTPMColor() {
-        return tpmGradientAdjusterController.getMaxTPMColor();
-    }
-
-    public String getScale() {
-        return tpmGradientAdjusterController.getScale();
+    public double getFractionOfExpressingCells(String isoformID, TSNEPlotController.Cluster cluster) {
+        return tsnePlotController.getFractionOfExpressingCells(isoformID, cluster);
     }
 
     public boolean isReverseComplementing() {

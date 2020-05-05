@@ -21,9 +21,12 @@
         </Text>
         <TextField fx:id="perplexity" text="20" prefWidth="50"/>
     </HBox>
-    <SwingNode fx:id="swingNode">
-        <VBox.margin>
-            <Insets bottom="10" left="10" right="10" top="10"/>
-        </VBox.margin>
-    </SwingNode>
+    <StackPane fx:id="tSNEPlotAndLegendHolder">
+        <SwingNode fx:id="swingNode">
+            <StackPane.margin>
+                <Insets bottom="10" left="10" right="10" top="10"/>
+            </StackPane.margin>
+        </SwingNode>
+    </StackPane>
+
 </VBox>

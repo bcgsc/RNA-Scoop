@@ -125,24 +125,18 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         gradientMaxTPM = recommendedMaxTPM;
     }
 
-    public double getGradientMinTPM() {
-        return gradientMinTPM;
-    }
+    /**
+     * Returns the color on the TPM gradient associated with the given expression
+     * */
+    public Color getColorFromTPMGradient(double expression) {
+        Color minTPMColor = minTPMColorPicker.getValue();
+        Color maxTPMColor = maxTPMColorPicker.getValue();
+        String scale = scaleChooser.getValue();
 
-    public double getGradientMaxTPM() {
-        return gradientMaxTPM;
-    }
-
-    public Color getMinTPMColor() {
-        return minTPMColorPicker.getValue();
-    }
-
-    public Color getMaxTPMColor() {
-        return maxTPMColorPicker.getValue();
-    }
-
-    public String getScale() {
-        return scaleChooser.getValue();
+        if (scale.equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION))
+            return getLinearScaleColor(expression, gradientMinTPM, gradientMaxTPM, minTPMColor, maxTPMColor);
+        else
+            return getLogarithmicScaleColor(expression, gradientMinTPM, gradientMaxTPM, minTPMColor, maxTPMColor);
     }
 
     /**
@@ -192,6 +186,37 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     protected void handleUseRecommendedMaxMinButton() {
         setGradientMaxMinToRecommended();
         ControllerMediator.getInstance().redrawIsoformGraphics();
+    }
+
+    /**
+     * Gets color for isoform with given expression based on TPM gradient using a linear scale
+     */
+    private Color getLinearScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
+        if (isoformExpression <= minTPM)
+            return minTPMColor;
+        else if (isoformExpression >= maxTPM)
+            return maxTPMColor;
+        else {
+            double t = (isoformExpression - minTPM) / (maxTPM - minTPM);
+            return minTPMColor.interpolate(maxTPMColor, t);
+        }
+    }
+
+    /**
+     * Gets color for isoform with given expression based on TPM gradient using a logarithmic scale
+     */
+    private Color getLogarithmicScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
+        if (isoformExpression <= minTPM)
+            return minTPMColor;
+        else if (isoformExpression >= maxTPM)
+            return  maxTPMColor;
+        else {
+            double logIsoformExpression = Math.log10(isoformExpression + Double.MIN_VALUE);
+            double logMinTPM = Math.log10(minTPM + Double.MIN_VALUE);
+            double logMaxTPM = Math.log10(maxTPM + Double.MIN_VALUE);
+            double t = (logIsoformExpression- logMinTPM)/(logMaxTPM - logMinTPM);
+            return minTPMColor.interpolate(maxTPMColor, t);
+        }
     }
 
     private void drawTPMGradient() {
