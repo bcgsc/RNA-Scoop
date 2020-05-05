@@ -23,6 +23,7 @@
                         </fx:define>
                         <CheckMenuItem fx:id="revComplementToggle" onAction="#handleReverseComplementToggle" text="Reverse Complement (-) Strand"/>
                         <CheckMenuItem fx:id="hideIsoformsWithNoJunctionsToggle" onAction="#handleHideIsoformsWithNoJunctionsToggle" text="Hide Isoforms with No Exon Junctions"/>
+                        <CheckMenuItem fx:id="hideDotPlotToggle" onAction="#handleHideDotPlotToggle" text="Hide Dot Plot"/>
                         <SeparatorMenuItem/>
                         <RadioMenuItem fx:id="showGeneNameAndIDToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show Gene Name and ID"/>
                         <RadioMenuItem fx:id="showGeneNameToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show Gene Name" selected="true"/>

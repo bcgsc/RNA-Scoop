@@ -14,6 +14,7 @@ public class SessionMaker {
     public static final String CONSOLE_OPEN_KEY = "console open";
     public static final String REVERSE_COMPLEMENT_KEY = "rev complement";
     public static final String HIDE_ISOFORMS_WITH_NO_JUNCTIONS_KEY = "hide isoforms with no junctions";
+    public static final String HIDE_DOT_PLOT_KEY = "hide dot plot";
     public static final String SHOW_GENE_NAME_AND_ID_KEY = "show gene name and id";
     public static final String SHOW_GENE_NAME_KEY = "show gene name";
     public static final String SHOW_GENE_ID_KEY = "show gene id";
@@ -39,6 +40,7 @@ public class SessionMaker {
         session.put(CONSOLE_OPEN_KEY, ControllerMediator.getInstance().isConsoleOpen());
         session.put(REVERSE_COMPLEMENT_KEY, ControllerMediator.getInstance().isReverseComplementing());
         session.put(HIDE_ISOFORMS_WITH_NO_JUNCTIONS_KEY, ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions());
+        session.put(HIDE_DOT_PLOT_KEY, ControllerMediator.getInstance().isHidingDotPlot());
         session.put(SHOW_GENE_NAME_AND_ID_KEY, ControllerMediator.getInstance().isShowingGeneNameAndID());
         session.put(SHOW_GENE_NAME_KEY, ControllerMediator.getInstance().isShowingGeneName());
         session.put(SHOW_GENE_ID_KEY, ControllerMediator.getInstance().isShowingGeneID());

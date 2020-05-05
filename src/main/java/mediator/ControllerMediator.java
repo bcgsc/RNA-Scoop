@@ -90,8 +90,8 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.removeGenes(genes);
     }
 
-    public void redrawIsoformGraphics() {
-        isoformPlotController.redrawGraphics();
+    public void updateIsoformGraphicsAndDotPlot() {
+        isoformPlotController.updateIsoformGraphicsAndDotPlot();
     }
 
     public void updateGeneReverseComplementStatus() {
@@ -100,6 +100,10 @@ public class ControllerMediator implements Mediator{
 
     public void updateHideIsoformsNoJunctionsStatus() {
         isoformPlotController.updateHideIsoformsNoJunctionsStatus();
+    }
+
+    public void updateHideDotPlotStatus() {
+        isoformPlotController.updateHideDotPlotStatus();
     }
 
     public void updateGeneLabels() {
@@ -200,6 +204,10 @@ public class ControllerMediator implements Mediator{
 
     public boolean isHidingIsoformsWithNoJunctions() {
         return  mainController.isHidingIsoformsWithNoJunctions();
+    }
+
+    public boolean isHidingDotPlot() {
+        return mainController.isHidingDotPlot();
     }
 
     public boolean isShowingGeneNameAndID() {

@@ -100,7 +100,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                     updateFirstGeneGroup();
             }
         }
-        DotPlot.updateDotPlotLegend(cellsSelected, false);
+        DotPlot.updateDotPlotLegend(false);
     }
 
     /**
@@ -117,15 +117,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                     updateFirstGeneGroup();
             }
         }
-        DotPlot.updateDotPlotLegend(ControllerMediator.getInstance().areCellsSelected(), false);
+        DotPlot.updateDotPlotLegend(false);
     }
 
-    public void redrawGraphics() {
-        boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
-        boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
-        for(GeneGroup geneGroup : geneGeneGroupMap.values())
-            geneGroup.redrawIsoformGraphics(reverseComplement, cellsSelected);
-        DotPlot.redrawDotPlot();
+    public void updateIsoformGraphicsAndDotPlot() {
+        redrawIsoformGraphics();
+        DotPlot.updateDotPlot();
     }
 
     public void deselectAllIsoforms() {
@@ -159,6 +156,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             hideIsoformsNoJunctions();
         else
             showIsoformsNoJunctions();
+    }
+
+    public void updateHideDotPlotStatus() {
+        if (ControllerMediator.getInstance().areCellsSelected())
+            updateIsoformGraphicsAndDotPlot();
     }
 
     /**
@@ -215,7 +217,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
         if (genesToRemove.size() > 0)
             removeGenes(genesToRemove);
-        DotPlot.updateDotPlotLegend(ControllerMediator.getInstance().areCellsSelected(), false);
+        DotPlot.updateDotPlotLegend( false);
     }
 
     private void showIsoformsNoJunctions() {
@@ -236,13 +238,20 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             addGenes(genesToAdd);
     }
 
+    private void redrawIsoformGraphics() {
+        boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
+        boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
+        for(GeneGroup geneGroup : geneGeneGroupMap.values())
+            geneGroup.redrawIsoformGraphics(reverseComplement, cellsSelected);
+    }
+
     private void setScrollPaneWidthSpacing() {
         Insets geneGroupsMargin = VBox.getMargin(geneGroups);
         scrollPaneWidthSpacing = geneGroupsMargin.getLeft() + geneGroupsMargin.getRight();
     }
 
     private void setUpRedrawIsoformsToMatchScrollPaneWidth() {
-        scrollPane.widthProperty().addListener((ov, oldValue, newValue) -> redrawGraphics());
+        scrollPane.widthProperty().addListener((ov, oldValue, newValue) -> redrawIsoformGraphics());
     }
 
     /**
@@ -313,9 +322,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         public void redrawIsoformGraphics(boolean reverseComplement, boolean cellsSelected) {
-            int geneStart = gene.getStartNucleotide();
-            int geneEnd = gene.getEndNucleotide();
-            double pixelsPerNucleotide = getPixelsPerNucleotide(geneStart, geneEnd);
+            double pixelsPerNucleotide = getPixelsPerNucleotide();
             for (IsoformGroup isoformGroup : isoformsIsoformGroupMap.values())
                 isoformGroup.redrawIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellsSelected);
 
@@ -336,9 +343,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         public void addIsoformsNoJunctions(boolean showIsoformName, boolean showIsoformID, boolean reverseComplement,
                                            boolean cellsSelected) {
-            int geneStart = gene.getStartNucleotide();
-            int geneEnd = gene.getEndNucleotide();
-            double pixelsPerNucleotide = getPixelsPerNucleotide(geneStart, geneEnd);
+            double pixelsPerNucleotide = getPixelsPerNucleotide();
 
             for (Isoform isoform : gene.getIsoforms()) {
                 if (!isoform.hasExonJunctions()) {
@@ -380,9 +385,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         private void addIsoformsGroups(boolean showIsoformName, boolean showIsoformID, boolean hideIsoformsWithNoJunctions,
                                        boolean reverseComplement, boolean cellsSelected) {
-            int geneStart = gene.getStartNucleotide();
-            int geneEnd = gene.getEndNucleotide();
-            double pixelsPerNucleotide = getPixelsPerNucleotide(geneStart, geneEnd);
+            double pixelsPerNucleotide = getPixelsPerNucleotide();
             Collection<String> isoformsID = gene.getIsoformsMap().keySet();
             List<String> sortedIsoformsIDs = Util.asSortedList(isoformsID);
             for (String isoformID : sortedIsoformsIDs) {
@@ -403,10 +406,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 firstIsoformGroup = null;
         }
 
-        private double getPixelsPerNucleotide(int geneStart, int geneEnd) {
+        private double getPixelsPerNucleotide() {
             return (scrollPane.getWidth() - IsoformGroup.ISOFORM_OFFSET - scrollPaneWidthSpacing - SCROLLBAR_WIDTH -
                     IsoformGroup.ISOFORM_GRAPHIC_SPACING - IsoformGroup.getDotPlotSpacing()) /
-                    (geneEnd - geneStart + 1);
+                    (gene.getEndNucleotide() - gene.getStartNucleotide() + 1);
         }
     }
 
@@ -675,39 +678,48 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private static final int DOT_PLOT_COLUMN_SPACING = 1;
 
         public static void addDotPlotRowsIfShould(GeneGroup geneGroup) {
-            if (ControllerMediator.getInstance().areCellsSelected()) {
+            if (shouldDrawDotPlot()) {
                 for (IsoformGroup isoformGroup : geneGroup.getIsoformGroups())
                     isoformGroup.setDotPlotRow(createDotPlotRow(isoformGroup));
             }
         }
 
-        public static void updateDotPlotLegend(boolean cellsSelected, boolean redraw){
+        public static void updateDotPlotLegend(boolean redraw){
             if (firstGeneGroup != null) {
                 IsoformGroup firstIsoformGroup = firstGeneGroup.getFirstIsoformGroup();
                 HBox dotPlotLegend = firstIsoformGroup.getDotPlotLegend();
-                if (cellsSelected && (dotPlotLegend == null || redraw)) {
+                boolean shouldDrawDotPlot = shouldDrawDotPlot();
+                if (shouldDrawDotPlot && (dotPlotLegend == null || redraw)) {
                     firstIsoformGroup.setDotPlotLegend(LegendMaker.createLegend(false, true,
                             ALL_EXPRESS_DOT_SIZE, DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT, DOT_PLOT_COLUMN_SPACING));
-                }  else if (dotPlotLegend != null && !cellsSelected) {
+                }  else if (dotPlotLegend != null && !shouldDrawDotPlot) {
                     firstIsoformGroup.setDotPlotLegend(null);
                 }
             }
         }
 
-        public static void redrawDotPlot() {
-            boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
+        public static void updateDotPlot() {
             for (GeneGroup geneGroup : getGeneGroups()) {
                 for (IsoformGroup isoformGroup : geneGroup.getIsoformGroups())
-                    updateDotPlotRow(cellsSelected, isoformGroup);
+                    updateDotPlotRow(isoformGroup);
             }
-            updateDotPlotLegend(cellsSelected, true);
+            updateDotPlotLegend( true);
         }
 
-        private static void updateDotPlotRow(boolean cellsSelected, IsoformGroup isoformGroup) {
+        public static double getDotPlotWidth() {
+            if (shouldDrawDotPlot()) {
+                int numSelectedClusters = ControllerMediator.getInstance().getClusters(true).size();
+                return numSelectedClusters * DOT_PLOT_COLUMN_WIDTH + (numSelectedClusters - 1) * DOT_PLOT_COLUMN_SPACING + GRAPHIC_SPACING;
+            }
+            return 0;
+        }
+
+        private static void updateDotPlotRow(IsoformGroup isoformGroup) {
             HBox dotPlotRow = isoformGroup.getDotPlotRow();
-            if (cellsSelected && dotPlotRow == null) {
+            boolean shouldDrawDotPlot = shouldDrawDotPlot();
+            if (shouldDrawDotPlot && dotPlotRow == null) {
                 isoformGroup.setDotPlotRow(createDotPlotRow(isoformGroup));
-            } else if (cellsSelected) {
+            } else if (shouldDrawDotPlot) {
                 dotPlotRow.getChildren().clear();
                 drawDotPlotRow(dotPlotRow, isoformGroup);
             } else if (dotPlotRow != null){
@@ -715,16 +727,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
         }
 
+        private static boolean shouldDrawDotPlot() {
+            return !ControllerMediator.getInstance().isHidingDotPlot() && ControllerMediator.getInstance().areCellsSelected();
+        }
 
         private static HBox createDotPlotRow(IsoformGroup isoformGroup) {
             HBox dotPlotRow = new HBox();
             drawDotPlotRow(dotPlotRow, isoformGroup);
             return dotPlotRow;
-        }
-
-        private static double getDotPlotWidth() {
-            int numSelectedClusters = ControllerMediator.getInstance().getClusters(true).size();
-            return numSelectedClusters * DOT_PLOT_COLUMN_WIDTH + (numSelectedClusters - 1) * DOT_PLOT_COLUMN_SPACING + GRAPHIC_SPACING;
         }
 
         private static void drawDotPlotRow(HBox dotPlotRow, IsoformGroup isoformGroup) {

@@ -35,6 +35,7 @@ public class MainController implements InteractiveElementController {
     // NOTE: for the gene name/id settings at least one should be true
     private static final boolean DEFAULT_REVERSE_COMPLEMENT_SETTING = false;
     private static final boolean DEFAULT_HIDE_ISOFORMS_WITH_NO_JUNCTIONS_SETTING = false;
+    private static final boolean DEFAULT_HIDE_DOT_PLOT_SETTING = false;
     private static final boolean DEFAULT_SHOW_GENE_NAME_AND_ID_SETTING = false;
     private static final boolean DEFAULT_SHOW_GENE_NAME_SETTING = true;
     private static final boolean DEFAULT_SHOW_GENE_ID_SETTING = false;
@@ -53,6 +54,7 @@ public class MainController implements InteractiveElementController {
     @FXML private SplitPane horizontalSplitPane;
     @FXML private CheckMenuItem hideIsoformsWithNoJunctionsToggle;
     @FXML private CheckMenuItem revComplementToggle;
+    @FXML private CheckMenuItem hideDotPlotToggle;
     // gene label toggles
     @FXML private RadioMenuItem showGeneNameAndIDToggle;
     @FXML private RadioMenuItem showGeneNameToggle;
@@ -183,6 +185,10 @@ public class MainController implements InteractiveElementController {
         return revComplementToggle.isSelected();
     }
 
+    public boolean isHidingDotPlot() {
+        return hideDotPlotToggle.isSelected();
+    }
+
     public boolean isHidingIsoformsWithNoJunctions () {
         return hideIsoformsWithNoJunctionsToggle.isSelected();
     }
@@ -276,6 +282,16 @@ public class MainController implements InteractiveElementController {
     protected void handleHideIsoformsWithNoJunctionsToggle() {
         ControllerMediator.getInstance().updateHideIsoformsNoJunctionsStatus();
     }
+
+    /**
+     * When hide dot plot toggle is selected/deselected changes whether dot plot
+     * shows up when cells in t-SNE plot are selected
+     */
+    @FXML
+    protected void handleHideDotPlotToggle() {
+        ControllerMediator.getInstance().updateHideDotPlotStatus();
+    }
+
 
     /**
      * When one of the gene label toggles is selected/deselected updates the gene labels
@@ -408,6 +424,7 @@ public class MainController implements InteractiveElementController {
     private void restoreIsoformPlotSettingsTogglesFromJSON(Map settings) {
         restoreReverseComplementToggle(settings);
         restoreHideIsoformsWithNoJunctionsToggle(settings);
+        restoreHideDotPlotToggle(settings);
         restoreShowGeneNameIDToggles(settings);
         restoreShowIsoformNameToggle(settings);
         restoreShowIsoformIDToggle(settings);
@@ -430,10 +447,7 @@ public class MainController implements InteractiveElementController {
      */
     private void restoreReverseComplementToggle(Map settings) {
         boolean wasReverseComplementing = (boolean) settings.get(SessionMaker.REVERSE_COMPLEMENT_KEY);
-        if (wasReverseComplementing)
-            revComplementToggle.setSelected(true);
-        else
-            revComplementToggle.setSelected(false);
+        revComplementToggle.setSelected(wasReverseComplementing);
     }
 
     /**
@@ -442,10 +456,16 @@ public class MainController implements InteractiveElementController {
      */
     private void restoreHideIsoformsWithNoJunctionsToggle(Map settings) {
         boolean wasHidingIsoformsWithNoJunctions = (boolean) settings.get(SessionMaker.HIDE_ISOFORMS_WITH_NO_JUNCTIONS_KEY);
-        if (wasHidingIsoformsWithNoJunctions)
-            hideIsoformsWithNoJunctionsToggle.setSelected(true);
-        else
-            hideIsoformsWithNoJunctionsToggle.setSelected(false);
+        hideIsoformsWithNoJunctionsToggle.setSelected(wasHidingIsoformsWithNoJunctions);
+    }
+
+    /**
+     * If the hide dot plot toggle was selected in the previous session, selects it,
+     * else deselects it
+     */
+    private void restoreHideDotPlotToggle(Map settings) {
+        boolean wasHidingDotPlot = (boolean) settings.get(SessionMaker.HIDE_DOT_PLOT_KEY);
+        hideDotPlotToggle.setSelected(wasHidingDotPlot);
     }
 
     /**
@@ -469,10 +489,7 @@ public class MainController implements InteractiveElementController {
      */
     private void restoreShowIsoformNameToggle(Map settings) {
         boolean wasShowingIsoformName = (boolean) settings.get(SessionMaker.SHOW_ISOFORM_NAME_KEY);
-        if (wasShowingIsoformName)
-            showIsoformNameToggle.setSelected(true);
-        else
-            showIsoformNameToggle.setSelected(false);
+        showIsoformNameToggle.setSelected(wasShowingIsoformName);
     }
 
     /**
@@ -481,15 +498,13 @@ public class MainController implements InteractiveElementController {
      */
     private void restoreShowIsoformIDToggle(Map settings) {
         boolean wasShowingIsoformID = (boolean) settings.get(SessionMaker.SHOW_ISOFORM_ID_KEY);
-        if (wasShowingIsoformID)
-            showIsoformIDToggle.setSelected(true);
-        else
-            showIsoformIDToggle.setSelected(false);
+        showIsoformIDToggle.setSelected(wasShowingIsoformID);
     }
 
     private void setIsoformPlotSettingsToDefault() {
         revComplementToggle.setSelected(DEFAULT_REVERSE_COMPLEMENT_SETTING);
         hideIsoformsWithNoJunctionsToggle.setSelected(DEFAULT_HIDE_ISOFORMS_WITH_NO_JUNCTIONS_SETTING);
+        hideDotPlotToggle.setSelected(DEFAULT_HIDE_DOT_PLOT_SETTING);
         showGeneNameAndIDToggle.setSelected(DEFAULT_SHOW_GENE_NAME_AND_ID_SETTING);
         showGeneNameToggle.setSelected(DEFAULT_SHOW_GENE_NAME_SETTING);
         showGeneIDToggle.setSelected(DEFAULT_SHOW_GENE_ID_SETTING);

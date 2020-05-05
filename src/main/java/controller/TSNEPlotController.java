@@ -1,6 +1,5 @@
 package controller;
 
-import annotation.Exon;
 import com.jujutsu.tsne.*;
 import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.utils.MatrixOps;
@@ -184,7 +183,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     @Override
     public void selectionChanged(SelectionChangeEvent<XYCursor> selectionChangeEvent) {
-        ControllerMediator.getInstance().redrawIsoformGraphics();
+        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
     }
 
     /**
@@ -358,7 +357,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         public void mousePressed(MouseEvent e) {
             super.mousePressed(e);
             ControllerMediator.getInstance().deselectAllIsoforms();
-            ControllerMediator.getInstance().redrawIsoformGraphics();
+            ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
         }
     }
 
