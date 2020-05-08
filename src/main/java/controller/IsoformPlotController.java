@@ -430,7 +430,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private BorderPane graphicsHolder;
         private Canvas isoformGraphic;
         private HBox dotPlotRow;
-        private HBox dotPlotLegend;
+        private Pane dotPlotLegend;
 
         public IsoformGroup(Isoform isoform, double pixelsPerNucleotide, boolean showIsoformName,
                             boolean showIsoformID, boolean reverseComplement, boolean cellsSelected) {
@@ -478,14 +478,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         public void setDotPlotRow(HBox dotPlotRow) {
             this.dotPlotRow = dotPlotRow;
-            Platform.runLater(() -> graphicsHolder.setRight(dotPlotRow));
+            graphicsHolder.setRight(dotPlotRow);
         }
 
-        public void setDotPlotLegend(HBox dotPlotLegend) {
+        public void setDotPlotLegend(Pane dotPlotLegend) {
             if (dotPlotLegend != null)
                 BorderPane.setAlignment(dotPlotLegend, Pos.CENTER_RIGHT);
             this.dotPlotLegend = dotPlotLegend;
-            Platform.runLater(() -> labelAndLegendHolder.setRight(dotPlotLegend));
+            labelAndLegendHolder.setRight(dotPlotLegend);
         }
 
         public Isoform getIsoform() {
@@ -496,7 +496,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return dotPlotRow;
         }
 
-        public HBox getDotPlotLegend() {
+        public Pane getDotPlotLegend() {
             return dotPlotLegend;
         }
 
@@ -687,10 +687,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         public static void updateDotPlotLegend(boolean redraw){
             if (firstGeneGroup != null) {
                 IsoformGroup firstIsoformGroup = firstGeneGroup.getFirstIsoformGroup();
-                HBox dotPlotLegend = firstIsoformGroup.getDotPlotLegend();
+                Pane dotPlotLegend = firstIsoformGroup.getDotPlotLegend();
                 boolean shouldDrawDotPlot = shouldDrawDotPlot();
                 if (shouldDrawDotPlot && (dotPlotLegend == null || redraw)) {
-                    firstIsoformGroup.setDotPlotLegend(LegendMaker.createLegend(false, true,
+                    firstIsoformGroup.setDotPlotLegend(LegendMaker.createLegend(false, true, false, false,
                             ALL_EXPRESS_DOT_SIZE, DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT, DOT_PLOT_COLUMN_SPACING));
                 }  else if (dotPlotLegend != null && !shouldDrawDotPlot) {
                     firstIsoformGroup.setDotPlotLegend(null);

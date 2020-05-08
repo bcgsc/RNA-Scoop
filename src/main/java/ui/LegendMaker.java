@@ -2,9 +2,10 @@ package ui;
 
 import controller.TSNEPlotController;
 import javafx.geometry.Insets;
+import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
@@ -13,44 +14,72 @@ import mediator.ControllerMediator;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 public class LegendMaker {
-    public static HBox createLegend(boolean includeLabels, boolean onlySelected, double dotSize, double dotCanvasWidth,
-                                    double dotCanvasHeight, double elementSpacing) {
-        HBox dotPlotLegend = new HBox();
-        double dotX = dotCanvasWidth / 2;
-        double dotY = dotCanvasHeight / 2;
+    public static final double LIGHT_COLOR_LUMINENCE_LIMIT = 0.69;
+    public static final int LEGEND_CIRCLE_LABEL_SPACING = 1;
+
+    public static Pane createLegend(boolean includeLabels, boolean onlySelected, boolean includeBackground, boolean vertical,
+                                    double dotSize, double circleCanvasWidth, double circleCanvasHeight, double elementSpacing) {
+        Pane legend;
+        if (vertical)
+            legend = new VBox();
+        else
+            legend = new HBox();
+
         Collection<TSNEPlotController.Cluster> clusters = ControllerMediator.getInstance().getClusters(onlySelected);
 
         Iterator<TSNEPlotController.Cluster> iterator = clusters.iterator();
         while(iterator.hasNext()) {
             TSNEPlotController.Cluster cluster= iterator.next();
-            Canvas dotPlotLegendItem = new Canvas(dotCanvasWidth, dotCanvasHeight);
-            if (iterator.hasNext() && !includeLabels)
-                HBox.setMargin(dotPlotLegendItem, new Insets(0, elementSpacing, 0, 0));
-            else if (iterator.hasNext())
-                    HBox.setMargin(dotPlotLegendItem, new Insets(0, 1, 0, 0));
-            GraphicsContext graphicsContext = dotPlotLegendItem.getGraphicsContext2D();
-            Color dotColor = cluster.getColor();
-            graphicsContext.setFill(dotColor);
-            graphicsContext.fillOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
-            graphicsContext.setFill(Color.BLACK);
-            graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
-            graphicsContext.setFill(getLegendLabelColor(dotColor));
-            graphicsContext.fillText(String.valueOf(cluster.getNumber()), dotX - 3, dotY + 4);
-            dotPlotLegend.getChildren().add(dotPlotLegendItem);
+            Canvas legendCircle = createLegendCircle(dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
+            legend.getChildren().add(legendCircle);
+            HBox legendElement = new HBox();
+            legendElement.getChildren().add(legendCircle);
             if (includeLabels) {
                 Text label = new Text(cluster.getLabel());
-                HBox.setMargin(label, new Insets(0, elementSpacing, 0, 0));
-                dotPlotLegend.getChildren().add(label);
+                legendElement.getChildren().add(label);
+                HBox.setMargin(legendCircle, new Insets(0, LEGEND_CIRCLE_LABEL_SPACING, 0, 0));
             }
+            if (iterator.hasNext() && vertical)
+                VBox.setMargin(legendElement, new Insets(0, 0, elementSpacing, 0));
+            else if (iterator.hasNext())
+                HBox.setMargin(legendElement, new Insets(0,  elementSpacing, 0, 0));
+            legend.getChildren().add(legendElement);
         }
-        return dotPlotLegend;
+
+        if (includeBackground) {
+            Pane legendElements = legend;
+            legend = new HBox();
+            HBox.setMargin(legendElements, new Insets(5));
+            legend.getChildren().add(legendElements);
+            legend.setStyle("-fx-background-color: rgba(255, 255, 255, 0.65);" +
+                            "-fx-border-color: transparent transparent rgba(173, 173, 173, 0.65) rgba(173, 173, 173, 0.65);");
+        }
+        return legend;
     }
 
-    private static Paint getLegendLabelColor(Color dotColor) {
-        if (getLuminence(dotColor) > 60)
+    private static Canvas createLegendCircle(double dotSize, double circleCanvasWidth, double circleCanvasHeight,
+                                             TSNEPlotController.Cluster cluster) {
+        Canvas legendCircle = new Canvas(circleCanvasWidth, circleCanvasHeight);
+        double circleX = circleCanvasWidth / 2;
+        double circleY = circleCanvasHeight / 2;
+        GraphicsContext graphicsContext = legendCircle.getGraphicsContext2D();
+        Color circleColor = cluster.getColor();
+        // draw circle
+        graphicsContext.setFill(circleColor);
+        graphicsContext.fillOval(circleX - dotSize / 2, circleY - dotSize / 2, dotSize, dotSize);
+        // draw outline around circle
+        graphicsContext.setFill(Color.BLACK);
+        graphicsContext.strokeOval(circleX - dotSize / 2, circleY - dotSize / 2, dotSize, dotSize);
+        // add circle label
+        graphicsContext.setFill(getLegendCircleLabelColor(circleColor));
+        graphicsContext.fillText(String.valueOf(cluster.getNumber()), circleX - 3, circleY + 4);
+        return legendCircle;
+    }
+
+    private static Paint getLegendCircleLabelColor(Color circleColor) {
+        if (getLuminence(circleColor) >= LIGHT_COLOR_LUMINENCE_LIMIT)
             return Color.BLACK;
         else
             return Color.WHITE;
@@ -61,10 +90,9 @@ public class LegendMaker {
         double g = color.getGreen();
         double b = color.getBlue();
 
-        //	Minimum and Maximum RGB values are used in the HSL calculations
+        // Minimum and Maximum RGB values are used in the HSL calculations
         double min = Math.min(r, Math.min(g, b));
         double max = Math.max(r, Math.max(g, b));
-
         return (max + min) / 2;
     }
 }

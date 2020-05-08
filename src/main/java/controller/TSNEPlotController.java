@@ -14,7 +14,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import mediator.ControllerMediator;
@@ -43,7 +43,6 @@ import ui.LegendMaker;
 import ui.PointColor;
 import util.Util;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.*;
@@ -52,29 +51,36 @@ import java.util.List;
 import java.util.*;
 
 import static javafx.application.Platform.runLater;
+import static jdk.nashorn.internal.objects.Global.Infinity;
 
 public class TSNEPlotController implements Initializable, InteractiveElementController, SelectionChangeListener<XYCursor> {
-    public static final javafx.geometry.Insets LEGEND_MARGIN = new javafx.geometry.Insets(0, 10, 25, 10);
     @FXML private VBox tSNEPlotPanel;
     @FXML private Button drawTSNEButton;
     @FXML private TextField perplexity;
     @FXML private SwingNode swingNode;
-    @FXML private StackPane tSNEPlotAndLegendHolder;
+    @FXML private StackPane tSNEPlotHolder;
 
     private TSNEPlotInfo tSNEPlotInfo;
-    private JPanel tSNEPlotHolder;
     private ChartPanel tSNEPlot;
-    private HBox tSNEPlotLegend;
+    private Pane tSNEPlotLegend;
     private CellSelectionManager cellSelectionManager;
     private XYSeriesCollection cellsInTSNEPlot;
 
     /**
-     * Sets up pane in which t-SNE plot is displayed
+     * Makes t-SNE plot repaint every time its holder resizes (otherwise doesn't on Windows),
+     * initializes cellsInTSNEPlot
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        setUpTSNEPlotHolder();
-        swingNode.setContent(tSNEPlotHolder);
+        tSNEPlotHolder.heightProperty().addListener((ov, oldValue, newValue) -> {
+            if (tSNEPlot != null) {
+                // wrapping revalidate and repaint with Platform.runlater() helps
+                Platform.runLater(() -> {
+                    tSNEPlot.revalidate();
+                    tSNEPlot.repaint();
+                });
+            }
+        });
         cellsInTSNEPlot = new XYSeriesCollection();
     }
 
@@ -105,14 +111,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
     public void clearTSNEPlot() {
         if (!isTSNEPlotCleared()) {
-            tSNEPlotHolder.remove(tSNEPlot);
-            tSNEPlotAndLegendHolder.getChildren().remove(tSNEPlotLegend);
+            swingNode.setContent(null);
+            tSNEPlotHolder.getChildren().remove(tSNEPlotLegend);
             tSNEPlot = null;
             tSNEPlotLegend = null;
             cellSelectionManager = null;
             cellsInTSNEPlot.removeAllSeries();
-            tSNEPlotHolder.revalidate();
-            tSNEPlotHolder.repaint();
         }
     }
 
@@ -183,7 +187,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     @Override
     public void selectionChanged(SelectionChangeEvent<XYCursor> selectionChangeEvent) {
-        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+        Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
     }
 
     /**
@@ -218,30 +222,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
-    }
-
-    /**
-     * Creates box where t-SNE plot is drawn (box is white with grey border)
-     * Makes sure t-SNE plot resizes when t-SNE plot panel resizes (height doesn't
-     * change on Windows when t-SNE plot panel height changes, so added code to fix
-     * this)
-     */
-    private void setUpTSNEPlotHolder() {
-        tSNEPlotHolder = new JPanel(new GridLayout(1, 2));
-        tSNEPlotHolder.setBackground(Color.WHITE);
-        // the preferred width does not matter (will automatically resize to right width), but
-        // if preferred height is too small will not take up all of t-SNE plot panel, which is why
-        // the preferred height is set to a large number
-        tSNEPlotHolder.setPreferredSize(new Dimension(500, Integer.MAX_VALUE));
-        tSNEPlotHolder.setBorder(BorderFactory.createLineBorder(Color.getHSBColor(0,0,0.68f)));
-        tSNEPlotPanel.heightProperty().addListener((ov, oldValue, newValue) -> {
-            // resetting preferred size and repainting and revalidating t-SNE plot (after short delay)
-            // results in t-SNE plot resizing on Windows
-            Platform.runLater(() -> {
-                tSNEPlotHolder.revalidate();
-                tSNEPlotHolder.repaint();
-            });
-        });
     }
 
     /**
@@ -356,8 +336,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         @Override
         public void mousePressed(MouseEvent e) {
             super.mousePressed(e);
-            ControllerMediator.getInstance().deselectAllIsoforms();
-            ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+            Platform.runLater(() -> ControllerMediator.getInstance().deselectAllIsoforms());
+            Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
         }
     }
 
@@ -543,7 +523,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         private double LEGEND_DOT_SIZE = 14.5;
         private double LEGEND_DOT_CANVAS_WIDTH = 16.5;
         private double LEGEND_DOT_CANVAS_HEIGHT = 16.5;
-        private double LEGEND_ELEMENT_SPACING  = 10;
+        private double LEGEND_ELEMENT_SPACING  = 5;
 
         private XYSeriesCollection cellsInNewTSNEPlot;
 
@@ -607,14 +587,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             addSelectionHandler(panel);
             addSelectionManager(datasetExtension, panel);
             tSNEPlot = panel;
-
+            tSNEPlot.setPreferredSize(new Dimension(500, Integer.MAX_VALUE));
             chart.removeLegend();
             addLegend();
 
             cellsInTSNEPlot = cellsInNewTSNEPlot;
-            tSNEPlotHolder.add(panel);
-            tSNEPlotHolder.revalidate();
-            tSNEPlotHolder.repaint();
+            swingNode.setContent(tSNEPlot);
         }
 
         private void setTPMGradientValues() {
@@ -671,12 +649,13 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
         private void addLegend() {
             Platform.runLater(() -> {
-                HBox legend = LegendMaker.createLegend(true, false, LEGEND_DOT_SIZE,
+                Pane legend = LegendMaker.createLegend(true, false, true, true, LEGEND_DOT_SIZE,
                         LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING);
-                StackPane.setMargin(legend, LEGEND_MARGIN);
-                legend.setAlignment(Pos.BOTTOM_RIGHT);
+                StackPane.setAlignment(legend, Pos.TOP_RIGHT);
                 legend.setPickOnBounds(false);
-                tSNEPlotAndLegendHolder.getChildren().add(legend);
+                legend.setMaxWidth(-Infinity);
+                legend.setMaxHeight(-Infinity);
+                tSNEPlotHolder.getChildren().add(legend);
                 tSNEPlotLegend = legend;
             });
         }
