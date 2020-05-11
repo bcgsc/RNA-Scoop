@@ -649,8 +649,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
         private void addLegend() {
             Platform.runLater(() -> {
-                Pane legend = LegendMaker.createLegend(true, false, true, true, LEGEND_DOT_SIZE,
-                        LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING);
+                Pane legend = LegendMaker.createLegend(true, false, true, true,
+                        LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING);
                 StackPane.setAlignment(legend, Pos.TOP_RIGHT);
                 legend.setPickOnBounds(false);
                 legend.setMaxWidth(-Infinity);

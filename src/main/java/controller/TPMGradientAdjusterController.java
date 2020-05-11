@@ -5,12 +5,10 @@ import exceptions.TPMGradientInvalidMaxMinException;
 import exceptions.TPMGradientMinGreaterEqualMaxException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ColorPicker;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
@@ -36,17 +34,21 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     private static final Color DEFAULT_MAX_TPM_COLOR = Color.color(0.000, 0.608, 0.969);
     private static final int DEFAULT_RECOMMENDED_MIN_TPM = 1;
     private static final int DEFAULT_RECOMMENDED_MAX_TPM = 10000;
-    public static final String SCALE_CHOOSER_LINEAR_OPTION = "Linear";
-    public static final String SCALE_CHOOSER_EXPONENTIAL_OPTION = "Logarithmic";
+    private static final String SCALE_CHOOSER_LINEAR_OPTION = "Linear";
+    private static final String SCALE_CHOOSER_EXPONENTIAL_OPTION = "Logarithmic";
+    private static final double TPM_GRADIENT_GRID_PANE_ROW_PERCENT_HEIGHT = 40;
+    private static final double TPM_GRADIENT_MIN_WIDTH = 250;
+    private static final double TPM_GRADIENT_MIN_HEIGHT  = 50;
 
-    @FXML private VBox tpmGradientAdjuster;
+    @FXML private ScrollPane tpmGradientAdjuster;
     @FXML private GridPane gridPane;
     @FXML private Rectangle tpmGradient;
+    @FXML private Text minGradientTPMLabel;
+    @FXML private Text maxGradientTPMLabel;
+    // TPM gradient controls
     @FXML private TextField gradientMinTPMField;
     @FXML private TextField gradientMaxTPMField;
     @FXML private Button useRecommendedMaxMinButton;
-    @FXML private Text minGradientTPMLabel;
-    @FXML private Text maxGradientTPMLabel;
     @FXML private ColorPicker minTPMColorPicker;
     @FXML private ColorPicker maxTPMColorPicker;
     @FXML private ComboBox<String> scaleChooser;
@@ -58,13 +60,12 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     private double gradientMaxTPM;
 
     /**
-     * Sets up grid pane, TPM gradient, scale chooser and the window
+     * Sets up grid pane, TPM gradient and controls, and the window
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpGridPane();
-        setUpTPMGradient();
-        setUpScaleChooser();
+        setUpTPMGradientAndControls();
         setUpWindow();
     }
 
@@ -219,94 +220,6 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         }
     }
 
-    private void drawTPMGradient() {
-        Color minTPMColor = minTPMColorPicker.getValue();
-        Color maxTPMColor = maxTPMColorPicker.getValue();
-        Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(1, maxTPMColor)};
-        LinearGradient gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
-        tpmGradient.setFill(gradient);
-    }
-
-    /**
-     * Sets up grid pane's columns and rows
-     */
-    private void setUpGridPane() {
-        ColumnConstraints column1 = new ColumnConstraints();
-        column1.setPercentWidth(33);
-        ColumnConstraints column2 = new ColumnConstraints();
-        column2.setPercentWidth(33);
-        ColumnConstraints column3 = new ColumnConstraints();
-        column2.setPercentWidth(33);
-        gridPane.getColumnConstraints().addAll(column1, column2, column3);
-        RowConstraints row1 = new RowConstraints();
-        row1.setPercentHeight(30);
-        RowConstraints row2 = new RowConstraints();
-        row2.setPercentHeight(40);
-        RowConstraints row3 = new RowConstraints();
-        row3.setPercentHeight(30);
-        gridPane.getRowConstraints().addAll(row1, row2, row3);
-    }
-
-    /**
-     * Makes TPM gradient resize when window resizes
-     * Makes TPM gradient check if user's inputted max/min values are valid
-     * Sets TPM gradient to default colors
-     * Sets recommended TPM gradient max and min to defaalt values, and sets
-     * the gradient's max and min to those values
-     * Draws the TPM gradient
-     */
-    private void setUpTPMGradient() {
-        gridPane.heightProperty().addListener((ov, oldValue, newValue) -> {
-            tpmGradient.setHeight(newValue.doubleValue() * .3);
-            drawTPMGradient();
-        });
-        gridPane.widthProperty().addListener((ov, oldValue, newValue) -> {
-            tpmGradient.setWidth(newValue.doubleValue() - 25);
-            drawTPMGradient();
-        });
-        gradientMinTPMField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
-            if (!newValue) { //when focus lost
-                handleChangedGradientMaxMinTPM();
-            }
-        });
-        gradientMaxTPMField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
-            if (!newValue) { //when focus lost
-                handleChangedGradientMaxMinTPM();
-            }
-        });
-        minTPMColorPicker.setValue(DEFAULT_MIN_TPM_COLOR);
-        maxTPMColorPicker.setValue(DEFAULT_MAX_TPM_COLOR);
-        recommendedMinTPM = DEFAULT_RECOMMENDED_MIN_TPM;
-        recommendedMaxTPM = DEFAULT_RECOMMENDED_MAX_TPM;
-        setGradientMaxMinToRecommended();
-        drawTPMGradient();
-    }
-
-    private void setUpScaleChooser() {
-        scaleChooser.setValue(SCALE_CHOOSER_LINEAR_OPTION);
-        scaleChooser.getItems().addAll(SCALE_CHOOSER_LINEAR_OPTION, SCALE_CHOOSER_EXPONENTIAL_OPTION);
-    }
-
-    /**
-     * Sets up TPM gradient adjuster window
-     * Makes it so window is hidden when X button is pressed
-     */
-    private void setUpWindow() {
-        window = new Stage();
-        window.setTitle("RNA-Scoop - TPM Gradient Adjuster");
-        window.getIcons().add(Main.RNA_SCOOP_LOGO);
-        setWindowSize();
-        window.setOnCloseRequest(event -> {
-            event.consume();
-            window.hide();
-        });
-    }
-
-    private void setWindowSize() {
-        Rectangle2D screen = Screen.getPrimary().getBounds();
-        window.setScene(new Scene(tpmGradientAdjuster, screen.getWidth() * TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR, screen.getHeight() * TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR));
-    }
-
     /**
      * Attempts to update TPM gradient min and max values by setting them to values in TPM gradient max and
      * min fields
@@ -333,6 +246,118 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
 
         gradientMinTPM = newGradientMin;
         gradientMaxTPM = newGradientMax;
+    }
+
+    private void drawTPMGradient() {
+        Color minTPMColor = minTPMColorPicker.getValue();
+        Color maxTPMColor = maxTPMColorPicker.getValue();
+        Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(1, maxTPMColor)};
+        LinearGradient gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
+        tpmGradient.setFill(gradient);
+    }
+
+    /**
+     * Sets up grid pane's columns and rows
+     */
+    private void setUpGridPane() {
+        ColumnConstraints column1 = new ColumnConstraints();
+        column1.setPercentWidth(33);
+        ColumnConstraints column2 = new ColumnConstraints();
+        column2.setPercentWidth(33);
+        ColumnConstraints column3 = new ColumnConstraints();
+        column2.setPercentWidth(33);
+        gridPane.getColumnConstraints().addAll(column1, column2, column3);
+        RowConstraints row1 = new RowConstraints();
+        row1.setPercentHeight((100 - TPM_GRADIENT_GRID_PANE_ROW_PERCENT_HEIGHT) / 2);
+        RowConstraints tpmGradientRow = new RowConstraints();
+        tpmGradientRow.setPercentHeight(TPM_GRADIENT_GRID_PANE_ROW_PERCENT_HEIGHT);
+        RowConstraints row3 = new RowConstraints();
+        row3.setPercentHeight((100 - TPM_GRADIENT_GRID_PANE_ROW_PERCENT_HEIGHT) / 2);
+        gridPane.getRowConstraints().addAll(row1, tpmGradientRow, row3);
+    }
+
+    /**
+     * Makes TPM gradient resize when window resizes
+     * Sets up handling for when TPM gradient max/min field values change
+     * Sets TPM gradient to default colors
+     * Sets recommended TPM gradient max and min to default values, and sets
+     * the gradient's max and min to those values
+     * Draws the TPM gradient
+     */
+    private void setUpTPMGradientAndControls() {
+        makeTPMGradientResizeToWindow();
+        setUpHandlingChangedMinMaxFields();
+        setUpScaleChooser();
+        minTPMColorPicker.setValue(DEFAULT_MIN_TPM_COLOR);
+        maxTPMColorPicker.setValue(DEFAULT_MAX_TPM_COLOR);
+        recommendedMinTPM = DEFAULT_RECOMMENDED_MIN_TPM;
+        recommendedMaxTPM = DEFAULT_RECOMMENDED_MAX_TPM;
+        setGradientMaxMinToRecommended();
+        drawTPMGradient();
+    }
+
+    /**
+     * Assumes gridPane is wrapped in a VBox, gridPane takes up whole tpmGradientAdjuster window (excluding margins)
+     * and tpmGradient is a child of gridPane
+     */
+    private void makeTPMGradientResizeToWindow() {
+        Insets gridPaneMargin = VBox.getMargin(gridPane);
+        Insets tpmGradientMargin = GridPane.getMargin(tpmGradient);
+        // adding 5 prevents horizontal scrollbar from showing up
+        double tpmGradientWidthSpacing = gridPaneMargin.getLeft() + gridPaneMargin.getRight() + tpmGradientMargin.getLeft() +
+                tpmGradientMargin.getRight() + 5;
+        double tpmGradientHeightSpacing = gridPaneMargin.getTop() + gridPaneMargin.getBottom() + tpmGradientMargin.getTop() +
+                tpmGradientMargin.getBottom();
+        tpmGradientAdjuster.heightProperty().addListener((ov, oldValue, newValue) -> {
+            tpmGradient.setHeight(Math.max(newValue.doubleValue() * TPM_GRADIENT_GRID_PANE_ROW_PERCENT_HEIGHT / 100 - tpmGradientHeightSpacing,
+                    TPM_GRADIENT_MIN_HEIGHT));
+            drawTPMGradient();
+        });
+        tpmGradientAdjuster.widthProperty().addListener((ov, oldValue, newValue) -> {
+            tpmGradient.setWidth(Math.max(newValue.doubleValue() - tpmGradientWidthSpacing, TPM_GRADIENT_MIN_WIDTH));
+            drawTPMGradient();
+        });
+    }
+
+    /**
+     * Makes so whenever TPM Gradient min/max field values change, handler method is called
+     */
+    private void setUpHandlingChangedMinMaxFields() {
+        gradientMinTPMField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
+            if (!newValue) { //when focus lost
+                handleChangedGradientMaxMinTPM();
+            }
+        });
+        gradientMaxTPMField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
+            if (!newValue) { //when focus lost
+                handleChangedGradientMaxMinTPM();
+            }
+        });
+    }
+
+    /**
+     * Sets up TPM gradient adjuster window
+     * Makes it so window is hidden when X button is pressed
+     */
+    private void setUpWindow() {
+        window = new Stage();
+        window.setTitle("RNA-Scoop - TPM Gradient Adjuster");
+        window.getIcons().add(Main.RNA_SCOOP_LOGO);
+        setWindowSize();
+        window.setOnCloseRequest(event -> {
+            event.consume();
+            window.hide();
+        });
+    }
+
+    private void setUpScaleChooser() {
+        scaleChooser.setValue(SCALE_CHOOSER_LINEAR_OPTION);
+        scaleChooser.getItems().addAll(SCALE_CHOOSER_LINEAR_OPTION, SCALE_CHOOSER_EXPONENTIAL_OPTION);
+    }
+
+    private void setWindowSize() {
+        Rectangle2D screen = Screen.getPrimary().getBounds();
+        window.setScene(new Scene(tpmGradientAdjuster, screen.getWidth() * TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR, screen.getHeight() * TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR));
     }
 
     private double roundToOneDecimal (double value) {
