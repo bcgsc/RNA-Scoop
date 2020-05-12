@@ -91,7 +91,7 @@ public class ControllerMediator implements Mediator{
     }
 
     public void updateIsoformGraphicsAndDotPlot() {
-        isoformPlotController.updateIsoformGraphicsAndDotPlot();
+            isoformPlotController.updateIsoformGraphicsAndDotPlot();
     }
 
     public void updateGeneReverseComplementStatus() {
@@ -178,24 +178,24 @@ public class ControllerMediator implements Mediator{
         return tsnePlotController.areCellsSelected();
     }
 
-    public double getIsoformExpressionLevel(String isoformID) {
-        return tsnePlotController.getIsoformExpressionLevel(isoformID);
+    public double getIsoformExpressionLevel(String isoformID, boolean selectedOnly) {
+        return tsnePlotController.getIsoformExpressionLevel(isoformID, selectedOnly);
     }
 
     public Color getColorFromTPMGradient(double expression) {
         return tpmGradientAdjusterController.getColorFromTPMGradient(expression);
     }
 
-    public double getIsoformExpressionLevelInCluster(String isoformID, TSNEPlotController.Cluster cluster) {
-        return  tsnePlotController.getIsoformExpressionLevelInCluster(isoformID, cluster);
+    public double getIsoformExpressionLevelInCluster(String isoformID, TSNEPlotController.Cluster cluster, boolean onlySelected) {
+        return  tsnePlotController.getIsoformExpressionLevelInCluster(isoformID, cluster, onlySelected);
     }
 
     public Collection<TSNEPlotController.Cluster> getClusters(boolean onlySelected) {
         return tsnePlotController.getClusters(onlySelected);
     }
 
-    public double getFractionOfExpressingCells(String isoformID, TSNEPlotController.Cluster cluster) {
-        return tsnePlotController.getFractionOfExpressingCells(isoformID, cluster);
+    public double getFractionOfExpressingCells(String isoformID, TSNEPlotController.Cluster cluster, boolean onlySelected) {
+        return tsnePlotController.getFractionOfExpressingCells(isoformID, cluster, onlySelected);
     }
 
     public boolean isReverseComplementing() {

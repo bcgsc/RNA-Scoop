@@ -49,6 +49,7 @@ import java.awt.geom.*;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static javafx.application.Platform.runLater;
 import static jdk.nashorn.internal.objects.Global.Infinity;
@@ -132,26 +133,35 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
     /**
      * Returns the average expression level of the isoform with the given
-     * ID in the cells selected in the t-SNE plot
+     * ID in either all cells in t-SNE plot, or only those selected
      */
-    public double getIsoformExpressionLevel(String isoformID) {
+    public double getIsoformExpressionLevel(String isoformID, boolean selectedOnly) {
         double isoformExpressionSum = 0;
-        int numSelected = 0;
-        HashMap<Cluster, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
-        for (ArrayList<CellDataItem> selectedCellsInCluster : selectedCells.values()) {
-            numSelected += selectedCellsInCluster.size();
-            for (CellDataItem selectedCell : selectedCellsInCluster)
-                isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
+        int numCells = 0;
+        Collection<Collection<CellDataItem>> cells;
+        if (selectedOnly)
+            cells = (Collection<Collection<CellDataItem>>)(Collection<?>) cellSelectionManager.getSelectedCells().values();
+        else
+            cells = (Collection<Collection<CellDataItem>>)(Collection<?>) cellsInTSNEPlot.getSeries().stream().map(XYSeries::getItems).collect(Collectors.toList());
+        for (Collection<CellDataItem> cellsInCluster : cells) {
+            numCells += cellsInCluster.size();
+            for (CellDataItem cell : cellsInCluster)
+                isoformExpressionSum += cell.getIsoformExpressionLevel(isoformID);
         }
-        return isoformExpressionSum / numSelected;
+        return isoformExpressionSum / numCells;
     }
 
-    public double getIsoformExpressionLevelInCluster(String isoformID, Cluster cluster) {
+    public double getIsoformExpressionLevelInCluster(String isoformID, Cluster cluster, boolean onlySelected) {
         double isoformExpressionSum = 0;
-        HashMap<Cluster, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
-        ArrayList<CellDataItem> selectedCellsInCluster = selectedCells.get(cluster);
-        int numSelected = selectedCellsInCluster.size();
-        for (CellDataItem selectedCell : selectedCellsInCluster)
+        Collection<CellDataItem> cellsInCluster;
+        if (onlySelected) {
+            HashMap<Cluster, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
+            cellsInCluster = selectedCells.get(cluster);
+        } else {
+            cellsInCluster = (Collection<CellDataItem>)(Collection<?>)cluster.getItems();
+        }
+        int numSelected = cellsInCluster.size();
+        for (CellDataItem selectedCell : cellsInCluster)
             isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
         return isoformExpressionSum / numSelected;
     }
@@ -166,12 +176,17 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
 
-    public double getFractionOfExpressingCells(String isoformID, Cluster cluster) {
+    public double getFractionOfExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
         double numExpressingCells = 0;
-        HashMap<Cluster, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
-        ArrayList<CellDataItem> selectedCellsInCluster = selectedCells.get(cluster);
-        int numSelected = selectedCellsInCluster.size();
-        for (CellDataItem selectedCell : selectedCellsInCluster) {
+        Collection<CellDataItem> cellsInCluster;
+        if (onlySelected) {
+            HashMap<Cluster, ArrayList<CellDataItem>> selectedCells = cellSelectionManager.getSelectedCells();
+            cellsInCluster = selectedCells.get(cluster);
+        } else {
+            cellsInCluster = (Collection<CellDataItem>)(Collection<?>)cluster.getItems();
+        }
+        int numSelected = cellsInCluster.size();
+        for (CellDataItem selectedCell : cellsInCluster) {
             if (selectedCell.getIsoformExpressionLevel(isoformID) > 0)
                 numExpressingCells++;
         }
@@ -538,12 +553,14 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 double[][] tSNEMatrix = generateTSNEMatrix();
                 drawTsne(tSNEMatrix);
                 setTPMGradientValues();
-                runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot"));
+                runLater(() -> {
+                    ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+                    ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot");
+                });
             } catch(RNAScoopException e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
             } catch (Exception e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the t-SNE plot"));
-                e.printStackTrace();
             } finally {
                 runLater(TSNEPlotController.this::enableAssociatedFunctionality);
             }
