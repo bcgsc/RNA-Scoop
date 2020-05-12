@@ -48,12 +48,14 @@
                     <Insets top="5" right="10" bottom="5" left="10"/>
                 </GridPane.margin>
             </Rectangle>
-            <HBox GridPane.columnIndex="0" GridPane.rowIndex="2">
+            <ColorPicker fx:id="minTPMColorPicker" onAction="#handleTPMColorPicker"
+                         GridPane.valignment="TOP" GridPane.columnIndex="0" GridPane.rowIndex="2"  prefWidth="50">
                 <GridPane.margin>
                     <Insets right="10" left="10"/>
                 </GridPane.margin>
-                <ColorPicker fx:id="minTPMColorPicker" onAction="#handleTPMColorPicker" prefWidth="50"/>
-            </HBox>
+            </ColorPicker>
+            <ColorPicker fx:id="midTPMColorPicker" onAction="#handleTPMColorPicker"
+                         GridPane.valignment="TOP"  GridPane.halignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="2"  prefWidth="50"/>
             <VBox alignment="TOP_RIGHT" GridPane.columnIndex="2" GridPane.rowIndex="2">
                 <GridPane.margin>
                     <Insets right="10" left="10" bottom="10"/>

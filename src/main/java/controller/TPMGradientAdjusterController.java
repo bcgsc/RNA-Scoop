@@ -31,14 +31,15 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR = 0.25f;
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR = 0.4f;
     private static final Color DEFAULT_MIN_TPM_COLOR = Color.color(1.000, 1.000,1.000);
-    private static final Color DEFAULT_MAX_TPM_COLOR = Color.color(0.000, 0.608, 0.969);
+    private static final Color DEFAULT_MID_TPM_COLOR = Color.color(0.659, 0.867, 0.710);
+    private static final Color DEFAULT_MAX_TPM_COLOR = Color.color(0.263, 0.635,0.792);
     private static final int DEFAULT_RECOMMENDED_MIN_TPM = 1;
     private static final int DEFAULT_RECOMMENDED_MAX_TPM = 10000;
     private static final String SCALE_CHOOSER_LINEAR_OPTION = "Linear";
     private static final String SCALE_CHOOSER_EXPONENTIAL_OPTION = "Logarithmic";
     private static final double TPM_GRADIENT_GRID_PANE_ROW_PERCENT_HEIGHT = 40;
     private static final double TPM_GRADIENT_MIN_WIDTH = 250;
-    private static final double TPM_GRADIENT_MIN_HEIGHT  = 50;
+    private static final double TPM_GRADIENT_MIN_HEIGHT  = 60;
 
     @FXML private ScrollPane tpmGradientAdjuster;
     @FXML private GridPane gridPane;
@@ -50,6 +51,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     @FXML private TextField gradientMaxTPMField;
     @FXML private Button useRecommendedMaxMinButton;
     @FXML private ColorPicker minTPMColorPicker;
+    @FXML private ColorPicker midTPMColorPicker;
     @FXML private ColorPicker maxTPMColorPicker;
     @FXML private ComboBox<String> scaleChooser;
 
@@ -79,6 +81,8 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         scaleChooser.setDisable(true);
         minTPMColorPicker.setDisable(true);
         minTPMColorPicker.hide();
+        midTPMColorPicker.setDisable(true);
+        midTPMColorPicker.hide();
         maxTPMColorPicker.setDisable(true);
         maxTPMColorPicker.hide();
     }
@@ -92,6 +96,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         useRecommendedMaxMinButton.setDisable(false);
         scaleChooser.setDisable(false);
         minTPMColorPicker.setDisable(false);
+        midTPMColorPicker.setDisable(false);
         maxTPMColorPicker.setDisable(false);
     }
 
@@ -131,13 +136,19 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
      * */
     public Color getColorFromTPMGradient(double expression) {
         Color minTPMColor = minTPMColorPicker.getValue();
+        Color midTPMColor = midTPMColorPicker.getValue();
         Color maxTPMColor = maxTPMColorPicker.getValue();
-        String scale = scaleChooser.getValue();
-
-        if (scale.equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION))
-            return getLinearScaleColor(expression, gradientMinTPM, gradientMaxTPM, minTPMColor, maxTPMColor);
-        else
-            return getLogarithmicScaleColor(expression, gradientMinTPM, gradientMaxTPM, minTPMColor, maxTPMColor);
+        if (expression <= gradientMinTPM) {
+            return minTPMColor;
+        } else if (expression >= gradientMaxTPM) {
+            return maxTPMColor;
+        } else {
+            double t = getTForExpressionBetweenMaxMin(expression);
+            if (t <= 0.5)
+                return minTPMColor.interpolate(midTPMColor, t/0.5);
+            else
+                return midTPMColor.interpolate(maxTPMColor, (t - 0.5)/0.5);
+        }
     }
 
     /**
@@ -190,34 +201,23 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     }
 
     /**
-     * Gets color for isoform with given expression based on TPM gradient using a linear scale
+     * Assuming given expression is between TPM  gradient's max and min values, returns t value
+     * representing where the expression lies on the TPM gradient (0 being the left, 1 being the
+     * right), depending on the type of scale being used. Ex. if gradient's min TPM = 0, max = 10,
+     * given expression = 5, and scale used is linear, will return 0.5
      */
-    private Color getLinearScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
-        if (isoformExpression <= minTPM)
-            return minTPMColor;
-        else if (isoformExpression >= maxTPM)
-            return maxTPMColor;
-        else {
-            double t = (isoformExpression - minTPM) / (maxTPM - minTPM);
-            return minTPMColor.interpolate(maxTPMColor, t);
+    private double getTForExpressionBetweenMaxMin(double expression) {
+        double t;
+        String scale = scaleChooser.getValue();
+        if (scale.equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION)) {
+            t = (expression - gradientMinTPM) / (gradientMaxTPM - gradientMinTPM);
+        } else {
+            double logIsoformExpression = Math.log10(expression + Double.MIN_VALUE);
+            double logMinTPM = Math.log10(gradientMinTPM + Double.MIN_VALUE);
+            double logMaxTPM = Math.log10(gradientMaxTPM+ Double.MIN_VALUE);
+            t = (logIsoformExpression- logMinTPM)/(logMaxTPM - logMinTPM);
         }
-    }
-
-    /**
-     * Gets color for isoform with given expression based on TPM gradient using a logarithmic scale
-     */
-    private Color getLogarithmicScaleColor(double isoformExpression, double minTPM, double maxTPM, Color minTPMColor, Color maxTPMColor) {
-        if (isoformExpression <= minTPM)
-            return minTPMColor;
-        else if (isoformExpression >= maxTPM)
-            return  maxTPMColor;
-        else {
-            double logIsoformExpression = Math.log10(isoformExpression + Double.MIN_VALUE);
-            double logMinTPM = Math.log10(minTPM + Double.MIN_VALUE);
-            double logMaxTPM = Math.log10(maxTPM + Double.MIN_VALUE);
-            double t = (logIsoformExpression- logMinTPM)/(logMaxTPM - logMinTPM);
-            return minTPMColor.interpolate(maxTPMColor, t);
-        }
+        return t;
     }
 
     /**
@@ -250,8 +250,9 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
 
     private void drawTPMGradient() {
         Color minTPMColor = minTPMColorPicker.getValue();
+        Color midTPMColor = midTPMColorPicker.getValue();
         Color maxTPMColor = maxTPMColorPicker.getValue();
-        Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(1, maxTPMColor)};
+        Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(0.5, midTPMColor), new Stop(1, maxTPMColor)};
         LinearGradient gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
         tpmGradient.setFill(gradient);
     }
@@ -289,6 +290,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         setUpHandlingChangedMinMaxFields();
         setUpScaleChooser();
         minTPMColorPicker.setValue(DEFAULT_MIN_TPM_COLOR);
+        midTPMColorPicker.setValue(DEFAULT_MID_TPM_COLOR);
         maxTPMColorPicker.setValue(DEFAULT_MAX_TPM_COLOR);
         recommendedMinTPM = DEFAULT_RECOMMENDED_MIN_TPM;
         recommendedMaxTPM = DEFAULT_RECOMMENDED_MAX_TPM;
