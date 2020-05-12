@@ -75,8 +75,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     public void initialize(URL location, ResourceBundle resources) {
         tSNEPlotHolder.heightProperty().addListener((ov, oldValue, newValue) -> {
             if (tSNEPlot != null) {
-                // wrapping revalidate and repaint with Platform.runlater() helps
-                Platform.runLater(() -> {
+                // wrapping revalidate and repaint with runlater() helps
+                runLater(() -> {
                     tSNEPlot.revalidate();
                     tSNEPlot.repaint();
                 });
@@ -151,6 +151,15 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         return isoformExpressionSum / numCells;
     }
 
+    public Collection<Cluster> getClusters(boolean onlySelected) {
+        if (!isTSNEPlotCleared() && onlySelected)
+            return Util.asSortedList(cellSelectionManager.getSelectedCells().keySet());
+        else if (!isTSNEPlotCleared())
+            return Util.asSortedList((Collection<Cluster>)(Collection<?>) cellsInTSNEPlot.getSeries());
+        else
+            return new HashSet<>();
+    }
+
     public double getIsoformExpressionLevelInCluster(String isoformID, Cluster cluster, boolean onlySelected) {
         double isoformExpressionSum = 0;
         Collection<CellDataItem> cellsInCluster;
@@ -165,16 +174,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
         return isoformExpressionSum / numSelected;
     }
-
-    public Collection<Cluster> getClusters(boolean onlySelected) {
-        if (!isTSNEPlotCleared() && onlySelected)
-            return Util.asSortedList(cellSelectionManager.getSelectedCells().keySet());
-        else if (!isTSNEPlotCleared())
-            return Util.asSortedList((Collection<Cluster>)(Collection<?>) cellsInTSNEPlot.getSeries());
-        else
-            return new HashSet<>();
-    }
-
 
     public double getFractionOfExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
         double numExpressingCells = 0;
@@ -202,7 +201,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     @Override
     public void selectionChanged(SelectionChangeEvent<XYCursor> selectionChangeEvent) {
-        Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+        runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
     }
 
     /**
@@ -351,8 +350,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         @Override
         public void mousePressed(MouseEvent e) {
             super.mousePressed(e);
-            Platform.runLater(() -> ControllerMediator.getInstance().deselectAllIsoforms());
-            Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+            runLater(() -> ControllerMediator.getInstance().deselectAllIsoforms());
+            runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
         }
     }
 
@@ -665,7 +664,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
 
         private void addLegend() {
-            Platform.runLater(() -> {
+            runLater(() -> {
                 Pane legend = LegendMaker.createLegend(true, false, true, true,
                         LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING);
                 StackPane.setAlignment(legend, Pos.TOP_RIGHT);
