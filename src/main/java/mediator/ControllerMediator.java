@@ -122,8 +122,8 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.clearShownGenes();
     }
 
-    public void clearAllGenes() {
-        geneSelectorController.clearAllGenes();
+    public void clearGeneSelector() {
+        geneSelectorController.clearGeneSelector();
     }
 
     public void deselectAllIsoforms() {

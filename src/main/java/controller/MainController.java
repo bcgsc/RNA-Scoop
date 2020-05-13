@@ -259,7 +259,7 @@ public class MainController implements InteractiveElementController {
         openTSNEPlot();
         openConsole();
         setIsoformPlotSettingsToDefault();
-        ControllerMediator.getInstance().clearAllGenes();
+        ControllerMediator.getInstance().clearGeneSelector();
         ControllerMediator.getInstance().clearTSNEPlot();
         ControllerMediator.getInstance().clearConsole();
         clearPathComboBox();
@@ -527,13 +527,13 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Clears t-SNE plot, all genes being shown in isoform plot, genes in gene selector tables,
+     * Clears t-SNE plot, all genes being shown in isoform plot, gene selector window,
      * current loaded path (as will be updated), disables associated functionality
      * Loads file from path in path combo box on different thread
      * Displays error (and successful completion) messages in console
      */
     private void loadFile() {
-        ControllerMediator.getInstance().clearAllGenes();
+        ControllerMediator.getInstance().clearGeneSelector();
         ControllerMediator.getInstance().clearTSNEPlot();
         currentLoadedPath = null;
         disableAssociatedFunctionality();

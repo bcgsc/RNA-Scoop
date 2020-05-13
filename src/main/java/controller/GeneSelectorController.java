@@ -3,14 +3,13 @@ package controller;
 import annotation.Gene;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -25,14 +24,16 @@ import ui.Main;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.ResourceBundle;
 
-public class GeneSelectorController implements Initializable, InteractiveElementController {
-    private static final float GENE_SELECTOR_SCALE_FACTOR = 0.40f;
+import static javafx.application.Platform.runLater;
 
-    @FXML private VBox geneSelector;
+public class GeneSelectorController implements Initializable, InteractiveElementController {
+    private static final float GENE_SELECTOR_SCALE_FACTOR = 0.45f;
+
+    @FXML private ScrollPane geneSelector;
     @FXML private GridPane gridPane;
+    @FXML private TextField filterField;
     @FXML private TableView genesTable;
     @FXML private TableView shownGenesTable;
     @FXML private Button addAllButton;
@@ -41,17 +42,17 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     @FXML private Button clearAllButton;
 
     private Stage window;
-    private List<Gene> genes;
-    private List<Gene> shownGenes;
+    private ObservableList<Gene> genes;
+    private ObservableList<Gene> shownGenes;
 
     /**
-     * Sets up grid pane, window, gene and shown gene tables
+     * Sets up grid pane, window, genes and shown genes tables
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpGridPane();
-        setUpGenesTableView();
-        setUpShownGenesTableView();
+        setUpGenesTable();
+        setUpShownGenesTable();
         setUpWindow();
     }
 
@@ -60,6 +61,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      */
     public void disable() {
         genesTable.setDisable(true);
+        filterField.setDisable(true);
         shownGenesTable.setDisable(true);
         addAllButton.setDisable(true);
         addSelectedButton.setDisable(true);
@@ -72,6 +74,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      */
     public void enable() {
         genesTable.setDisable(false);
+        filterField.setDisable(false);
         shownGenesTable.setDisable(false);
         addAllButton.setDisable(false);
         addSelectedButton.setDisable(false);
@@ -86,15 +89,16 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     public void display() {
         window.hide();
         window.show();
+        runLater(() -> geneSelector.requestFocus());
     }
 
     /**
-     * Clears all genes in genes table, shown genes table, and clears the isoform plot
+     * Clears all genes in genes table, clears genes being shown and filter field
      */
-    public void clearAllGenes() {
-        ControllerMediator.getInstance().removeGenesFromIsoformPlot(shownGenes);
+    public void clearGeneSelector() {
+        clearShownGenes();
         genes.clear();
-        shownGenes.clear();
+        filterField.setText(null);
     }
 
     /**
@@ -202,44 +206,28 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         column3.setPercentWidth(40);
         gridPane.getColumnConstraints().addAll(column1, column2, column3);
         RowConstraints row1 = new RowConstraints();
-        row1.setPercentHeight(100);
-        gridPane.getRowConstraints().add(row1);
+        RowConstraints row2 = new RowConstraints();
+        gridPane.getRowConstraints().addAll(row1, row2);
     }
 
     /**
-     * Gives genes table two columns (one for gene ID, one for gene name)
-     * Genes table is populated with all parsed genes
+     * Sets up genes table's columns, items, and makes table searchable
      */
-    private void setUpGenesTableView() {
+    private void setUpGenesTable() {
         genesTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        genes = FXCollections.observableArrayList();
-        genesTable.setItems((ObservableList) genes);
-        TableColumn<Gene,String> geneIDCol = new TableColumn("Gene ID");
-        geneIDCol .setCellValueFactory(new PropertyValueFactory("id"));
-        TableColumn<Gene,String> geneName = new TableColumn("Gene Name");
-        geneName.setCellValueFactory(new PropertyValueFactory("name"));
-        TableColumn<Gene,String> numIsoforms = new TableColumn("# Isoforms");
-        numIsoforms.setCellValueFactory(new PropertyValueFactory("numIsoforms"));
-
-        genesTable.getColumns().setAll(geneIDCol , geneName, numIsoforms);
-        genesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        setUpGenesTableColumns();
+        setGenesTableItemsAndMakeSearchable();
     }
 
     /**
-     * Gives shown genes table two columns (one for gene ID, one for gene name)
+     * Sets up shown genes table's columns
      * Shown genes table is populated with all genes users has selected to display
      */
-    private void setUpShownGenesTableView() {
+    private void setUpShownGenesTable() {
         shownGenesTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        setUpShownGenesTableColumns();
         shownGenes = FXCollections.observableArrayList();
-        shownGenesTable.setItems((ObservableList) shownGenes);
-        TableColumn<Gene,String> geneIDCol = new TableColumn("Gene ID");
-        geneIDCol .setCellValueFactory(new PropertyValueFactory("id"));
-        TableColumn<Gene,String> geneName = new TableColumn("Gene Name");
-        geneName.setCellValueFactory(new PropertyValueFactory("name"));
-
-        shownGenesTable.getColumns().setAll(geneIDCol , geneName);
-        shownGenesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        shownGenesTable.setItems(shownGenes);
     }
 
     /**
@@ -255,6 +243,59 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             event.consume();
             window.hide();
         });
+    }
+
+    /**
+     * Gives genes table 3 columns (one for gene ID, one for gene name and one for
+     * number of isoforms)
+     */
+    private void setUpGenesTableColumns() {
+        TableColumn<Gene,String> geneIDCol = new TableColumn("Gene ID");
+        geneIDCol .setCellValueFactory(new PropertyValueFactory("id"));
+        TableColumn<Gene,String> geneName = new TableColumn("Gene Name");
+        geneName.setCellValueFactory(new PropertyValueFactory("name"));
+        TableColumn<Gene,String> numIsoforms = new TableColumn("# Isoforms");
+        numIsoforms.setCellValueFactory(new PropertyValueFactory("numIsoforms"));
+        genesTable.getColumns().setAll(geneIDCol , geneName, numIsoforms);
+        genesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    /**
+     * Sets genes table to contain all parsed genes. When something is typed into the
+     * filter field, filters gene table's list of genes to only contain genes whose names
+     * or IDs start with the filter field's text
+     */
+    private void setGenesTableItemsAndMakeSearchable() {
+        genes = FXCollections.observableArrayList();
+        FilteredList<Gene> filteredGenes = new FilteredList<>(genes, gene -> true);
+        filterField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredGenes.setPredicate(gene -> {
+                // If filter text is empty, display all genes
+                if (newValue == null || newValue.isEmpty())
+                    return true;
+                // Compare gene name and id of every gene with filter text.
+                String lowerCaseFilter = newValue.toLowerCase();
+                if (gene.getName().toLowerCase().startsWith(lowerCaseFilter))
+                    return true;
+                else return gene.getId().toLowerCase().startsWith(lowerCaseFilter);
+            });
+        });
+        // allows genes in genes table to be sortable
+        SortedList<Gene> sortedGenes = new SortedList<>(filteredGenes);
+        sortedGenes.comparatorProperty().bind(genesTable.comparatorProperty());
+        genesTable.setItems(sortedGenes);
+    }
+
+    /**
+     * Gives shown genes table two columns (one for gene ID, one for gene name)
+     */
+    private void setUpShownGenesTableColumns() {
+        TableColumn<Gene,String> geneIDCol = new TableColumn("Gene ID");
+        geneIDCol .setCellValueFactory(new PropertyValueFactory("id"));
+        TableColumn<Gene,String> geneName = new TableColumn("Gene Name");
+        geneName.setCellValueFactory(new PropertyValueFactory("name"));
+        shownGenesTable.getColumns().setAll(geneIDCol , geneName);
+        shownGenesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
     private void disableAssociatedFunctionality() {
