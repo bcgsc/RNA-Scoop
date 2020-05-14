@@ -14,7 +14,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
-import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
@@ -238,7 +237,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         window = new Stage();
         window.setTitle("RNA-Scoop - Gene Selector");
         window.getIcons().add(Main.RNA_SCOOP_LOGO);
-        setWindowSize();
+        setWindowSizeAndDisplay();
         window.setOnCloseRequest(event -> {
             event.consume();
             window.hide();
@@ -268,18 +267,16 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     private void setGenesTableItemsAndMakeSearchable() {
         genes = FXCollections.observableArrayList();
         FilteredList<Gene> filteredGenes = new FilteredList<>(genes, gene -> true);
-        filterField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredGenes.setPredicate(gene -> {
-                // If filter text is empty, display all genes
-                if (newValue == null || newValue.isEmpty())
-                    return true;
-                // Compare gene name and id of every gene with filter text.
-                String lowerCaseFilter = newValue.toLowerCase();
-                if (gene.getName().toLowerCase().startsWith(lowerCaseFilter))
-                    return true;
-                else return gene.getId().toLowerCase().startsWith(lowerCaseFilter);
-            });
-        });
+        filterField.textProperty().addListener((observable, oldValue, newValue) -> filteredGenes.setPredicate(gene -> {
+            // If filter text is empty, display all genes
+            if (newValue == null || newValue.isEmpty())
+                return true;
+            // Compare gene name and id of every gene with filter text.
+            String lowerCaseFilter = newValue.toLowerCase();
+            if (gene.getName().toLowerCase().startsWith(lowerCaseFilter))
+                return true;
+            else return gene.getId().toLowerCase().startsWith(lowerCaseFilter);
+        }));
         // allows genes in genes table to be sortable
         SortedList<Gene> sortedGenes = new SortedList<>(filteredGenes);
         sortedGenes.comparatorProperty().bind(genesTable.comparatorProperty());
@@ -314,7 +311,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
     }
 
-    private void setWindowSize() {
+    private void setWindowSizeAndDisplay() {
         Rectangle2D screen = Screen.getPrimary().getBounds();
         window.setScene(new Scene(geneSelector, screen.getWidth() * GENE_SELECTOR_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_SCALE_FACTOR));
     }

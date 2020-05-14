@@ -11,9 +11,14 @@
       fx:id="tSNEPlotPanel" style="-fx-background-color: #fafafa;">
     <HBox>
         <VBox.margin>
-            <Insets top="10" left="10"/>
+            <Insets top="10" left="10" right="10"/>
         </VBox.margin>
-        <Button fx:id="drawTSNEButton" onAction="#handleDrawTSNEButtonAction" text="Draw t-SNE"/>
+        <Button fx:id="changeClusterLabelsButton" onAction="#handleChangeClusterLabelsButton" text="Change Cluster Labels"/>
+        <Button fx:id="drawTSNEButton" onAction="#handleDrawTSNEButton" text="Draw t-SNE">
+            <HBox.margin>
+                <Insets left="10"/>
+            </HBox.margin>
+        </Button>
         <Text text="Perplexity: ">
             <HBox.margin>
                 <Insets top="6" left="10"/>
@@ -27,5 +32,4 @@
         </VBox.margin>
         <SwingNode fx:id="swingNode"/>
     </StackPane>
-
 </VBox>

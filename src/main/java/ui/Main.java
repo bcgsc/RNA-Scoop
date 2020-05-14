@@ -24,6 +24,7 @@ public class Main extends Application {
         FXMLLoader tSNEPlotLoader = new FXMLLoader(getClass().getResource("/fxml/main/tsneplot.fxml"));
         FXMLLoader geneSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/geneselector.fxml"));
         FXMLLoader tpmGradientLoader = new FXMLLoader(getClass().getResource("/fxml/tpmgradient.fxml"));
+        FXMLLoader clusterManagerLoader = new FXMLLoader(getClass().getResource("/fxml/clustermanager.fxml"));
 
         mainLoader.load();
         Parent console = consoleLoader.load();
@@ -31,9 +32,11 @@ public class Main extends Application {
         Parent tSNEPlot = tSNEPlotLoader.load();
         geneSelectorLoader.load();
         tpmGradientLoader.load();
+        clusterManagerLoader.load();
 
         registerControllers(mainLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
-                            tSNEPlotLoader.getController(), geneSelectorLoader.getController(), tpmGradientLoader.getController());
+                            tSNEPlotLoader.getController(), geneSelectorLoader.getController(), tpmGradientLoader.getController(),
+                            clusterManagerLoader.getController());
         ControllerMediator.getInstance().initializeMain(console, isoformPlot, tSNEPlot);
         loadPreviousSession();
     }
@@ -50,13 +53,15 @@ public class Main extends Application {
      * Registers controllers with mediator
      */
     private void registerControllers(MainController mainController, ConsoleController consoleController, IsoformPlotController isoformPlotController,
-                                     TSNEPlotController tSNEPlotController, GeneSelectorController geneSelectorController, TPMGradientAdjusterController tpmGradientAdjusterController) {
+                                     TSNEPlotController tSNEPlotController, GeneSelectorController geneSelectorController,
+                                     TPMGradientAdjusterController tpmGradientAdjusterController, ClusterManagerController clusterManagerController) {
         ControllerMediator.getInstance().registerMainController(mainController);
         ControllerMediator.getInstance().registerConsoleController(consoleController);
         ControllerMediator.getInstance().registerIsoformPlotController(isoformPlotController);
         ControllerMediator.getInstance().registerTSNEPlotController(tSNEPlotController);
         ControllerMediator.getInstance().registerGeneSelectorController(geneSelectorController);
         ControllerMediator.getInstance().registerTPMGradientController(tpmGradientAdjusterController);
+        ControllerMediator.getInstance().registerClusterManagerController(clusterManagerController);
     }
 
     /**

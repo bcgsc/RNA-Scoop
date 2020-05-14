@@ -18,7 +18,7 @@
         </Button>
     </HBox>
     <ScrollPane fx:id="scrollPane" fitToWidth="true" prefHeight="1000" prefWidth="585"
-                style="-fx-background: #ffffff; -fx-border-color: #adadad;">
+                style="-fx-background-color: #ffffff; -fx-border-color: #adadad;">
         <VBox.margin>
             <Insets topRightBottomLeft="10"/>
         </VBox.margin>

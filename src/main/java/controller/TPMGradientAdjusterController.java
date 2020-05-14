@@ -345,7 +345,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         window = new Stage();
         window.setTitle("RNA-Scoop - TPM Gradient Adjuster");
         window.getIcons().add(Main.RNA_SCOOP_LOGO);
-        setWindowSize();
+        setWindowSizeAndDisplay();
         window.setOnCloseRequest(event -> {
             event.consume();
             window.hide();
@@ -357,7 +357,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         scaleChooser.getItems().addAll(SCALE_CHOOSER_LINEAR_OPTION, SCALE_CHOOSER_EXPONENTIAL_OPTION);
     }
 
-    private void setWindowSize() {
+    private void setWindowSizeAndDisplay() {
         Rectangle2D screen = Screen.getPrimary().getBounds();
         window.setScene(new Scene(tpmGradientAdjuster, screen.getWidth() * TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR, screen.getHeight() * TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR));
     }

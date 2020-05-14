@@ -1,0 +1,4 @@
+/* Styling that allows scroll-panes to be transparent and -fx-background-color to work */
+.scroll-pane > .viewport {
+   -fx-background-color: transparent;
+}

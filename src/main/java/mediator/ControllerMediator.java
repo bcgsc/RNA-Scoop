@@ -15,6 +15,7 @@ public class ControllerMediator implements Mediator{
     private TSNEPlotController tsnePlotController;
     private GeneSelectorController geneSelectorController;
     private TPMGradientAdjusterController tpmGradientAdjusterController;
+    private ClusterManagerController clusterManagerController;
 
     // Register controllers
     @Override
@@ -45,6 +46,11 @@ public class ControllerMediator implements Mediator{
     @Override
     public void registerTPMGradientController(TPMGradientAdjusterController tpmGradientAdjusterController) {
         this.tpmGradientAdjusterController = tpmGradientAdjusterController;
+    }
+
+    @Override
+    public void registerClusterManagerController(ClusterManagerController clusterManagerController) {
+        this.clusterManagerController = clusterManagerController;
     }
 
     // Change Main Display
@@ -131,6 +137,10 @@ public class ControllerMediator implements Mediator{
     }
 
     //Display t-SNE
+    public void displayClusterManager() {
+        clusterManagerController.display();
+    }
+
     public void clearTSNEPlot() {
         tsnePlotController.clearTSNEPlot();
     }

@@ -9,4 +9,5 @@ public interface Mediator {
     void registerTSNEPlotController(TSNEPlotController tsnePlotController);
     void registerGeneSelectorController(GeneSelectorController geneSelectorController);
     void registerTPMGradientController(TPMGradientAdjusterController tpmGradientAdjusterController);
+    void registerClusterManagerController(ClusterManagerController clusterManagerController);
 }

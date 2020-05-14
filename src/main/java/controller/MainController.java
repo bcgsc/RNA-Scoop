@@ -605,14 +605,20 @@ public class MainController implements InteractiveElementController {
         window = new Stage();
         window.setTitle("RNA-Scoop");
         window.getIcons().add(Main.RNA_SCOOP_LOGO);
-        setWindowSize();
+        setWindowSizeAndDisplay();
         window.setOnCloseRequest(event -> Platform.exit());
         window.show();
     }
 
-    private void setWindowSize() {
+    /**
+     * Sets size of window and scene it displays, adds important styling for all scroll-panes
+     * in the scene
+     */
+    private void setWindowSizeAndDisplay() {
         Rectangle2D screen = Screen.getPrimary().getBounds();
-        window.setScene(new Scene(borderPane, screen.getWidth() * MAIN_SCALE_FACTOR, screen.getHeight() * MAIN_SCALE_FACTOR));
+        Scene scene = new Scene(borderPane, screen.getWidth() * MAIN_SCALE_FACTOR, screen.getHeight() * MAIN_SCALE_FACTOR);
+        scene.getStylesheets().add("/css/scrollpane.css");
+        window.setScene(scene);
     }
 
     /**

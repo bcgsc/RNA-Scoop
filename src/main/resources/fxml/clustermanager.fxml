@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableView?>
+<ScrollPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.ClusterManagerController"
+            fx:id="clusterController" style="-fx-background-color: #fcfcfc;" fitToWidth="true" fitToHeight="true">
+    <VBox>
+       <VBox VBox.vgrow="ALWAYS" style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;">
+           <VBox.margin>
+               <Insets topRightBottomLeft="10"/>
+           </VBox.margin>
+           <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+               <VBox.margin>
+                   <Insets topRightBottomLeft="20"/>
+               </VBox.margin>
+               <Text text="Cluster Label Sets" style="-fx-font-size: 15;"/>
+               <TableView VBox.vgrow="ALWAYS">
+                   <VBox.margin>
+                       <Insets top="10" bottom="10"/>
+                   </VBox.margin>
+               </TableView>
+               <HBox alignment="CENTER">
+                   <Button text="Add Label Set">
+                       <HBox.margin>
+                           <Insets right="10"/>
+                       </HBox.margin>
+                   </Button>
+                   <Button text="Remove Selected Set"/>
+               </HBox>
+           </VBox>
+       </VBox>
+    </VBox>
+</ScrollPane>

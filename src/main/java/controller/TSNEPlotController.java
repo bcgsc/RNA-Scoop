@@ -13,6 +13,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -56,6 +57,7 @@ import static jdk.nashorn.internal.objects.Global.Infinity;
 
 public class TSNEPlotController implements Initializable, InteractiveElementController, SelectionChangeListener<XYCursor> {
     @FXML private VBox tSNEPlotPanel;
+    @FXML private Button changeClusterLabelsButton;
     @FXML private Button drawTSNEButton;
     @FXML private TextField perplexity;
     @FXML private SwingNode swingNode;
@@ -63,7 +65,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
     private TSNEPlotInfo tSNEPlotInfo;
     private ChartPanel tSNEPlot;
-    private Pane tSNEPlotLegend;
+    private ScrollPane tSNEPlotLegend;
     private CellSelectionManager cellSelectionManager;
     private XYSeriesCollection cellsInTSNEPlot;
 
@@ -93,6 +95,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      * Disables all functionality
      */
     public void disable() {
+        changeClusterLabelsButton.setDisable(true);
         drawTSNEButton.setDisable(true);
         perplexity.setDisable(true);
     }
@@ -101,6 +104,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      * Enables all functionality
      */
     public void enable() {
+        changeClusterLabelsButton.setDisable(false);
         drawTSNEButton.setDisable(false);
         perplexity.setDisable(false);
     }
@@ -209,7 +213,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      * selected isoforms
      */
     @FXML
-    protected void handleDrawTSNEButtonAction() {
+    protected void handleDrawTSNEButton() {
         clearTSNEPlot();
         ControllerMediator.getInstance().deselectAllIsoforms();
         disableAssociatedFunctionality();
@@ -220,6 +224,14 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             enableAssociatedFunctionality();
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the t-SNE plot");
         }
+    }
+
+    /**
+     * Opens up cluster controller window when handle change cluster labels button is pressed
+     */
+    @FXML
+    protected void handleChangeClusterLabelsButton() {
+        ControllerMediator.getInstance().displayClusterManager();
     }
 
     private void disableAssociatedFunctionality() {
@@ -665,14 +677,15 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
         private void addLegend() {
             runLater(() -> {
-                Pane legend = LegendMaker.createLegend(true, false, true, true,
-                        LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING);
-                StackPane.setAlignment(legend, Pos.TOP_RIGHT);
-                legend.setPickOnBounds(false);
-                legend.setMaxWidth(-Infinity);
-                legend.setMaxHeight(-Infinity);
-                tSNEPlotHolder.getChildren().add(legend);
-                tSNEPlotLegend = legend;
+                tSNEPlotLegend = new ScrollPane();
+                tSNEPlotLegend.setContent(LegendMaker.createLegend(true, false, true, true,
+                        LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
+                StackPane.setAlignment(tSNEPlotLegend, Pos.TOP_RIGHT);
+                tSNEPlotLegend.setPickOnBounds(false);
+                tSNEPlotLegend.setMaxWidth(-Infinity);
+                tSNEPlotLegend.setMaxHeight(-Infinity);
+                tSNEPlotHolder.getChildren().add(tSNEPlotLegend);
+                tSNEPlotLegend.setStyle("-fx-background-color: transparent;");
             });
         }
 
