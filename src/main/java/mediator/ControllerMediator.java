@@ -136,7 +136,24 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.deselectAllIsoforms();
     }
 
-    //Display t-SNE
+    // Label Sets Functions
+    public void clearLabelSets() {
+        clusterManagerController.clearLabelSets();
+    }
+
+    public void addLabelSet(Map<Integer, ClusterManagerController.Cluster> cellMap) {
+        clusterManagerController.addLabelSet(cellMap);
+    }
+
+    public void clearLabelSetClusterCells() {
+        clusterManagerController.clearLabelSetClusterCells();
+    }
+
+    public void updateLabelSetClusterCells() {
+        clusterManagerController.updateLabelSetClusterCells();
+    }
+
+    // Display t-SNE
     public void displayClusterManager() {
         clusterManagerController.display();
     }
@@ -184,6 +201,10 @@ public class ControllerMediator implements Mediator{
         return geneSelectorController.getShownGenes();
     }
 
+    public Map<Integer, TSNEPlotController.CellDataItem> getCellMap() {
+        return tsnePlotController.getCellMap();
+    }
+
     public boolean areCellsSelected () {
         return tsnePlotController.areCellsSelected();
     }
@@ -196,16 +217,32 @@ public class ControllerMediator implements Mediator{
         return tpmGradientAdjusterController.getColorFromTPMGradient(expression);
     }
 
-    public double getIsoformExpressionLevelInCluster(String isoformID, TSNEPlotController.Cluster cluster, boolean onlySelected) {
-        return  tsnePlotController.getIsoformExpressionLevelInCluster(isoformID, cluster, onlySelected);
+    public ClusterManagerController.LabelSet getLabelSetInUse() {
+        return clusterManagerController.getLabelSetInUse();
     }
 
-    public Collection<TSNEPlotController.Cluster> getClusters(boolean onlySelected) {
-        return tsnePlotController.getClusters(onlySelected);
+    public int getNumCellsToPlot() {
+        return tsnePlotController.getNumCellsToPlot();
     }
 
-    public double getFractionOfExpressingCells(String isoformID, TSNEPlotController.Cluster cluster, boolean onlySelected) {
-        return tsnePlotController.getFractionOfExpressingCells(isoformID, cluster, onlySelected);
+    public double getIsoformExpressionLevelInCluster(String isoformID, ClusterManagerController.Cluster cluster, boolean onlySelected) {
+        return  clusterManagerController.getIsoformExpressionLevelInCluster(isoformID, cluster, onlySelected);
+    }
+
+    public List<ClusterManagerController.Cluster> getAllClusters() {
+        return clusterManagerController.getAllClusters();
+    }
+
+    public List<ClusterManagerController.Cluster> getSelectedClusters() {
+        return tsnePlotController.getSelectedClusters();
+    }
+
+    public Collection<TSNEPlotController.CellDataItem> getSelectedCellsInCluster(ClusterManagerController.Cluster cluster) {
+        return tsnePlotController.getSelectedCellsInCluster(cluster);
+    }
+
+    public double getFractionOfExpressingCells(String isoformID, ClusterManagerController.Cluster cluster, boolean onlySelected) {
+        return clusterManagerController.getFractionOfExpressingCells(isoformID, cluster, onlySelected);
     }
 
     public boolean isReverseComplementing() {
@@ -257,9 +294,12 @@ public class ControllerMediator implements Mediator{
     }
 
     //Setters
-    public void setTSNEPlotInfo(double[][] cellIsoformMatrix, HashMap<String, Integer> isoformIndexMap,
-                                ArrayList<String> cellLabels) {
-        tsnePlotController.setTSNEPlotInfo(cellIsoformMatrix, isoformIndexMap, cellLabels);
+    public void setCellIsoformExpressionMatrix(double[][] cellIsoformExpressionMatrix) {
+        tsnePlotController.setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
+    }
+
+    public void setIsoformIndexMap(HashMap<String, Integer> isoformIndexMap) {
+        tsnePlotController.setIsoformIndexMap(isoformIndexMap);
     }
 
     public void setRecommendedMinTPM(int recommendedMinTPM) {

@@ -4,6 +4,7 @@ import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
 import com.jujutsu.utils.MatrixUtils;
+import controller.ClusterManagerController;
 import exceptions.*;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -219,9 +221,9 @@ public class Parser {
     private static class TSNEInfoLoader {
 
         public static void loadTSNEInfo(String pathToMatrix, String pathToIsoformLabels, String pathToCellLabels) throws IOException, RNAScoopException {
-            ControllerMediator.getInstance().setTSNEPlotInfo(getCellIsoformExpressionMatrix(pathToMatrix),
-                                                             getIsoformIndexMap(pathToIsoformLabels),
-                                                             getCellLabels(pathToCellLabels));
+            ControllerMediator.getInstance().setCellIsoformExpressionMatrix(getCellIsoformExpressionMatrix(pathToMatrix));
+            ControllerMediator.getInstance().setIsoformIndexMap(getIsoformIndexMap(pathToIsoformLabels));
+            ControllerMediator.getInstance().addLabelSet(getCellLabels(pathToCellLabels));
         }
 
         /**
@@ -260,18 +262,33 @@ public class Parser {
         }
 
         /**
-         * Creates list of groups each cell in matrix belongs to. If cell represented by the first
-         * row in the matrix is in group "T Cells", cellLabels[0] = "T Cells"
+         * Creates map of cells (represented by their numbers) and the clusters they belong to.
+         * If the first line of the cell labels file says "T Cells", the cell represented by the first
+         * row of the matrix should be in the cluster labelled "T Cells". The returned map, will map 0
+         * to a cluster with label "T Cells"
          */
-        private static ArrayList<String> getCellLabels(String pathToCellLabels) throws IOException {
+        private static Map<Integer, ClusterManagerController.Cluster> getCellLabels(String pathToCellLabels) throws IOException {
+            Map<Integer, ClusterManagerController.Cluster> cellMap = new HashMap<>();
+            Map<String, ClusterManagerController.Cluster> clusterMap = new HashMap<>();
+            String currentLabel;
+            ClusterManagerController.Cluster cluster;
+            int cellNumber = 0;
+            int clusterNumber = 1;
+
             File cellLabelsFile = new File(pathToCellLabels);
             BufferedReader reader= new BufferedReader(new FileReader(cellLabelsFile));
-            ArrayList<String> cellLabels = new ArrayList<>();
-            String currentLabel;
             while ((currentLabel = reader.readLine()) != null) {
-                cellLabels.add(currentLabel);
+                if (clusterMap.containsKey(currentLabel)) {
+                    cluster = clusterMap.get(currentLabel);
+                } else {
+                    cluster = new ClusterManagerController.Cluster(currentLabel, clusterNumber);
+                    clusterMap.put(currentLabel, cluster);
+                    clusterNumber++;
+                }
+                cellMap.put(cellNumber, cluster);
+                cellNumber++;
             }
-            return cellLabels;
+            return cellMap;
         }
     }
 }

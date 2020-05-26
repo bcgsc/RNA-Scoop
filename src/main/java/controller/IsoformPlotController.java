@@ -714,10 +714,17 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         public static double getDotPlotWidth() {
             if (shouldDrawDotPlot()) {
                 boolean onlySelected = ControllerMediator.getInstance().areCellsSelected();
-                int numSelectedClusters = ControllerMediator.getInstance().getClusters(onlySelected).size();
+                int numSelectedClusters = getClusters(onlySelected).size();
                 return numSelectedClusters * DOT_PLOT_COLUMN_WIDTH + (numSelectedClusters - 1) * DOT_PLOT_COLUMN_SPACING + GRAPHIC_SPACING;
             }
             return 0;
+        }
+
+        private static Collection<ClusterManagerController.Cluster> getClusters(boolean onlySelected) {
+            if (onlySelected)
+                return ControllerMediator.getInstance().getSelectedClusters();
+            else
+                return ControllerMediator.getInstance().getAllClusters();
         }
 
         private static void updateDotPlotRow(IsoformGroup isoformGroup) {
@@ -747,10 +754,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             double dotX = DOT_PLOT_COLUMN_WIDTH / 2;
             double dotY = DOT_PLOT_ROW_HEIGHT / 2;
             boolean onlySelected = ControllerMediator.getInstance().areCellsSelected();
-            Collection<TSNEPlotController.Cluster> clusterNumbers = ControllerMediator.getInstance().getClusters(onlySelected);
-            Iterator<TSNEPlotController.Cluster> iterator = clusterNumbers.iterator();
+            Collection<ClusterManagerController.Cluster> clusters = getClusters(onlySelected);
+            Iterator<ClusterManagerController.Cluster> iterator = clusters.iterator();
             while(iterator.hasNext()) {
-                TSNEPlotController.Cluster cluster = iterator.next();
+                ClusterManagerController.Cluster cluster = iterator.next();
                 Canvas dotPlotRowItem = new Canvas(DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT);
                 if (iterator.hasNext())
                     HBox.setMargin(dotPlotRowItem, new Insets(0, DOT_PLOT_COLUMN_SPACING, 0, 0));
@@ -766,7 +773,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
         }
 
-        private static double getDotSize(TSNEPlotController.Cluster cluster, IsoformGroup isoformGroup, boolean onlySelected) {
+        private static double getDotSize(ClusterManagerController.Cluster cluster, IsoformGroup isoformGroup, boolean onlySelected) {
             double fractionExpressingCells = ControllerMediator.getInstance().getFractionOfExpressingCells(isoformGroup.getIsoform().getId(), cluster, onlySelected);
             if (fractionExpressingCells <= 0.25)
                 return QUARTER_EXPRESS_DOT_SIZE;

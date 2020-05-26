@@ -1,5 +1,6 @@
 package ui;
 
+import controller.ClusterManagerController;
 import controller.TSNEPlotController;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
@@ -12,8 +13,8 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import mediator.ControllerMediator;
 
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 public class LegendMaker {
     public static final double LIGHT_COLOR_LUMINENCE_LIMIT = 0.69;
@@ -27,11 +28,15 @@ public class LegendMaker {
         else
             legend = new HBox();
 
-        Collection<TSNEPlotController.Cluster> clusters = ControllerMediator.getInstance().getClusters(onlySelected);
+        List<ClusterManagerController.Cluster> clusters;
+        if (onlySelected)
+            clusters = ControllerMediator.getInstance().getSelectedClusters();
+        else
+            clusters = ControllerMediator.getInstance().getAllClusters();
 
-        Iterator<TSNEPlotController.Cluster> iterator = clusters.iterator();
+        Iterator<ClusterManagerController.Cluster> iterator = clusters.iterator();
         while(iterator.hasNext()) {
-            TSNEPlotController.Cluster cluster= iterator.next();
+            ClusterManagerController.Cluster cluster= iterator.next();
             Canvas legendCircle = createLegendCircle(dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
             legend.getChildren().add(legendCircle);
             HBox legendElement = new HBox();
@@ -60,12 +65,12 @@ public class LegendMaker {
     }
 
     private static Canvas createLegendCircle(double dotSize, double circleCanvasWidth, double circleCanvasHeight,
-                                             TSNEPlotController.Cluster cluster) {
+                                             ClusterManagerController.Cluster cluster) {
         Canvas legendCircle = new Canvas(circleCanvasWidth, circleCanvasHeight);
         double circleX = circleCanvasWidth / 2;
         double circleY = circleCanvasHeight / 2;
         GraphicsContext graphicsContext = legendCircle.getGraphicsContext2D();
-        Color circleColor = cluster.getColor();
+        Color circleColor = cluster.getJavaFXColor();
         // draw circle
         graphicsContext.setFill(circleColor);
         graphicsContext.fillOval(circleX - dotSize / 2, circleY - dotSize / 2, dotSize, dotSize);

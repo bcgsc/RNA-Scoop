@@ -11,6 +11,7 @@ import persistance.SessionIO;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.*;
 
 
 public class Main extends Application {
@@ -33,6 +34,7 @@ public class Main extends Application {
         geneSelectorLoader.load();
         tpmGradientLoader.load();
         clusterManagerLoader.load();
+        Map<String, Integer> map = new HashMap<>();
 
         registerControllers(mainLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
                             tSNEPlotLoader.getController(), geneSelectorLoader.getController(), tpmGradientLoader.getController(),

@@ -6,7 +6,7 @@
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ListView?>
 <ScrollPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controller.ClusterManagerController"
             fx:id="clusterController" style="-fx-background-color: #fcfcfc;" fitToWidth="true" fitToHeight="true">
@@ -20,11 +20,11 @@
                    <Insets topRightBottomLeft="20"/>
                </VBox.margin>
                <Text text="Cluster Label Sets" style="-fx-font-size: 15;"/>
-               <TableView VBox.vgrow="ALWAYS">
+               <ListView fx:id="labelSetsListView" VBox.vgrow="ALWAYS">
                    <VBox.margin>
                        <Insets top="10" bottom="10"/>
                    </VBox.margin>
-               </TableView>
+               </ListView>
                <HBox alignment="CENTER">
                    <Button text="Add Label Set">
                        <HBox.margin>
