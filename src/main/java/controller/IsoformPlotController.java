@@ -126,6 +126,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         DotPlot.updateDotPlot();
     }
 
+    public void updateDotPlot() {
+        DotPlot.updateDotPlot();
+    }
+
     public void deselectAllIsoforms() {
         selectionModel.clearSelectedIsoformGraphics();
     }

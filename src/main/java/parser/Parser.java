@@ -13,10 +13,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -268,12 +265,12 @@ public class Parser {
          * to a cluster with label "T Cells"
          */
         private static Map<Integer, ClusterManagerController.Cluster> getCellLabels(String pathToCellLabels) throws IOException {
-            Map<Integer, ClusterManagerController.Cluster> cellMap = new HashMap<>();
+            Map<Integer, ClusterManagerController.Cluster> cellMap = new LinkedHashMap<>();
             Map<String, ClusterManagerController.Cluster> clusterMap = new HashMap<>();
+
             String currentLabel;
             ClusterManagerController.Cluster cluster;
             int cellNumber = 0;
-            int clusterNumber = 1;
 
             File cellLabelsFile = new File(pathToCellLabels);
             BufferedReader reader= new BufferedReader(new FileReader(cellLabelsFile));
@@ -281,9 +278,8 @@ public class Parser {
                 if (clusterMap.containsKey(currentLabel)) {
                     cluster = clusterMap.get(currentLabel);
                 } else {
-                    cluster = new ClusterManagerController.Cluster(currentLabel, clusterNumber);
+                    cluster = new ClusterManagerController.Cluster(currentLabel);
                     clusterMap.put(currentLabel, cluster);
-                    clusterNumber++;
                 }
                 cellMap.put(cellNumber, cluster);
                 cellNumber++;

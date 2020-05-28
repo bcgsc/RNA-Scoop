@@ -1,39 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.text.Text?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.ListView?>
-<ScrollPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controller.ClusterManagerController"
-            fx:id="clusterController" style="-fx-background-color: #fcfcfc;" fitToWidth="true" fitToHeight="true">
-    <VBox>
-       <VBox VBox.vgrow="ALWAYS" style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;">
+<ScrollPane fx:id="clusterController" fitToHeight="true" fitToWidth="true" style="-fx-background-color: #fcfcfc;" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ClusterManagerController">
+    <VBox fx:id="mainView">
+       <VBox style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
            <VBox.margin>
-               <Insets topRightBottomLeft="10"/>
+               <Insets topRightBottomLeft="10" />
            </VBox.margin>
            <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
                <VBox.margin>
-                   <Insets topRightBottomLeft="20"/>
+                   <Insets topRightBottomLeft="20" />
                </VBox.margin>
-               <Text text="Cluster Label Sets" style="-fx-font-size: 15;"/>
+               <Text style="-fx-font-size: 15;" text="Cluster Label Sets" />
                <ListView fx:id="labelSetsListView" VBox.vgrow="ALWAYS">
                    <VBox.margin>
-                       <Insets top="10" bottom="10"/>
+                       <Insets bottom="10" top="10" />
                    </VBox.margin>
                </ListView>
                <HBox alignment="CENTER">
-                   <Button text="Add Label Set">
+                   <Button onAction="#handleAddLabelSetButton" text="Add New">
                        <HBox.margin>
-                           <Insets right="10"/>
+                           <Insets right="10" />
                        </HBox.margin>
                    </Button>
-                   <Button text="Remove Selected Set"/>
+                   <Button onAction="#handleRemoveLabelSetButton" text="Remove Selected" />
                </HBox>
            </VBox>
        </VBox>
+    </VBox>
+    <VBox fx:id="addClusterView">
+        <VBox style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets topRightBottomLeft="10" />
+            </VBox.margin>
+            <VBox VBox.vgrow="ALWAYS">
+                <VBox.margin>
+                    <Insets topRightBottomLeft="20" />
+                </VBox.margin>
+                <HBox>
+                    <Text style="-fx-font-size: 13;" text="Name: ">
+                        <HBox.margin>
+                            <Insets right="3" top="3" />
+                        </HBox.margin>
+                    </Text>
+                    <TextField fx:id="labelSetAddingText" focusTraversable="false" prefWidth="150" promptText="Label Set Name" />
+                </HBox>
+                <HBox>
+                    <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+                        <Text style="-fx-font-size: 13; -fx-alignment: center" text="Cluster Labels">
+                            <VBox.margin>
+                                <Insets bottom="10" top="20" />
+                            </VBox.margin>
+                        </Text>
+                        <TableView fx:id="clustersTable" VBox.vgrow="ALWAYS">
+                            <VBox.margin>
+                                <Insets bottom="10" />
+                            </VBox.margin>
+                        </TableView>
+                        <Button onAction="#handleSaveLabelSetButton" text="Save Label Set" />
+                    </VBox>
+                    <VBox alignment="CENTER">
+                        <HBox.margin>
+                            <Insets left="10" />
+                        </HBox.margin>
+                        <Button onAction="#handleMakeClusterButton" text="Add New Cluster From&#10; Cell Selection" textAlignment="CENTER">
+                            <VBox.margin>
+                                <Insets bottom="10" />
+                            </VBox.margin>
+                        </Button>
+                        <Button onAction="#handleRemoveClusterButton" text="Remove Label" />
+                    </VBox>
+                </HBox>
+            </VBox>
+        </VBox>
     </VBox>
 </ScrollPane>

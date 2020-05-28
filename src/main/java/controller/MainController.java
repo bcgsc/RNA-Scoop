@@ -534,8 +534,8 @@ public class MainController implements InteractiveElementController {
      */
     private void loadFile() {
         ControllerMediator.getInstance().clearGeneSelector();
-        ControllerMediator.getInstance().clearLabelSets();
         ControllerMediator.getInstance().clearTSNEPlot();
+        ControllerMediator.getInstance().clearLabelSets();
         currentLoadedPath = null;
         disableAssociatedFunctionality();
         try {

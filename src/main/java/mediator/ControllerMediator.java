@@ -100,6 +100,10 @@ public class ControllerMediator implements Mediator{
             isoformPlotController.updateIsoformGraphicsAndDotPlot();
     }
 
+    public void updateDotPlot() {
+        isoformPlotController.updateDotPlot();
+    }
+
     public void updateGeneReverseComplementStatus() {
         isoformPlotController.updateGeneReverseComplementStatus();
     }
@@ -162,6 +166,26 @@ public class ControllerMediator implements Mediator{
         tsnePlotController.clearTSNEPlot();
     }
 
+    public void handleClusterAddedFromSelectedCells() {
+        tsnePlotController.handleClusterAddedFromSelectedCells();
+    }
+
+    public void handleRemovedCluster(ClusterManagerController.Cluster removedCluster, ClusterManagerController.Cluster clusterMergedInto) {
+        tsnePlotController.handleRemovedCluster(removedCluster, clusterMergedInto);
+    }
+
+    public void handleChangedLabelSetInUse(){
+        tsnePlotController.handleChangedLabelSetInUse();
+    }
+
+    public void redrawTSNEPlot() {
+        tsnePlotController.redrawTSNEPlot();
+    }
+
+    public void redrawTSNEPlotLegend() {
+        tsnePlotController.redrawTSNEPlotLegend();
+    }
+
     public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
         tsnePlotController.selectCellsIsoformsExpressedIn(isoformIDs);
     }
@@ -207,6 +231,10 @@ public class ControllerMediator implements Mediator{
 
     public boolean areCellsSelected () {
         return tsnePlotController.areCellsSelected();
+    }
+
+    public Set<TSNEPlotController.CellDataItem> getSelectedCells() {
+        return tsnePlotController.getSelectedCells();
     }
 
     public double getIsoformExpressionLevel(String isoformID, boolean selectedOnly) {

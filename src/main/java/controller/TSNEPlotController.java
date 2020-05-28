@@ -53,6 +53,15 @@ import static javafx.application.Platform.runLater;
 import static jdk.nashorn.internal.objects.Global.Infinity;
 
 public class TSNEPlotController implements Initializable, InteractiveElementController, SelectionChangeListener<XYCursor> {
+    private static final double LEGEND_DOT_SIZE = 14.5;
+    private static final double LEGEND_DOT_CANVAS_WIDTH = 16.5;
+    private static final double LEGEND_DOT_CANVAS_HEIGHT = 16.5;
+    private static final double LEGEND_ELEMENT_SPACING  = 5;
+    private static final boolean INCLUDE_LEGEND_LABELS = true;
+    private static final boolean LEGEND_SHOW_ONLY_SELECTED = false;
+    private static final boolean LEGEND_SHOW_BACKGROUND = true;
+    private static final boolean LEGEND_IS_VERTICAL = true;
+
     @FXML private VBox tSNEPlotPanel;
     @FXML private Button changeClusterLabelsButton;
     @FXML private Button drawTSNEButton;
@@ -135,6 +144,44 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
     }
 
+    public void handleClusterAddedFromSelectedCells() {
+        if (!isTSNEPlotCleared()) {
+            cellSelectionManager.handleClusterAddedFromSelectedCells();
+            redrawTSNEPlot();
+        }
+    }
+
+    public void handleRemovedCluster(ClusterManagerController.Cluster removedCluster, ClusterManagerController.Cluster clusterMergedInto) {
+        if (!isTSNEPlotCleared()) {
+            cellSelectionManager.handleRemovedCluster(removedCluster, clusterMergedInto);
+            redrawTSNEPlot();
+        }
+    }
+
+    public void handleChangedLabelSetInUse(){
+        if (!isTSNEPlotCleared()) {
+            cellSelectionManager.handleChangedLabelSet();
+            redrawTSNEPlot();
+        }
+    }
+
+    public void redrawTSNEPlot() {
+        if (!isTSNEPlotCleared()) {
+            tSNEPlot.getChart().setTitle(tSNEPlot.getChart().getTitle());
+            redrawTSNEPlotLegend();
+        }
+    }
+
+    public void redrawTSNEPlotLegend() {
+        tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
+                LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
+    }
+
+    public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
+        cellSelectionManager.selectCellsIsoformsExpressedIn(isoformIDs);
+    }
+
+
     public boolean isTSNEPlotCleared() {
         return tSNEPlot == null;
     }
@@ -150,7 +197,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     public int getNumCellsToPlot() {
-        return cellIsoformExpressionMatrix.length;
+        if (cellIsoformExpressionMatrix != null)
+            return cellIsoformExpressionMatrix.length;
+        return 0;
     }
 
     /**
@@ -161,7 +210,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         double isoformExpressionSum = 0;
         Collection<CellDataItem> cells;
         if (selectedOnly)
-            cells = cellSelectionManager.getSelectedCells().values().stream().flatMap(List::stream).collect(Collectors.toList());
+            cells = getSelectedCells();
         else
             cells = cellMap.values();
         int numCells = cells.size();
@@ -170,6 +219,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 isoformExpressionSum += cell.getIsoformExpressionLevel(isoformID);
 
         return isoformExpressionSum / numCells;
+    }
+
+    public Set<CellDataItem> getSelectedCells() {
+        if (isTSNEPlotCleared())
+            return new HashSet<>();
+        return cellSelectionManager.getSelectedCells().values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
     }
 
     public List<ClusterManagerController.Cluster> getSelectedClusters() {
@@ -182,11 +237,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         if (isTSNEPlotCleared())
             return new ArrayList<>();
         return cellSelectionManager.getSelectedCellsInCluster(cluster);
-    }
-
-
-    public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
-        cellSelectionManager.selectCellsIsoformsExpressedIn(isoformIDs);
     }
 
     /**
@@ -247,10 +297,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          * Each number is the level of expression of some isoform in this cell.
          */
         private double[] isoformExpressionLevels;
+        private int cellNumber;
 
-        private CellDataItem(Number x, Number y, double[] isoformExpressionLevels) {
+        private CellDataItem(Number x, Number y, double[] isoformExpressionLevels, int cellNumber) {
             super(x, y);
             this.isoformExpressionLevels = isoformExpressionLevels;
+            this.cellNumber = cellNumber;
         }
 
         /**
@@ -264,6 +316,10 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
             else
                 return 0;
+        }
+
+        public int getCellNumber() {
+            return cellNumber;
         }
     }
 
@@ -312,7 +368,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     private class CellSelectionManager implements SelectionManager {
         private DatasetExtensionManager extensionManager;
-        private HashMap<ClusterManagerController.Cluster, ArrayList<CellDataItem>> selectedCells;
+        private HashMap<ClusterManagerController.Cluster, Collection<CellDataItem>> selectedCells;
 
         public CellSelectionManager(DatasetExtensionManager extensionManager) {
             selectedCells = new HashMap<>();
@@ -320,7 +376,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
 
         public boolean isCellSelected(CellDataItem cellDataItem) {
-            for (ArrayList<CellDataItem> selectedCellsInCluster : selectedCells.values()) {
+            for (Collection<CellDataItem> selectedCellsInCluster : selectedCells.values()) {
                 if (selectedCellsInCluster.contains(cellDataItem))
                     return true;
             }
@@ -335,6 +391,38 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             if (selectedCells.containsKey(cluster))
                 return selectedCells.get(cluster);
             return new ArrayList<>();
+        }
+
+        public void handleClusterAddedFromSelectedCells() {
+            if (selectedCells.size() > 0) {
+                Collection<CellDataItem> selectedCellsSubset = selectedCells.values().iterator().next();
+                CellDataItem selectedCell = selectedCellsSubset.iterator().next();
+                ClusterManagerController.Cluster addCluster = ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(selectedCell.getCellNumber());
+                selectedCells.clear();
+                selectedCells.put(addCluster, addCluster.getCells());
+            }
+        }
+
+        public void handleRemovedCluster(ClusterManagerController.Cluster removedCluster, ClusterManagerController.Cluster clusterMergedWith) {
+            if (selectedCells.containsKey(removedCluster)) {
+                Collection<CellDataItem> cellsToMove = selectedCells.get(removedCluster);
+                Collection<CellDataItem> cellsInClusterMergedWith;
+                if (selectedCells.containsKey(clusterMergedWith)) {
+                    cellsInClusterMergedWith = selectedCells.get(clusterMergedWith);
+                } else {
+                    cellsInClusterMergedWith = new ArrayList<>();
+                    selectedCells.put(clusterMergedWith, cellsInClusterMergedWith);
+                }
+                cellsInClusterMergedWith.addAll(cellsToMove);
+                selectedCells.remove(removedCluster);
+            }
+        }
+
+        public void handleChangedLabelSet() {
+            Collection<CellDataItem> cellsToMove = selectedCells.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+            selectedCells.clear();
+            for (CellDataItem cell : cellsToMove)
+                addCellToSelectedCells(cell.getCellNumber());
         }
 
         /**
@@ -353,8 +441,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 }
             }
             unmuteAndTrigger();
-            tSNEPlot.repaint();
         }
+
 
         /**
          * Selects cell at given (x, y) coordinates (if cell exists there)
@@ -431,7 +519,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
         }
 
-        public HashMap<ClusterManagerController.Cluster, ArrayList<CellDataItem>> getSelectedCells() {
+        public HashMap<ClusterManagerController.Cluster, Collection<CellDataItem>> getSelectedCells() {
             return selectedCells;
         }
 
@@ -493,22 +581,18 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         private void addCellToSelectedCells(Integer cellNumber) {
             ClusterManagerController.Cluster cluster = ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(cellNumber);
             CellDataItem cell = cellMap.get(cellNumber);
+            Collection<CellDataItem> selectedCellsOfSameCluster;
             if (selectedCells.containsKey(cluster)) {
-                ArrayList<CellDataItem> selectedCellsOfSameCluster =  selectedCells.get(cluster);
-                selectedCellsOfSameCluster.add(cell);
+                selectedCellsOfSameCluster =  selectedCells.get(cluster);
             } else {
-                ArrayList<CellDataItem> selectedCellsOfSameCluster = new ArrayList<>();
-                selectedCellsOfSameCluster.add(cell);
+                selectedCellsOfSameCluster = new ArrayList<>();
                 selectedCells.put(cluster, selectedCellsOfSameCluster);
             }
+            selectedCellsOfSameCluster.add(cell);
         }
     }
 
     private class TSNEPlotMaker implements Runnable {
-        private double LEGEND_DOT_SIZE = 14.5;
-        private double LEGEND_DOT_CANVAS_WIDTH = 16.5;
-        private double LEGEND_DOT_CANVAS_HEIGHT = 16.5;
-        private double LEGEND_ELEMENT_SPACING  = 5;
 
         private XYSeriesCollection cellsInNewTSNEPlot;
 
@@ -600,12 +684,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         private void createDataSet(double[][] tSNEMatrix) {
             XYSeries cells = new XYSeries("Cells", false);
             cellsInNewTSNEPlot.addSeries(cells);
-            for (int cellIndex = 0; cellIndex < tSNEMatrix.length; cellIndex++) {
-                double cellX = tSNEMatrix[cellIndex][0];
-                double cellY = tSNEMatrix[cellIndex][1];
-                CellDataItem cellDataItem = new CellDataItem(cellX, cellY, cellIsoformExpressionMatrix[cellIndex]);
+            for (int cellNumber = 0; cellNumber < tSNEMatrix.length; cellNumber++) {
+                double cellX = tSNEMatrix[cellNumber][0];
+                double cellY = tSNEMatrix[cellNumber][1];
+                CellDataItem cellDataItem = new CellDataItem(cellX, cellY, cellIsoformExpressionMatrix[cellNumber], cellNumber);
                 cells.add(cellDataItem);
-                cellMap.put(cellIndex, cellDataItem);
+                cellMap.put(cellDataItem.getCellNumber(), cellDataItem);
             }
         }
 
@@ -625,8 +709,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         private void addLegend() {
             runLater(() -> {
                 tSNEPlotLegend = new ScrollPane();
-                tSNEPlotLegend.setContent(LegendMaker.createLegend(true, false, true, true,
-                        LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
+                tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SHOW_ONLY_SELECTED,
+                        LEGEND_SHOW_BACKGROUND, LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH,
+                        LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
                 StackPane.setAlignment(tSNEPlotLegend, Pos.TOP_RIGHT);
                 tSNEPlotLegend.setPickOnBounds(false);
                 tSNEPlotLegend.setMaxWidth(-Infinity);

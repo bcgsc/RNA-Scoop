@@ -1,9 +1,7 @@
 package ui;
 
 import controller.ClusterManagerController;
-import controller.TSNEPlotController;
 import javafx.geometry.Insets;
-import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.*;
@@ -42,7 +40,7 @@ public class LegendMaker {
             HBox legendElement = new HBox();
             legendElement.getChildren().add(legendCircle);
             if (includeLabels) {
-                Text label = new Text(cluster.getLabel());
+                Text label = new Text(cluster.getName());
                 legendElement.getChildren().add(label);
                 HBox.setMargin(legendCircle, new Insets(0, LEGEND_CIRCLE_LABEL_SPACING, 0, 0));
             }
