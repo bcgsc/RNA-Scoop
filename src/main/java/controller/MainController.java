@@ -640,7 +640,8 @@ public class MainController implements InteractiveElementController {
      * Automatically resizes path combo box when window is resized
      * Sets path combo box initial width
      * Allows dragging and dropping of files
-     * Makes it so files are loaded from path in combo box when ENTER is pressed
+     * Makes it so files are loaded from path in combo box when ENTER is pressed, and
+     * combo box is in focus
      * Removes initial focus from path combo box
      */
     private void setUpPathComboBox() {
@@ -649,7 +650,7 @@ public class MainController implements InteractiveElementController {
         setUpPathComboBoxDragNDrop();
         // adds listener to border pane so that focus can be on any or no elements and
         // the key press is still registered
-        borderPane.setOnKeyPressed(event -> {
+        pathComboBox.setOnKeyPressed(event -> {
             if (event.getCode().equals(KeyCode.ENTER))
                 loadFile();
         });
@@ -670,7 +671,7 @@ public class MainController implements InteractiveElementController {
 
     /**
      * Allows user to drag a file into path combo box and set its value to
-     * the file's path
+     * the file's path. Path combo box is in focus after
      *
      * If user drags multiple files, prints an error message to the console
      */
@@ -683,6 +684,7 @@ public class MainController implements InteractiveElementController {
         });
         pathComboBox.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
+            pathComboBox.requestFocus();
             if (db.getFiles().size() > 1)
                 ControllerMediator.getInstance().addConsoleErrorMessage("You cannot load more than one file at a time");
             else
