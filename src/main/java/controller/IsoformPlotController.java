@@ -15,6 +15,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -30,6 +31,8 @@ import util.Util;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static util.Util.roundToOneDecimal;
 
 public class IsoformPlotController implements Initializable, InteractiveElementController {
     private static final int SCROLLBAR_WIDTH = 16;
@@ -253,6 +256,19 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             geneGroup.redrawIsoformGraphics(reverseComplement, tSNEPlotCleared, cellsSelected);
     }
 
+    private void updateFirstGeneGroup() {
+        ObservableList<Node> geneGroupsList = geneGroups.getChildren();
+        if (geneGroupsList.size() > 0)
+            firstGeneGroup = (GeneGroup) geneGroupsList.get(0);
+        else
+            firstGeneGroup = null;
+    }
+
+    private static void addExpressionLevelToolTip(double expression, Node node) {
+        Tooltip tooltip = new Tooltip(roundToOneDecimal(expression) + " TPM");
+        Tooltip.install(node, tooltip);
+    }
+
     private void setScrollPaneWidthSpacing() {
         Insets geneGroupsMargin = VBox.getMargin(geneGroups);
         scrollPaneWidthSpacing = geneGroupsMargin.getLeft() + geneGroupsMargin.getRight();
@@ -267,14 +283,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     private void setGeneGroupsStyling() {
         geneGroups.setSpacing(10);
-    }
-
-    private void updateFirstGeneGroup() {
-        ObservableList<Node> geneGroupsList = geneGroups.getChildren();
-        if (geneGroupsList.size() > 0)
-            firstGeneGroup = (GeneGroup) geneGroupsList.get(0);
-        else
-            firstGeneGroup = null;
     }
 
 
@@ -466,9 +474,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         public void redrawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
-            setIsoformGraphicWidth(pixelsPerNucleotide);
-            clearGraphic(isoformGraphic);
-            drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
+            addIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
         }
 
         public void removeLabel() {
@@ -517,11 +523,17 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         private void addIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+            if (isoformGraphic != null)
+                makeIsoformGraphicNonSelectable();
             double isoformGraphicWidth = getIsoformGraphicWidth(pixelsPerNucleotide);
+            double expression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoform.getId(), cellsSelected);
+
             isoformGraphic = new Canvas(isoformGraphicWidth, EXON_HEIGHT + ISOFORM_GRAPHIC_SPACING);
             graphicsHolder.setLeft(isoformGraphic);
             rectangularSelection.addSelectableIsoformGraphic(isoformGraphic, isoform.getId());
-            drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
+            if (!tSNEPlotCleared)
+                addExpressionLevelToolTip(expression, isoformGraphic);
+            drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
         }
 
 
@@ -566,8 +578,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
 
-        private void drawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
-            Color isoformColor = getIsoformColor(!tSNEPlotCleared, cellsSelected);
+        private void drawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, double expression) {
+            Color isoformColor = getIsoformColor(!tSNEPlotCleared, expression);
             ArrayList<Exon> exons = isoform.getExons();
             Gene gene = isoform.getGene();
             GraphicsContext graphicsContext = isoformGraphic.getGraphicsContext2D();
@@ -589,12 +601,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
         }
 
-        private Color getIsoformColor(boolean shouldGetCustomIsoformColor, boolean cellsSelected) {
+        private Color getIsoformColor(boolean shouldGetCustomIsoformColor, double expression) {
             Color isoformColor = DEFAULT_EXON_COLOR;
-            if (shouldGetCustomIsoformColor) {
-                double expression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoform.getId(), cellsSelected);
+            if (shouldGetCustomIsoformColor)
                 isoformColor = ControllerMediator.getInstance().getColorFromTPMGradient(expression);
-            }
             return isoformColor;
         }
 
@@ -734,11 +744,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private static void updateDotPlotRow(IsoformGroup isoformGroup) {
             HBox dotPlotRow = isoformGroup.getDotPlotRow();
             boolean shouldDrawDotPlot = shouldDrawDotPlot();
-            if (shouldDrawDotPlot && dotPlotRow == null) {
+            if (shouldDrawDotPlot) {
                 isoformGroup.setDotPlotRow(createDotPlotRow(isoformGroup));
-            } else if (shouldDrawDotPlot) {
-                dotPlotRow.getChildren().clear();
-                drawDotPlotRow(dotPlotRow, isoformGroup);
             } else if (dotPlotRow != null){
                 isoformGroup.setDotPlotRow(null);
             }
@@ -750,31 +757,23 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         private static HBox createDotPlotRow(IsoformGroup isoformGroup) {
             HBox dotPlotRow = new HBox();
-            drawDotPlotRow(dotPlotRow, isoformGroup);
-            return dotPlotRow;
-        }
-
-        private static void drawDotPlotRow(HBox dotPlotRow, IsoformGroup isoformGroup) {
             double dotX = DOT_PLOT_COLUMN_WIDTH / 2;
             double dotY = DOT_PLOT_ROW_HEIGHT / 2;
             boolean onlySelected = ControllerMediator.getInstance().areCellsSelected();
             Collection<Cluster> clusters = getClusters(onlySelected);
             Iterator<Cluster> iterator = clusters.iterator();
+
             while(iterator.hasNext()) {
                 Cluster cluster = iterator.next();
-                Canvas dotPlotRowItem = new Canvas(DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT);
-                if (iterator.hasNext())
-                    HBox.setMargin(dotPlotRowItem, new Insets(0, DOT_PLOT_COLUMN_SPACING, 0, 0));
-                GraphicsContext graphicsContext = dotPlotRowItem.getGraphicsContext2D();
                 double expression = ControllerMediator.getInstance().getIsoformExpressionLevelInCluster(isoformGroup.getIsoform().getId(), cluster, onlySelected);
-                Color dotColor = ControllerMediator.getInstance().getColorFromTPMGradient(expression);
                 double dotSize = getDotSize(cluster, isoformGroup, onlySelected);
-                graphicsContext.setFill(dotColor);
-                graphicsContext.fillOval(dotX - dotSize / 2, dotY -dotSize / 2, dotSize, dotSize);
-                graphicsContext.setFill(Color.BLACK);
-                graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
-                dotPlotRow.getChildren().add(dotPlotRowItem);
+                Canvas dotPlotRowCircle = getDotPlotRowCircle(dotX, dotY, expression, dotSize);
+                addExpressionLevelToolTip(expression, dotPlotRowCircle);
+                if (iterator.hasNext())
+                    HBox.setMargin(dotPlotRowCircle, new Insets(0, DOT_PLOT_COLUMN_SPACING, 0, 0));
+                dotPlotRow.getChildren().add(dotPlotRowCircle);
             }
+            return dotPlotRow;
         }
 
         private static double getDotSize(Cluster cluster, IsoformGroup isoformGroup, boolean onlySelected) {
@@ -787,6 +786,17 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 return THREE_QUARTERS_EXPRESS_DOT_SIZE;
             else
                 return ALL_EXPRESS_DOT_SIZE;
+        }
+
+        private static Canvas getDotPlotRowCircle(double dotX, double dotY, double expression, double dotSize) {
+            Canvas dotPlotRowItem = new Canvas(DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT);
+            GraphicsContext graphicsContext = dotPlotRowItem.getGraphicsContext2D();
+            Color dotColor = ControllerMediator.getInstance().getColorFromTPMGradient(expression);
+            graphicsContext.setFill(dotColor);
+            graphicsContext.fillOval(dotX - dotSize / 2, dotY -dotSize / 2, dotSize, dotSize);
+            graphicsContext.setFill(Color.BLACK);
+            graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+            return dotPlotRowItem;
         }
     }
 

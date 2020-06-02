@@ -27,6 +27,8 @@ import ui.Main;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import static util.Util.roundToOneDecimal;
+
 public class TPMGradientAdjusterController implements Initializable, InteractiveElementController {
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR = 0.25f;
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR = 0.4f;
@@ -360,10 +362,5 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     private void setWindowSizeAndDisplay() {
         Rectangle2D screen = Screen.getPrimary().getBounds();
         window.setScene(new Scene(tpmGradientAdjuster, screen.getWidth() * TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR, screen.getHeight() * TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR));
-    }
-
-    private double roundToOneDecimal (double value) {
-        int scale = (int) Math.pow(10, 1);
-        return (double) Math.round(value * scale) / scale;
     }
 }
