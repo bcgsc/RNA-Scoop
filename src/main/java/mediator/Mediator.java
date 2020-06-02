@@ -1,6 +1,8 @@
 package mediator;
 
 import controller.*;
+import controller.labelsetmanager.AddLabelSetViewController;
+import controller.labelsetmanager.LabelSetManagerController;
 
 public interface Mediator {
     void registerMainController(MainController mainController);
@@ -9,5 +11,6 @@ public interface Mediator {
     void registerTSNEPlotController(TSNEPlotController tsnePlotController);
     void registerGeneSelectorController(GeneSelectorController geneSelectorController);
     void registerTPMGradientController(TPMGradientAdjusterController tpmGradientAdjusterController);
-    void registerClusterManagerController(ClusterManagerController clusterManagerController);
+    void registerLabelSetManagerController(LabelSetManagerController labelSetManagerController);
+    void registerAddLabelSetViewController(AddLabelSetViewController addLabelSetViewController);
 }

@@ -1,6 +1,5 @@
 package ui;
 
-import controller.ClusterManagerController;
 import javafx.geometry.Insets;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -9,6 +8,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
 import javafx.scene.text.Text;
+import labelset.Cluster;
 import mediator.ControllerMediator;
 
 import java.util.Iterator;
@@ -26,15 +26,15 @@ public class LegendMaker {
         else
             legend = new HBox();
 
-        List<ClusterManagerController.Cluster> clusters;
+        List<Cluster> clusters;
         if (onlySelected)
             clusters = ControllerMediator.getInstance().getSelectedClusters();
         else
             clusters = ControllerMediator.getInstance().getAllClusters();
 
-        Iterator<ClusterManagerController.Cluster> iterator = clusters.iterator();
+        Iterator<Cluster> iterator = clusters.iterator();
         while(iterator.hasNext()) {
-            ClusterManagerController.Cluster cluster= iterator.next();
+            Cluster cluster= iterator.next();
             Canvas legendCircle = createLegendCircle(dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
             legend.getChildren().add(legendCircle);
             HBox legendElement = new HBox();
@@ -63,7 +63,7 @@ public class LegendMaker {
     }
 
     private static Canvas createLegendCircle(double dotSize, double circleCanvasWidth, double circleCanvasHeight,
-                                             ClusterManagerController.Cluster cluster) {
+                                             Cluster cluster) {
         Canvas legendCircle = new Canvas(circleCanvasWidth, circleCanvasHeight);
         double circleX = circleCanvasWidth / 2;
         double circleY = circleCanvasHeight / 2;

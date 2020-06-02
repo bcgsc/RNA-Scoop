@@ -4,8 +4,9 @@ import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
 import com.jujutsu.utils.MatrixUtils;
-import controller.ClusterManagerController;
 import exceptions.*;
+import labelset.Cluster;
+import labelset.LabelSet;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
 
@@ -259,17 +260,18 @@ public class Parser {
         }
 
         /**
-         * Creates map of cells (represented by their numbers) and the clusters they belong to.
+         * Creates a label set from given cell labels file. Label set is made based on map of cells
+         * (represented by their numbers) and the clusters they belong to.
          * If the first line of the cell labels file says "T Cells", the cell represented by the first
-         * row of the matrix should be in the cluster labelled "T Cells". The returned map, will map 0
-         * to a cluster with label "T Cells"
+         * row of the matrix should be in the cluster labelled "T Cells". The map from which the
+         * label set is produced will map 0 to a cluster with label "T Cells"
          */
-        private static Map<Integer, ClusterManagerController.Cluster> getCellLabels(String pathToCellLabels) throws IOException {
-            Map<Integer, ClusterManagerController.Cluster> cellMap = new LinkedHashMap<>();
-            Map<String, ClusterManagerController.Cluster> clusterMap = new HashMap<>();
+        private static LabelSet getCellLabels(String pathToCellLabels) throws IOException {
+            Map<Integer, Cluster> cellNumberClusterMap = new LinkedHashMap<>();
+            Map<String, Cluster> clusterMap = new HashMap<>();
 
             String currentLabel;
-            ClusterManagerController.Cluster cluster;
+            Cluster cluster;
             int cellNumber = 0;
 
             File cellLabelsFile = new File(pathToCellLabels);
@@ -278,13 +280,13 @@ public class Parser {
                 if (clusterMap.containsKey(currentLabel)) {
                     cluster = clusterMap.get(currentLabel);
                 } else {
-                    cluster = new ClusterManagerController.Cluster(currentLabel);
+                    cluster = new Cluster(currentLabel);
                     clusterMap.put(currentLabel, cluster);
                 }
-                cellMap.put(cellNumber, cluster);
+                cellNumberClusterMap.put(cellNumber, cluster);
                 cellNumber++;
             }
-            return cellMap;
+            return new LabelSet(cellNumberClusterMap);
         }
     }
 }

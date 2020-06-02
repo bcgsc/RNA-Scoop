@@ -2,9 +2,14 @@ package mediator;
 
 import annotation.Gene;
 import controller.*;
+import controller.labelsetmanager.AddLabelSetViewController;
+import controller.labelsetmanager.LabelSetManagerController;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.paint.Color;
+import labelset.Cluster;
+import labelset.LabelSet;
+import ui.LabelSetManagerWindow;
 
 import java.util.*;
 
@@ -15,7 +20,8 @@ public class ControllerMediator implements Mediator{
     private TSNEPlotController tsnePlotController;
     private GeneSelectorController geneSelectorController;
     private TPMGradientAdjusterController tpmGradientAdjusterController;
-    private ClusterManagerController clusterManagerController;
+    private LabelSetManagerController labelSetManagerController;
+    private AddLabelSetViewController addLabelSetViewController;
 
     // Register controllers
     @Override
@@ -49,8 +55,13 @@ public class ControllerMediator implements Mediator{
     }
 
     @Override
-    public void registerClusterManagerController(ClusterManagerController clusterManagerController) {
-        this.clusterManagerController = clusterManagerController;
+    public void registerLabelSetManagerController(LabelSetManagerController labelSetManagerController) {
+        this.labelSetManagerController = labelSetManagerController;
+    }
+
+    @Override
+    public void registerAddLabelSetViewController(AddLabelSetViewController addLabelSetViewController) {
+        this.addLabelSetViewController = addLabelSetViewController;
     }
 
     // Change Main Display
@@ -100,8 +111,8 @@ public class ControllerMediator implements Mediator{
             isoformPlotController.updateIsoformGraphicsAndDotPlot();
     }
 
-    public void updateDotPlot() {
-        isoformPlotController.updateDotPlot();
+    public void updateDotPlotLegend() {
+        isoformPlotController.updateDotPlotLegend();
     }
 
     public void updateGeneReverseComplementStatus() {
@@ -141,40 +152,61 @@ public class ControllerMediator implements Mediator{
     }
 
     // Label Sets Functions
-    public void clearLabelSets() {
-        clusterManagerController.clearLabelSets();
+
+    public void initializeLabelSetManager(LabelSetManagerWindow window) {
+        labelSetManagerController.initializeLabelSetManager(window);
     }
 
-    public void addLabelSet(Map<Integer, ClusterManagerController.Cluster> cellMap) {
-        clusterManagerController.addLabelSet(cellMap);
+    public void initializeAddLabelSetView(LabelSetManagerWindow window) {
+        addLabelSetViewController.initializeAddLabelSetView(window);
+    }
+
+    public void prepareAddLabelSetViewForDisplay() {
+        addLabelSetViewController.prepareForDisplay();
+    }
+
+    public void addLabelSet(LabelSet labelSet) {
+        labelSetManagerController.addLabelSet(labelSet);
+    }
+
+    public void removeLabelSet(LabelSet labelSet) {
+        labelSetManagerController.removeLabelSet(labelSet);
+    }
+
+    public void clearLabelSets() {
+        labelSetManagerController.clearLabelSets();
     }
 
     public void clearLabelSetClusterCells() {
-        clusterManagerController.clearLabelSetClusterCells();
+        labelSetManagerController.clearLabelSetClusterCells();
     }
 
-    public void updateLabelSetClusterCells() {
-        clusterManagerController.updateLabelSetClusterCells();
+    public void addCellsToLabelSetClusters() {
+        labelSetManagerController.addCellsToLabelSetClusters();
+    }
+
+    public int getNumLabelSets() {
+        return labelSetManagerController.getNumLabelSets();
     }
 
     // Display t-SNE
     public void displayClusterManager() {
-        clusterManagerController.display();
+        labelSetManagerController.display();
     }
 
     public void clearTSNEPlot() {
         tsnePlotController.clearTSNEPlot();
     }
 
-    public void handleClusterAddedFromSelectedCells() {
+    public void TSNEPlotHandleClusterAddedFromSelectedCells() {
         tsnePlotController.handleClusterAddedFromSelectedCells();
     }
 
-    public void handleRemovedCluster(ClusterManagerController.Cluster removedCluster, ClusterManagerController.Cluster clusterMergedInto) {
+    public void TSNEPlotHandleRemovedCluster(Cluster removedCluster, Cluster clusterMergedInto) {
         tsnePlotController.handleRemovedCluster(removedCluster, clusterMergedInto);
     }
 
-    public void handleChangedLabelSetInUse(){
+    public void TSNEPlotHandleChangedLabelSetInUse(){
         tsnePlotController.handleChangedLabelSetInUse();
     }
 
@@ -225,8 +257,8 @@ public class ControllerMediator implements Mediator{
         return geneSelectorController.getShownGenes();
     }
 
-    public Map<Integer, TSNEPlotController.CellDataItem> getCellMap() {
-        return tsnePlotController.getCellMap();
+    public Map<Integer, TSNEPlotController.CellDataItem> getCellNumberCellMap() {
+        return tsnePlotController.getCellNumberCellMap();
     }
 
     public boolean areCellsSelected () {
@@ -245,32 +277,28 @@ public class ControllerMediator implements Mediator{
         return tpmGradientAdjusterController.getColorFromTPMGradient(expression);
     }
 
-    public ClusterManagerController.LabelSet getLabelSetInUse() {
-        return clusterManagerController.getLabelSetInUse();
+    public LabelSet getLabelSetInUse() {
+        return labelSetManagerController.getLabelSetInUse();
     }
 
     public int getNumCellsToPlot() {
         return tsnePlotController.getNumCellsToPlot();
     }
 
-    public double getIsoformExpressionLevelInCluster(String isoformID, ClusterManagerController.Cluster cluster, boolean onlySelected) {
-        return  clusterManagerController.getIsoformExpressionLevelInCluster(isoformID, cluster, onlySelected);
+    public double getIsoformExpressionLevelInCluster(String isoformID, Cluster cluster, boolean onlySelected) {
+        return  tsnePlotController.getIsoformExpressionLevelInCluster(isoformID, cluster, onlySelected);
     }
 
-    public List<ClusterManagerController.Cluster> getAllClusters() {
-        return clusterManagerController.getAllClusters();
+    public List<Cluster> getAllClusters() {
+        return labelSetManagerController.getAllClusters();
     }
 
-    public List<ClusterManagerController.Cluster> getSelectedClusters() {
+    public List<Cluster> getSelectedClusters() {
         return tsnePlotController.getSelectedClusters();
     }
 
-    public Collection<TSNEPlotController.CellDataItem> getSelectedCellsInCluster(ClusterManagerController.Cluster cluster) {
-        return tsnePlotController.getSelectedCellsInCluster(cluster);
-    }
-
-    public double getFractionOfExpressingCells(String isoformID, ClusterManagerController.Cluster cluster, boolean onlySelected) {
-        return clusterManagerController.getFractionOfExpressingCells(isoformID, cluster, onlySelected);
+    public double getFractionOfExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
+        return tsnePlotController.getFractionOfExpressingCells(isoformID, cluster, onlySelected);
     }
 
     public boolean isReverseComplementing() {

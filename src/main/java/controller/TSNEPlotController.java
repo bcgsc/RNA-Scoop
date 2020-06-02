@@ -16,6 +16,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import labelset.Cluster;
 import mediator.ControllerMediator;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -74,7 +75,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     private ChartPanel tSNEPlot;
     private ScrollPane tSNEPlotLegend;
     private CellSelectionManager cellSelectionManager;
-    private HashMap<Integer, CellDataItem> cellMap;
+    private HashMap<Integer, CellDataItem> cellNumberCellMap;
     private XYSeriesCollection cellsInTSNEPlot;
 
     /**
@@ -93,7 +94,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
         });
         cellsInTSNEPlot = new XYSeriesCollection();
-        cellMap = new HashMap<>();
+        cellNumberCellMap = new HashMap<>();
     }
 
     public Node getTSNEPlot() {
@@ -144,6 +145,11 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
     }
 
+    /*
+    The below three functions should be called when changes happen to the label set in use
+    They all redraw the t-SNE plot and notify the cell selection manager about the changes
+    */
+
     public void handleClusterAddedFromSelectedCells() {
         if (!isTSNEPlotCleared()) {
             cellSelectionManager.handleClusterAddedFromSelectedCells();
@@ -151,7 +157,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
     }
 
-    public void handleRemovedCluster(ClusterManagerController.Cluster removedCluster, ClusterManagerController.Cluster clusterMergedInto) {
+    public void handleRemovedCluster(Cluster removedCluster, Cluster clusterMergedInto) {
         if (!isTSNEPlotCleared()) {
             cellSelectionManager.handleRemovedCluster(removedCluster, clusterMergedInto);
             redrawTSNEPlot();
@@ -186,8 +192,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         return tSNEPlot == null;
     }
 
-    public Map<Integer, CellDataItem> getCellMap() {
-        return cellMap;
+    public Map<Integer, CellDataItem> getCellNumberCellMap() {
+        return cellNumberCellMap;
     }
 
     public boolean areCellsSelected() {
@@ -212,7 +218,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         if (selectedOnly)
             cells = getSelectedCells();
         else
-            cells = cellMap.values();
+            cells = cellNumberCellMap.values();
         int numCells = cells.size();
 
         for (CellDataItem cell : cells)
@@ -221,22 +227,46 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         return isoformExpressionSum / numCells;
     }
 
+    public double getIsoformExpressionLevelInCluster(String isoformID, Cluster cluster, boolean onlySelected) {
+        double isoformExpressionSum = 0;
+        Collection<TSNEPlotController.CellDataItem> cellsInCluster;
+        if (onlySelected)
+            cellsInCluster = getSelectedCellsInCluster(cluster);
+        else
+            cellsInCluster = cluster.getCells();
+
+        int numSelected = cellsInCluster.size();
+        for (TSNEPlotController.CellDataItem selectedCell : cellsInCluster)
+            isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
+        return isoformExpressionSum / numSelected;
+    }
+
+    public double getFractionOfExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
+        double numExpressingCells = 0;
+        Collection<TSNEPlotController.CellDataItem> cellsInCluster;
+        if (onlySelected)
+            cellsInCluster = getSelectedCellsInCluster(cluster);
+        else
+            cellsInCluster = cluster.getCells();
+
+        int numSelected = cellsInCluster.size();
+        for (TSNEPlotController.CellDataItem selectedCell : cellsInCluster) {
+            if (selectedCell.getIsoformExpressionLevel(isoformID) > 0)
+                numExpressingCells++;
+        }
+        return numExpressingCells / numSelected;
+    }
+
     public Set<CellDataItem> getSelectedCells() {
         if (isTSNEPlotCleared())
             return new HashSet<>();
         return cellSelectionManager.getSelectedCells().values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
     }
 
-    public List<ClusterManagerController.Cluster> getSelectedClusters() {
+    public List<Cluster> getSelectedClusters() {
         if (isTSNEPlotCleared())
             return new ArrayList<>();
         return cellSelectionManager.getSelectedClusters();
-    }
-
-    public Collection<CellDataItem> getSelectedCellsInCluster(ClusterManagerController.Cluster cluster) {
-        if (isTSNEPlotCleared())
-            return new ArrayList<>();
-        return cellSelectionManager.getSelectedCellsInCluster(cluster);
     }
 
     /**
@@ -273,6 +303,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().displayClusterManager();
     }
 
+    private Collection<CellDataItem> getSelectedCellsInCluster(Cluster cluster) {
+        if (isTSNEPlotCleared())
+            return new ArrayList<>();
+        return cellSelectionManager.getSelectedCellsInCluster(cluster);
+    }
+
     private void disableAssociatedFunctionality() {
         disable();
         ControllerMediator.getInstance().disableMain();
@@ -297,6 +333,11 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          * Each number is the level of expression of some isoform in this cell.
          */
         private double[] isoformExpressionLevels;
+        /**
+         * The row in the cell isoform expression matrix that this cell represents
+         * (first row is represented by cell 0). This is also the index of this cell in the
+         * series that is used to plot the t-SNE plot
+         */
         private int cellNumber;
 
         private CellDataItem(Number x, Number y, double[] isoformExpressionLevels, int cellNumber) {
@@ -339,13 +380,13 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
         public TSNEPlotRenderer() {
             super(false, true);
-            setDrawOutlines(true);
+            //setDrawOutlines(true);
             setUseOutlinePaint(true);
         }
 
         @Override
         public Paint getItemPaint(int series, int cellNumber) {
-            CellDataItem cell = cellMap.get(cellNumber);
+            CellDataItem cell = cellNumberCellMap.get(cellNumber);
             if (cellSelectionManager.isCellSelected(cell))
                 return Color.WHITE;
             else
@@ -368,7 +409,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      */
     private class CellSelectionManager implements SelectionManager {
         private DatasetExtensionManager extensionManager;
-        private HashMap<ClusterManagerController.Cluster, Collection<CellDataItem>> selectedCells;
+        private HashMap<Cluster, Collection<CellDataItem>> selectedCells;
 
         public CellSelectionManager(DatasetExtensionManager extensionManager) {
             selectedCells = new HashMap<>();
@@ -383,27 +424,33 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             return false;
         }
 
-        public List<ClusterManagerController.Cluster> getSelectedClusters() {
+        public List<Cluster> getSelectedClusters() {
             return Util.asSortedList(selectedCells.keySet());
         }
 
-        public Collection<CellDataItem> getSelectedCellsInCluster(ClusterManagerController.Cluster cluster) {
+        public Collection<CellDataItem> getSelectedCellsInCluster(Cluster cluster) {
             if (selectedCells.containsKey(cluster))
                 return selectedCells.get(cluster);
             return new ArrayList<>();
         }
 
+        /*
+        The below three functions fix selected cells map so that it correctly maps selected
+        clusters to the cells in them that are selected, after there are changes to the label set
+        in use
+         */
+
         public void handleClusterAddedFromSelectedCells() {
             if (selectedCells.size() > 0) {
                 Collection<CellDataItem> selectedCellsSubset = selectedCells.values().iterator().next();
                 CellDataItem selectedCell = selectedCellsSubset.iterator().next();
-                ClusterManagerController.Cluster addCluster = ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(selectedCell.getCellNumber());
+                Cluster addCluster = ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(selectedCell.getCellNumber());
                 selectedCells.clear();
-                selectedCells.put(addCluster, addCluster.getCells());
+                selectedCells.put(addCluster, new ArrayList<>(addCluster.getCells()));
             }
         }
 
-        public void handleRemovedCluster(ClusterManagerController.Cluster removedCluster, ClusterManagerController.Cluster clusterMergedWith) {
+        public void handleRemovedCluster(Cluster removedCluster, Cluster clusterMergedWith) {
             if (selectedCells.containsKey(removedCluster)) {
                 Collection<CellDataItem> cellsToMove = selectedCells.get(removedCluster);
                 Collection<CellDataItem> cellsInClusterMergedWith;
@@ -519,7 +566,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
         }
 
-        public HashMap<ClusterManagerController.Cluster, Collection<CellDataItem>> getSelectedCells() {
+        public HashMap<Cluster, Collection<CellDataItem>> getSelectedCells() {
             return selectedCells;
         }
 
@@ -579,8 +626,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         }
 
         private void addCellToSelectedCells(Integer cellNumber) {
-            ClusterManagerController.Cluster cluster = ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(cellNumber);
-            CellDataItem cell = cellMap.get(cellNumber);
+            Cluster cluster = ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(cellNumber);
+            CellDataItem cell = cellNumberCellMap.get(cellNumber);
             Collection<CellDataItem> selectedCellsOfSameCluster;
             if (selectedCells.containsKey(cluster)) {
                 selectedCellsOfSameCluster =  selectedCells.get(cluster);
@@ -607,7 +654,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 double[][] tSNEMatrix = generateTSNEMatrix();
                 drawTsne(tSNEMatrix);
                 setTPMGradientValues();
-                ControllerMediator.getInstance().updateLabelSetClusterCells();
+                ControllerMediator.getInstance().addCellsToLabelSetClusters();
                 runLater(() -> {
                     ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
                     ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot");
@@ -689,7 +736,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 double cellY = tSNEMatrix[cellNumber][1];
                 CellDataItem cellDataItem = new CellDataItem(cellX, cellY, cellIsoformExpressionMatrix[cellNumber], cellNumber);
                 cells.add(cellDataItem);
-                cellMap.put(cellDataItem.getCellNumber(), cellDataItem);
+                cellNumberCellMap.put(cellDataItem.getCellNumber(), cellDataItem);
             }
         }
 

@@ -1,6 +1,8 @@
 package ui;
 
 import controller.*;
+import controller.labelsetmanager.AddLabelSetViewController;
+import controller.labelsetmanager.LabelSetManagerController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,7 +13,6 @@ import persistance.SessionIO;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
-import java.util.*;
 
 
 public class Main extends Application {
@@ -25,7 +26,8 @@ public class Main extends Application {
         FXMLLoader tSNEPlotLoader = new FXMLLoader(getClass().getResource("/fxml/main/tsneplot.fxml"));
         FXMLLoader geneSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/geneselector.fxml"));
         FXMLLoader tpmGradientLoader = new FXMLLoader(getClass().getResource("/fxml/tpmgradient.fxml"));
-        FXMLLoader clusterManagerLoader = new FXMLLoader(getClass().getResource("/fxml/clustermanager.fxml"));
+        FXMLLoader labelSetManagerLoader = new FXMLLoader(getClass().getResource("/fxml/labelsetmanager/labelsetmanager.fxml"));
+        FXMLLoader addLabelSetViewLoader = new FXMLLoader(getClass().getResource("/fxml/labelsetmanager/addlabelsetview.fxml"));
 
         mainLoader.load();
         Parent console = consoleLoader.load();
@@ -33,13 +35,14 @@ public class Main extends Application {
         Parent tSNEPlot = tSNEPlotLoader.load();
         geneSelectorLoader.load();
         tpmGradientLoader.load();
-        clusterManagerLoader.load();
-        Map<String, Integer> map = new HashMap<>();
+        Parent labelSetManager = labelSetManagerLoader.load();
+        Parent addLabelSetView = addLabelSetViewLoader.load();
 
         registerControllers(mainLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
                             tSNEPlotLoader.getController(), geneSelectorLoader.getController(), tpmGradientLoader.getController(),
-                            clusterManagerLoader.getController());
+                            labelSetManagerLoader.getController(), addLabelSetViewLoader.getController());
         ControllerMediator.getInstance().initializeMain(console, isoformPlot, tSNEPlot);
+        setUpLabelSetManagerPopUp(labelSetManager, addLabelSetView);
         loadPreviousSession();
     }
 
@@ -56,14 +59,23 @@ public class Main extends Application {
      */
     private void registerControllers(MainController mainController, ConsoleController consoleController, IsoformPlotController isoformPlotController,
                                      TSNEPlotController tSNEPlotController, GeneSelectorController geneSelectorController,
-                                     TPMGradientAdjusterController tpmGradientAdjusterController, ClusterManagerController clusterManagerController) {
+                                     TPMGradientAdjusterController tpmGradientAdjusterController, LabelSetManagerController labelSetManagerController,
+                                     AddLabelSetViewController addLabelSetViewController) {
         ControllerMediator.getInstance().registerMainController(mainController);
         ControllerMediator.getInstance().registerConsoleController(consoleController);
         ControllerMediator.getInstance().registerIsoformPlotController(isoformPlotController);
         ControllerMediator.getInstance().registerTSNEPlotController(tSNEPlotController);
         ControllerMediator.getInstance().registerGeneSelectorController(geneSelectorController);
         ControllerMediator.getInstance().registerTPMGradientController(tpmGradientAdjusterController);
-        ControllerMediator.getInstance().registerClusterManagerController(clusterManagerController);
+        ControllerMediator.getInstance().registerLabelSetManagerController(labelSetManagerController);
+        ControllerMediator.getInstance().registerAddLabelSetViewController(addLabelSetViewController);
+    }
+
+    private void setUpLabelSetManagerPopUp(Parent labelSetManager, Parent addLabelSetView) {
+        // label set manager has custom window to allow for changing between views
+        LabelSetManagerWindow labelSetManagerWindow = new LabelSetManagerWindow(labelSetManager, addLabelSetView);
+        ControllerMediator.getInstance().initializeAddLabelSetView(labelSetManagerWindow);
+        ControllerMediator.getInstance().initializeLabelSetManager(labelSetManagerWindow);
     }
 
     /**

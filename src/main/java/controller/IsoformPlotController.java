@@ -3,7 +3,6 @@ package controller;
 import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -23,6 +22,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import labelset.Cluster;
 import mediator.ControllerMediator;
 import ui.LegendMaker;
 import util.Util;
@@ -126,8 +126,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         DotPlot.updateDotPlot();
     }
 
-    public void updateDotPlot() {
-        DotPlot.updateDotPlot();
+    public void updateDotPlotLegend() {
+        DotPlot.updateDotPlotLegend(true);
     }
 
     public void deselectAllIsoforms() {
@@ -724,7 +724,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return 0;
         }
 
-        private static Collection<ClusterManagerController.Cluster> getClusters(boolean onlySelected) {
+        private static Collection<Cluster> getClusters(boolean onlySelected) {
             if (onlySelected)
                 return ControllerMediator.getInstance().getSelectedClusters();
             else
@@ -758,10 +758,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             double dotX = DOT_PLOT_COLUMN_WIDTH / 2;
             double dotY = DOT_PLOT_ROW_HEIGHT / 2;
             boolean onlySelected = ControllerMediator.getInstance().areCellsSelected();
-            Collection<ClusterManagerController.Cluster> clusters = getClusters(onlySelected);
-            Iterator<ClusterManagerController.Cluster> iterator = clusters.iterator();
+            Collection<Cluster> clusters = getClusters(onlySelected);
+            Iterator<Cluster> iterator = clusters.iterator();
             while(iterator.hasNext()) {
-                ClusterManagerController.Cluster cluster = iterator.next();
+                Cluster cluster = iterator.next();
                 Canvas dotPlotRowItem = new Canvas(DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT);
                 if (iterator.hasNext())
                     HBox.setMargin(dotPlotRowItem, new Insets(0, DOT_PLOT_COLUMN_SPACING, 0, 0));
@@ -777,7 +777,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
         }
 
-        private static double getDotSize(ClusterManagerController.Cluster cluster, IsoformGroup isoformGroup, boolean onlySelected) {
+        private static double getDotSize(Cluster cluster, IsoformGroup isoformGroup, boolean onlySelected) {
             double fractionExpressingCells = ControllerMediator.getInstance().getFractionOfExpressingCells(isoformGroup.getIsoform().getId(), cluster, onlySelected);
             if (fractionExpressingCells <= 0.25)
                 return QUARTER_EXPRESS_DOT_SIZE;

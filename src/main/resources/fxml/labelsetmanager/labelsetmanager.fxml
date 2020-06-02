@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<ScrollPane fx:id="labelSetManager" fitToHeight="true" fitToWidth="true" style="-fx-background-color: #fcfcfc;"
+            xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.labelsetmanager.LabelSetManagerController">
+    <VBox>
+       <VBox style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
+           <VBox.margin>
+               <Insets topRightBottomLeft="10" />
+           </VBox.margin>
+           <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+               <VBox.margin>
+                   <Insets topRightBottomLeft="20" />
+               </VBox.margin>
+               <Text style="-fx-font-size: 15;" text="Cluster Label Sets" />
+               <ListView fx:id="labelSetsListView" VBox.vgrow="ALWAYS">
+                   <VBox.margin>
+                       <Insets bottom="10" top="10" />
+                   </VBox.margin>
+               </ListView>
+               <HBox alignment="CENTER">
+                   <Button onAction="#handleAddLabelSetButton" text="Add New">
+                       <HBox.margin>
+                           <Insets right="10" />
+                       </HBox.margin>
+                   </Button>
+                   <Button onAction="#handleRemoveLabelSetButton" text="Remove Selected" />
+               </HBox>
+           </VBox>
+       </VBox>
+    </VBox>
+</ScrollPane>
