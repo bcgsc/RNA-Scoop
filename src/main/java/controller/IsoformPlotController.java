@@ -125,7 +125,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     public void updateIsoformGraphicsAndDotPlot() {
-        redrawIsoformGraphics();
+        redrawIsoforms();
         DotPlot.updateDotPlot();
     }
 
@@ -151,7 +151,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             GeneGroup geneGroup = geneGeneGroupMap.get(gene);
             geneGroup.updateLabel(showGeneNameAndID, showGeneName, reverseComplement);
             if (!gene.isOnPositiveStrand())
-                geneGroup.redrawIsoformGraphics(reverseComplement, tSNEPlotCleared, cellsSelected);
+                geneGroup.redrawIsoforms(reverseComplement, tSNEPlotCleared, cellsSelected);
         }
     }
 
@@ -167,6 +167,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             showIsoformsNoJunctions();
     }
 
+    /**
+     * Should be called when hide dot plot status changes.
+     * Updates isoform graphics and dot plot if necessary (i.e. if t-SNE plot isn't cleared)
+     */
     public void updateHideDotPlotStatus() {
         if (!ControllerMediator.getInstance().isTSNEPlotCleared())
             updateIsoformGraphicsAndDotPlot();
@@ -248,12 +252,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             addGenes(genesToAdd);
     }
 
-    private void redrawIsoformGraphics() {
+    private void redrawIsoforms() {
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
         boolean tSNEPlotCleared = ControllerMediator.getInstance().isTSNEPlotCleared();
         boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
         for(GeneGroup geneGroup : geneGeneGroupMap.values())
-            geneGroup.redrawIsoformGraphics(reverseComplement, tSNEPlotCleared, cellsSelected);
+            geneGroup.redrawIsoforms(reverseComplement, tSNEPlotCleared, cellsSelected);
     }
 
     private void updateFirstGeneGroup() {
@@ -264,18 +268,13 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             firstGeneGroup = null;
     }
 
-    private static void addExpressionLevelToolTip(double expression, Node node) {
-        Tooltip tooltip = new Tooltip(roundToOneDecimal(expression) + " TPM");
-        Tooltip.install(node, tooltip);
-    }
-
     private void setScrollPaneWidthSpacing() {
         Insets geneGroupsMargin = VBox.getMargin(geneGroups);
         scrollPaneWidthSpacing = geneGroupsMargin.getLeft() + geneGroupsMargin.getRight();
     }
 
     private void setUpRedrawIsoformsToMatchScrollPaneWidth() {
-        scrollPane.widthProperty().addListener((ov, oldValue, newValue) -> redrawIsoformGraphics());
+        scrollPane.widthProperty().addListener((ov, oldValue, newValue) -> redrawIsoforms());
     }
 
     /**
@@ -285,7 +284,9 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         geneGroups.setSpacing(10);
     }
 
-
+    /**
+     * A gene in the isoform plot with all its isoforms
+     */
     private class GeneGroup extends VBox {
         private final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
 
@@ -300,19 +301,15 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             this.gene = gene;
             isoformsIsoformGroupMap = new HashMap<>();
             addLabel(showGeneNameAndID, showGeneName, reverseComplement);
-            addIsoformsGroups(showIsoformName, showIsoformID, hideIsoformsWithNoJunctions, reverseComplement, tSNEPlotCleared, cellsSelected);
+            addIsoforms(showIsoformName, showIsoformID, hideIsoformsWithNoJunctions, reverseComplement, tSNEPlotCleared, cellsSelected);
+            // spacing is spacing between isoforms
             setSpacing(7.5);
-        }
-
-        public void addIsoform(IsoformGroup isoformGroup) {
-            isoformsIsoformGroupMap.put(isoformGroup.getIsoform(), isoformGroup);
-            getChildren().add(isoformGroup);
-            if (firstIsoformGroup == null)
-                updateFirstIsoformGroup();
         }
 
         public void removeIsoform(Isoform isoform) {
             IsoformGroup isoformGroup = isoformsIsoformGroupMap.get(isoform);
+            // necessary to remove all references to isoform group so can be cleaned up by
+            // garbage collector
             isoformGroup.makeIsoformGraphicNonSelectable();
             getChildren().remove(isoformGroup);
             isoformsIsoformGroupMap.remove(isoform, isoformGroup);
@@ -337,7 +334,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return firstIsoformGroup;
         }
 
-        public void redrawIsoformGraphics(boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+        public void redrawIsoforms(boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
             double pixelsPerNucleotide = getPixelsPerNucleotide();
             for (IsoformGroup isoformGroup : isoformsIsoformGroupMap.values())
                 isoformGroup.redrawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
@@ -377,6 +374,21 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             getChildren().add(label);
         }
 
+        private void addIsoforms(boolean showIsoformName, boolean showIsoformID, boolean hideIsoformsWithNoJunctions,
+                                 boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+            double pixelsPerNucleotide = getPixelsPerNucleotide();
+            Collection<String> isoformsID = gene.getIsoformsMap().keySet();
+            List<String> sortedIsoformsIDs = Util.asSortedList(isoformsID);
+            for (String isoformID : sortedIsoformsIDs) {
+                Isoform isoform = gene.getIsoform(isoformID);
+                if (!hideIsoformsWithNoJunctions || isoform.hasExonJunctions()) {
+                    IsoformGroup isoformGroup = new IsoformGroup(isoform, pixelsPerNucleotide, showIsoformName,
+                            showIsoformID, reverseComplement, tSNEPlotCleared, cellsSelected);
+                    addIsoform(isoformGroup);
+                }
+            }
+        }
+
         private String getGeneLabelText(boolean showGeneNameAndID, boolean showGeneName, boolean reverseComplement) {
             String labelText;
             String geneName = gene.getName();
@@ -399,20 +411,13 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return labelText;
         }
 
-        private void addIsoformsGroups(boolean showIsoformName, boolean showIsoformID, boolean hideIsoformsWithNoJunctions,
-                                       boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
-            double pixelsPerNucleotide = getPixelsPerNucleotide();
-            Collection<String> isoformsID = gene.getIsoformsMap().keySet();
-            List<String> sortedIsoformsIDs = Util.asSortedList(isoformsID);
-            for (String isoformID : sortedIsoformsIDs) {
-                Isoform isoform = gene.getIsoform(isoformID);
-                if (!hideIsoformsWithNoJunctions || isoform.hasExonJunctions()) {
-                    IsoformGroup isoformGroup = new IsoformGroup(isoform, pixelsPerNucleotide, showIsoformName,
-                                                                 showIsoformID, reverseComplement, tSNEPlotCleared, cellsSelected);
-                    addIsoform(isoformGroup);
-                }
-            }
+        private void addIsoform(IsoformGroup isoformGroup) {
+            isoformsIsoformGroupMap.put(isoformGroup.getIsoform(), isoformGroup);
+            getChildren().add(isoformGroup);
+            if (firstIsoformGroup == null)
+                updateFirstIsoformGroup();
         }
+
 
         private void updateFirstIsoformGroup() {
             ObservableList<Node> isoformGroupsList = getChildren();
@@ -423,28 +428,26 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         private double getPixelsPerNucleotide() {
-            return (scrollPane.getWidth() - IsoformGroup.ISOFORM_OFFSET - scrollPaneWidthSpacing - SCROLLBAR_WIDTH -
-                    IsoformGroup.ISOFORM_GRAPHIC_SPACING - IsoformGroup.getDotPlotSpacing()) /
+            return (scrollPane.getWidth() - IsoformGroup.ISOFORM_GROUP_OFFSET - scrollPaneWidthSpacing - SCROLLBAR_WIDTH -
+                    IsoformGroup.IsoformGraphic.ISOFORM_GRAPHIC_SPACING - IsoformGroup.getDotPlotSpacing()) /
                     (gene.getEndNucleotide() - gene.getStartNucleotide() + 1);
         }
     }
 
+    /**
+     * An isoform in the isoform plot. If showing dot plot, group also contains dot plot row
+     * for the isoform
+     */
     private static class IsoformGroup extends VBox {
-        public static final Color DEFAULT_EXON_COLOR = Color.color(0.929, 0.929, 0.929);
-        public static final int ISOFORM_OFFSET = 10;
-        public static final int EXON_HEIGHT = 10;
-        public final Color OUTLINE_COLOUR = Color.BLACK;
-        // objects on which isoform graphic is drawn have a padding of
-        // GRAPHIC_SPACING / 2 all around
-        public static final double ISOFORM_GRAPHIC_SPACING = 2;
-        private final Font ISOFORM_FONT = Font.font("Verdana",12);
+        public static final int ISOFORM_GROUP_OFFSET = 10;
+        private static final Font ISOFORM_FONT = Font.font("Verdana",12);
         private static final int ISOFORM_GRAPHIC_DOT_PLOT_SPACING = 5;
 
         private Isoform isoform;
         private SelectableText label;
         private BorderPane labelAndLegendHolder;
         private BorderPane graphicsHolder;
-        private Canvas isoformGraphic;
+        private IsoformGraphic isoformGraphic;
         private HBox dotPlotRow;
         private Pane dotPlotLegend;
 
@@ -453,11 +456,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             this.isoform = isoform;
             graphicsHolder = new BorderPane();
             labelAndLegendHolder = new BorderPane();
-            VBox.setMargin(labelAndLegendHolder, new Insets(0, 0, 0, ISOFORM_OFFSET));
+            Insets isoformGroupMargins = new Insets(0, 0, 0, ISOFORM_GROUP_OFFSET);
+            VBox.setMargin(labelAndLegendHolder, isoformGroupMargins);
+            VBox.setMargin(graphicsHolder, isoformGroupMargins);
             getChildren().addAll(labelAndLegendHolder, graphicsHolder);
             if (shouldHaveLabel(showIsoformName, showIsoformID))
                 addLabel(getIsoformLabelText(showIsoformName, showIsoformID));
             addIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
+            // spacing between these isoform and those above/below it
             setSpacing(5);
         }
 
@@ -474,7 +480,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         public void redrawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
-            addIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
+            isoformGraphic.redraw(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
         }
 
         public void removeLabel() {
@@ -514,6 +520,9 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return dotPlotLegend;
         }
 
+        /**
+         * Returns space required for dot plot row
+         */
         public static double getDotPlotSpacing() {
             double dotPlotWidth = DotPlot.getDotPlotWidth();
             if (dotPlotWidth == 0)
@@ -523,17 +532,9 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         private void addIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
-            if (isoformGraphic != null)
-                makeIsoformGraphicNonSelectable();
-            double isoformGraphicWidth = getIsoformGraphicWidth(pixelsPerNucleotide);
-            double expression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoform.getId(), cellsSelected);
-
-            isoformGraphic = new Canvas(isoformGraphicWidth, EXON_HEIGHT + ISOFORM_GRAPHIC_SPACING);
+            isoformGraphic = new IsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
             graphicsHolder.setLeft(isoformGraphic);
             rectangularSelection.addSelectableIsoformGraphic(isoformGraphic, isoform.getId());
-            if (!tSNEPlotCleared)
-                addExpressionLevelToolTip(expression, isoformGraphic);
-            drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
         }
 
 
@@ -562,126 +563,174 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 return "";
         }
 
-        private void setIsoformGraphicWidth(double pixelsPerNucleotide) {
-            double isoformGraphicWidth = getIsoformGraphicWidth(pixelsPerNucleotide);
-            isoformGraphic.setWidth(isoformGraphicWidth);
-        }
+        private class IsoformGraphic extends Canvas {
+            public final Color DEFAULT_EXON_COLOR = Color.color(0.929, 0.929, 0.929);
+            public final Color OUTLINE_COLOUR = Color.BLACK;
+            public static final int EXON_HEIGHT = 10;
+            // objects on which isoform graphic is drawn have a padding of
+            // GRAPHIC_SPACING / 2 all around
+            public static final double ISOFORM_GRAPHIC_SPACING = 2;
 
-        private void clearGraphic(Canvas graphic) {
-            GraphicsContext graphicsContext = graphic.getGraphicsContext2D();
-            graphicsContext.clearRect(0, 0, graphic.getWidth(), graphic.getHeight());
-        }
+            private Tooltip toolTip;
+            boolean toolTipShowing;
 
-        private double getIsoformGraphicWidth(double pixelsPerNucleotide) {
-            double isoformWidth = (isoform.getEndNucleotide() - isoform.getStartNucleotide() + 1) * pixelsPerNucleotide;
-            return isoformWidth + ISOFORM_GRAPHIC_SPACING;
-        }
+            public IsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+                setWidth(getIsoformGraphicWidth(pixelsPerNucleotide));
+                setHeight(EXON_HEIGHT + IsoformGraphic.ISOFORM_GRAPHIC_SPACING);
 
+                toolTip = new Tooltip();
+                toolTipShowing = false;
 
-        private void drawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, double expression) {
-            Color isoformColor = getIsoformColor(!tSNEPlotCleared, expression);
-            ArrayList<Exon> exons = isoform.getExons();
-            Gene gene = isoform.getGene();
-            GraphicsContext graphicsContext = isoformGraphic.getGraphicsContext2D();
-
-            if(gene.isOnPositiveStrand() || !reverseComplement) {
-                int isoformStart = isoform.getStartNucleotide();
-                int geneStart = gene.getStartNucleotide();
-
-                double isoformExtraOffset = (isoformStart - geneStart) * pixelsPerNucleotide;
-                BorderPane.setMargin(isoformGraphic, new Insets(0, ISOFORM_GRAPHIC_DOT_PLOT_SPACING, 0, ISOFORM_OFFSET + isoformExtraOffset));
-                drawIsoform(pixelsPerNucleotide, isoformColor, exons, isoformStart, graphicsContext);
-            } else {
-                int isoformEnd = isoform.getEndNucleotide();
-                int geneEnd = gene.getEndNucleotide();
-
-                double isoformExtraOffset = (geneEnd - isoformEnd) * pixelsPerNucleotide;
-                BorderPane.setMargin(isoformGraphic, new Insets(0, 10, 0, ISOFORM_OFFSET + isoformExtraOffset));
-                drawIsoformReverseComplement(pixelsPerNucleotide, isoformColor, exons, isoformEnd, graphicsContext);
+                double expression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoform.getId(), cellsSelected);
+                drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
+                setToolTip(!tSNEPlotCleared, expression);
             }
-        }
 
-        private Color getIsoformColor(boolean shouldGetCustomIsoformColor, double expression) {
-            Color isoformColor = DEFAULT_EXON_COLOR;
-            if (shouldGetCustomIsoformColor)
-                isoformColor = ControllerMediator.getInstance().getColorFromTPMGradient(expression);
-            return isoformColor;
-        }
-
-        private void drawIsoform(double pixelsPerNucleotide, Color isoformColor, ArrayList<Exon> exons, int isoformStart,
-                                 GraphicsContext graphicsContext) {
-            for (int i = 0; i < exons.size(); ++i) {
-                drawExon(isoformStart, pixelsPerNucleotide, exons, i, isoformColor, graphicsContext);
-                if (i != 0)
-                    drawIntron(isoformStart, pixelsPerNucleotide, exons, i, graphicsContext);
+            /**
+             * Redraws the isoform graphic and updates the tool tip text (or removes it if it should not be shown)
+             */
+            public void redraw(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+                setIsoformGraphicWidth(pixelsPerNucleotide);
+                clear();
+                double expression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoform.getId(), cellsSelected);
+                drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
+                setToolTip(!tSNEPlotCleared, expression);
             }
-        }
 
-        private void drawIsoformReverseComplement(double pixelsPerNucleotide, Color isoformColor, ArrayList<Exon> exons, int isoformEnd,
-                                                  GraphicsContext graphicsContext) {
-            for (int i = 0; i < exons.size(); ++i) {
-                drawExonReverseComplement(isoformEnd, pixelsPerNucleotide, exons, i, isoformColor, graphicsContext);
-                if (i != 0) {
-                    drawIntronReverseComplement(isoformEnd, pixelsPerNucleotide, exons, i, graphicsContext);
+            /**
+             * Sets this isoform graphic to its correct width
+             */
+            private void setIsoformGraphicWidth(double pixelsPerNucleotide) {
+                double isoformGraphicWidth = getIsoformGraphicWidth(pixelsPerNucleotide);
+                setWidth(isoformGraphicWidth);
+            }
+
+            private void clear() {
+                GraphicsContext graphicsContext = getGraphicsContext2D();
+                graphicsContext.clearRect(0, 0, getWidth(), getHeight());
+            }
+
+            /**
+             * Gets the width this isoform graphic should be
+             */
+            private double getIsoformGraphicWidth(double pixelsPerNucleotide) {
+                double isoformWidth = (isoform.getEndNucleotide() - isoform.getStartNucleotide() + 1) * pixelsPerNucleotide;
+                return isoformWidth + IsoformGraphic.ISOFORM_GRAPHIC_SPACING;
+            }
+
+            /**
+             * Either removes the tooltip for this isoform graphic (if shouldn't be shown)
+             * or sets its text to display the given expression (rounded to one decimal)
+             */
+            private void setToolTip(boolean shouldShowToolTip, double expression) {
+                if (shouldShowToolTip) {
+                    toolTip.setText(roundToOneDecimal(expression) + " TPM");
+                    if (!toolTipShowing) {
+                        Tooltip.install(this, toolTip);
+                        toolTipShowing = true;
+                    }
+                } else {
+                    Tooltip.uninstall(this, toolTip);
+                    toolTipShowing = false;
                 }
             }
-        }
 
-        /**
-         * Draws the given exon, without reverse complementing
-         */
-        private void drawExon(int isoformStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i, Color isoformColor,
-                              GraphicsContext graphicsContext) {
-            int exonStart = exons.get(i).getStartNucleotide();
-            int exonEnd = exons.get(i).getEndNucleotide();
-            double startX = (exonStart - isoformStart) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
-            double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
-            drawExonGraphic(startX, width, isoformColor, graphicsContext);
-        }
+            private void drawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, double expression) {
+                Color isoformColor = getIsoformColor(!tSNEPlotCleared, expression);
+                ArrayList<Exon> exons = isoform.getExons();
+                Gene gene = isoform.getGene();
+                GraphicsContext graphicsContext = getGraphicsContext2D();
 
-        /**
-         * Draws the given intron, without reverse complementing
-         */
-        private void drawIntron(int isoformStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i,
-                                GraphicsContext graphicsContext) {
-            int exonStart = exons.get(i).getStartNucleotide() ;
-            int prevExonEnd = exons.get(i - 1).getEndNucleotide();
-            double startX = (prevExonEnd - isoformStart + 1) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
-            double endX = (exonStart - isoformStart) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
-            drawIntronGraphic(startX, endX, graphicsContext);
-        }
+                if(gene.isOnPositiveStrand() || !reverseComplement) {
+                    int isoformStart = isoform.getStartNucleotide();
+                    int geneStart = gene.getStartNucleotide();
 
-        private void drawExonReverseComplement(int isoformEnd, double pixelsPerNucleotide, ArrayList<Exon> exons, int i, Color isoformColor,
-                                               GraphicsContext graphicsContext) {
-            int exonStart = exons.get(i).getStartNucleotide();
-            int exonEnd = exons.get(i).getEndNucleotide();
-            double startX = (isoformEnd - exonEnd) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
-            double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
-            drawExonGraphic(startX, width, isoformColor, graphicsContext);
-        }
+                    double isoformExtraOffset = (isoformStart - geneStart) * pixelsPerNucleotide;
+                    BorderPane.setMargin(this, new Insets(0, ISOFORM_GRAPHIC_DOT_PLOT_SPACING, 0, isoformExtraOffset));
+                    drawIsoform(pixelsPerNucleotide, isoformColor, exons, isoformStart, graphicsContext);
+                } else {
+                    int isoformEnd = isoform.getEndNucleotide();
+                    int geneEnd = gene.getEndNucleotide();
 
-        /**
-         * Draws the given intron, without reverse complementing
-         */
-        private void drawIntronReverseComplement(int isoformEnd, double pixelsPerNucleotide, ArrayList<Exon> exons, int i,
-                                                 GraphicsContext graphicsContext) {
-            int exonStart = exons.get(i).getStartNucleotide() ;
-            int prevExonEnd = exons.get(i - 1).getEndNucleotide();
-            double startX = (isoformEnd - exonStart + 1) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
-            double endX = (isoformEnd - prevExonEnd) * pixelsPerNucleotide + ISOFORM_GRAPHIC_SPACING / 2;
-            drawIntronGraphic(startX, endX, graphicsContext);
-        }
+                    double isoformExtraOffset = (geneEnd - isoformEnd) * pixelsPerNucleotide;
+                    BorderPane.setMargin(this, new Insets(0, 10, 0, ISOFORM_GROUP_OFFSET + isoformExtraOffset));
+                    drawIsoformReverseComplement(pixelsPerNucleotide, isoformColor, exons, isoformEnd, graphicsContext);
+                }
+            }
 
-        private void drawExonGraphic(double startX, double width, Color isoformColor, GraphicsContext graphicsContext) {
-            graphicsContext.setFill(isoformColor);
-            graphicsContext.fillRect(startX, ISOFORM_GRAPHIC_SPACING / 2, width, EXON_HEIGHT);
-            graphicsContext.setFill(OUTLINE_COLOUR);
-            graphicsContext.strokeRect(startX, ISOFORM_GRAPHIC_SPACING / 2, width, EXON_HEIGHT);
-        }
+            private Color getIsoformColor(boolean shouldGetCustomIsoformColor, double expression) {
+                Color isoformColor = DEFAULT_EXON_COLOR;
+                if (shouldGetCustomIsoformColor)
+                    isoformColor = ControllerMediator.getInstance().getColorFromTPMGradient(expression);
+                return isoformColor;
+            }
 
-        private void drawIntronGraphic(double startX, double endX, GraphicsContext graphicsContext) {
-            graphicsContext.setFill(OUTLINE_COLOUR);
-            graphicsContext.strokeLine(startX, EXON_HEIGHT / 2, endX, EXON_HEIGHT / 2);
+            private void drawIsoform(double pixelsPerNucleotide, Color isoformColor, ArrayList<Exon> exons, int isoformStart,
+                                     GraphicsContext graphicsContext) {
+                for (int i = 0; i < exons.size(); ++i) {
+                    drawExon(isoformStart, pixelsPerNucleotide, exons, i, isoformColor, graphicsContext);
+                    if (i != 0)
+                        drawIntron(isoformStart, pixelsPerNucleotide, exons, i, graphicsContext);
+                }
+            }
+
+            private void drawIsoformReverseComplement(double pixelsPerNucleotide, Color isoformColor, ArrayList<Exon> exons, int isoformEnd,
+                                                      GraphicsContext graphicsContext) {
+                for (int i = 0; i < exons.size(); ++i) {
+                    drawExonReverseComplement(isoformEnd, pixelsPerNucleotide, exons, i, isoformColor, graphicsContext);
+                    if (i != 0) {
+                        drawIntronReverseComplement(isoformEnd, pixelsPerNucleotide, exons, i, graphicsContext);
+                    }
+                }
+            }
+
+            private void drawExon(int isoformStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i, Color isoformColor,
+                                  GraphicsContext graphicsContext) {
+                int exonStart = exons.get(i).getStartNucleotide();
+                int exonEnd = exons.get(i).getEndNucleotide();
+                double startX = (exonStart - isoformStart) * pixelsPerNucleotide + IsoformGraphic.ISOFORM_GRAPHIC_SPACING / 2;
+                double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
+                drawExonGraphic(startX, width, isoformColor, graphicsContext);
+            }
+
+            private void drawIntron(int isoformStart, double pixelsPerNucleotide, ArrayList<Exon> exons, int i,
+                                    GraphicsContext graphicsContext) {
+                int exonStart = exons.get(i).getStartNucleotide() ;
+                int prevExonEnd = exons.get(i - 1).getEndNucleotide();
+                double startX = (prevExonEnd - isoformStart + 1) * pixelsPerNucleotide + IsoformGraphic.ISOFORM_GRAPHIC_SPACING / 2;
+                double endX = (exonStart - isoformStart) * pixelsPerNucleotide + IsoformGraphic.ISOFORM_GRAPHIC_SPACING / 2;
+                drawIntronGraphic(startX, endX, graphicsContext);
+            }
+
+            private void drawExonReverseComplement(int isoformEnd, double pixelsPerNucleotide, ArrayList<Exon> exons, int i, Color isoformColor,
+                                                   GraphicsContext graphicsContext) {
+                int exonStart = exons.get(i).getStartNucleotide();
+                int exonEnd = exons.get(i).getEndNucleotide();
+                double startX = (isoformEnd - exonEnd) * pixelsPerNucleotide + IsoformGraphic.ISOFORM_GRAPHIC_SPACING / 2;
+                double width = (exonEnd - exonStart + 1) * pixelsPerNucleotide;
+                drawExonGraphic(startX, width, isoformColor, graphicsContext);
+            }
+
+            private void drawIntronReverseComplement(int isoformEnd, double pixelsPerNucleotide, ArrayList<Exon> exons, int i,
+                                                     GraphicsContext graphicsContext) {
+                int exonStart = exons.get(i).getStartNucleotide() ;
+                int prevExonEnd = exons.get(i - 1).getEndNucleotide();
+                double startX = (isoformEnd - exonStart + 1) * pixelsPerNucleotide + IsoformGraphic.ISOFORM_GRAPHIC_SPACING / 2;
+                double endX = (isoformEnd - prevExonEnd) * pixelsPerNucleotide + IsoformGraphic.ISOFORM_GRAPHIC_SPACING / 2;
+                drawIntronGraphic(startX, endX, graphicsContext);
+            }
+
+            private void drawExonGraphic(double startX, double width, Color isoformColor, GraphicsContext graphicsContext) {
+                graphicsContext.setFill(isoformColor);
+                graphicsContext.fillRect(startX, IsoformGraphic.ISOFORM_GRAPHIC_SPACING / 2, width, EXON_HEIGHT);
+                graphicsContext.setFill(OUTLINE_COLOUR);
+                graphicsContext.strokeRect(startX, IsoformGraphic.ISOFORM_GRAPHIC_SPACING / 2, width, EXON_HEIGHT);
+            }
+
+            private void drawIntronGraphic(double startX, double endX, GraphicsContext graphicsContext) {
+                graphicsContext.setFill(OUTLINE_COLOUR);
+                graphicsContext.strokeLine(startX, EXON_HEIGHT / 2, endX, EXON_HEIGHT / 2);
+            }
         }
     }
 
@@ -797,6 +846,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             graphicsContext.setFill(Color.BLACK);
             graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
             return dotPlotRowItem;
+        }
+
+        private static void addExpressionLevelToolTip(double expression, Node node) {
+            Tooltip tooltip = new Tooltip(roundToOneDecimal(expression) + " TPM");
+            Tooltip.install(node, tooltip);
         }
     }
 
