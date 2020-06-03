@@ -265,8 +265,8 @@ public class ControllerMediator implements Mediator{
         return tsnePlotController.areCellsSelected();
     }
 
-    public Set<TSNEPlotController.CellDataItem> getSelectedCells() {
-        return tsnePlotController.getSelectedCells();
+    public Collection<TSNEPlotController.CellDataItem> getCells(boolean onlySelected) {
+        return tsnePlotController.getCells(onlySelected);
     }
 
     public double getIsoformExpressionLevel(String isoformID, boolean selectedOnly) {
@@ -289,16 +289,16 @@ public class ControllerMediator implements Mediator{
         return  tsnePlotController.getIsoformExpressionLevelInCluster(isoformID, cluster, onlySelected);
     }
 
-    public List<Cluster> getAllClusters() {
-        return labelSetManagerController.getAllClusters();
+    public List<Cluster> getClusters(boolean onlySelected) {
+        return tsnePlotController.getClusters(onlySelected);
     }
 
-    public List<Cluster> getSelectedClusters() {
-        return tsnePlotController.getSelectedClusters();
+    public Collection<TSNEPlotController.CellDataItem> getSelectedCellsInCluster(Cluster cluster) {
+        return tsnePlotController.getSelectedCellsInCluster(cluster);
     }
 
-    public double getFractionOfExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
-        return tsnePlotController.getFractionOfExpressingCells(isoformID, cluster, onlySelected);
+    public int getNumExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
+        return tsnePlotController.getNumExpressingCells(isoformID, cluster, onlySelected);
     }
 
     public boolean isReverseComplementing() {

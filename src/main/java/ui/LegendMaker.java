@@ -27,10 +27,7 @@ public class LegendMaker {
             legend = new HBox();
 
         List<Cluster> clusters;
-        if (onlySelected)
-            clusters = ControllerMediator.getInstance().getSelectedClusters();
-        else
-            clusters = ControllerMediator.getInstance().getAllClusters();
+        clusters = ControllerMediator.getInstance().getClusters(onlySelected);
 
         Iterator<Cluster> iterator = clusters.iterator();
         while(iterator.hasNext()) {

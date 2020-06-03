@@ -34,11 +34,6 @@
                 <GridPane.margin>
                     <Insets top="10" bottom="10"/>
                 </GridPane.margin>
-                <Button fx:id="addAllButton" onAction="#handleAddAllButtonAction" text="Add All" textAlignment="CENTER">
-                    <VBox.margin>
-                        <Insets bottom="10"/>
-                    </VBox.margin>
-                </Button>
                 <Button fx:id="addSelectedButton" onAction="#handleAddSelectedButtonAction" text="Add Selected" textAlignment="CENTER"
                         contentDisplay="TOP" wrapText="true" style="-fx-graphic: url('/icons/addSelected.png')">
                     <VBox.margin>

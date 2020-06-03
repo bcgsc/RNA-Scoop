@@ -114,6 +114,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         for (Gene gene : genes) {
             if (geneGeneGroupMap.containsKey(gene)) {
                 GeneGroup geneGroup = geneGeneGroupMap.get(gene);
+                // gene group must be made unselectable to remove references to its isoform
+                // graphics
                 geneGroup.makeUnselectable();
                 geneGroups.getChildren().remove(geneGroup);
                 geneGeneGroupMap.remove(gene, geneGroup);
@@ -580,7 +582,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
                 toolTip = new Tooltip();
                 toolTipShowing = false;
-
                 double expression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoform.getId(), cellsSelected);
                 drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
                 setToolTip(!tSNEPlotCleared, expression);
@@ -624,7 +625,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
              */
             private void setToolTip(boolean shouldShowToolTip, double expression) {
                 if (shouldShowToolTip) {
-                    toolTip.setText(roundToOneDecimal(expression) + " TPM");
+                    toolTip.setText("TPM: " + roundToOneDecimal(expression));
                     if (!toolTipShowing) {
                         Tooltip.install(this, toolTip);
                         toolTipShowing = true;
@@ -777,17 +778,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         public static double getDotPlotWidth() {
             if (shouldDrawDotPlot()) {
                 boolean onlySelected = ControllerMediator.getInstance().areCellsSelected();
-                int numSelectedClusters = getClusters(onlySelected).size();
+                int numSelectedClusters = ControllerMediator.getInstance().getClusters(onlySelected).size();
                 return numSelectedClusters * DOT_PLOT_COLUMN_WIDTH + (numSelectedClusters - 1) * DOT_PLOT_COLUMN_SPACING + GRAPHIC_SPACING;
             }
             return 0;
-        }
-
-        private static Collection<Cluster> getClusters(boolean onlySelected) {
-            if (onlySelected)
-                return ControllerMediator.getInstance().getSelectedClusters();
-            else
-                return ControllerMediator.getInstance().getAllClusters();
         }
 
         private static void updateDotPlotRow(IsoformGroup isoformGroup) {
@@ -809,15 +803,17 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             double dotX = DOT_PLOT_COLUMN_WIDTH / 2;
             double dotY = DOT_PLOT_ROW_HEIGHT / 2;
             boolean onlySelected = ControllerMediator.getInstance().areCellsSelected();
-            Collection<Cluster> clusters = getClusters(onlySelected);
+            Collection<Cluster> clusters = ControllerMediator.getInstance().getClusters(onlySelected);
             Iterator<Cluster> iterator = clusters.iterator();
 
             while(iterator.hasNext()) {
                 Cluster cluster = iterator.next();
                 double expression = ControllerMediator.getInstance().getIsoformExpressionLevelInCluster(isoformGroup.getIsoform().getId(), cluster, onlySelected);
-                double dotSize = getDotSize(cluster, isoformGroup, onlySelected);
+                int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoformGroup.getIsoform().getId(), cluster, onlySelected);
+                int numCells = onlySelected? ControllerMediator.getInstance().getSelectedCellsInCluster(cluster).size() : cluster.getCells().size();
+                double dotSize = getDotSize((double) numExpressingCells/numCells);
                 Canvas dotPlotRowCircle = getDotPlotRowCircle(dotX, dotY, expression, dotSize);
-                addExpressionLevelToolTip(expression, dotPlotRowCircle);
+                addExpressionLevelToolTip(expression, numExpressingCells, numCells, dotPlotRowCircle);
                 if (iterator.hasNext())
                     HBox.setMargin(dotPlotRowCircle, new Insets(0, DOT_PLOT_COLUMN_SPACING, 0, 0));
                 dotPlotRow.getChildren().add(dotPlotRowCircle);
@@ -825,8 +821,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return dotPlotRow;
         }
 
-        private static double getDotSize(Cluster cluster, IsoformGroup isoformGroup, boolean onlySelected) {
-            double fractionExpressingCells = ControllerMediator.getInstance().getFractionOfExpressingCells(isoformGroup.getIsoform().getId(), cluster, onlySelected);
+        private static double getDotSize(double fractionExpressingCells) {
             if (fractionExpressingCells <= 0.25)
                 return QUARTER_EXPRESS_DOT_SIZE;
             else if (fractionExpressingCells <= 0.5)
@@ -848,8 +843,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return dotPlotRowItem;
         }
 
-        private static void addExpressionLevelToolTip(double expression, Node node) {
-            Tooltip tooltip = new Tooltip(roundToOneDecimal(expression) + " TPM");
+        private static void addExpressionLevelToolTip(double expression, int numExpressingCells, int numCells, Node node) {
+            double percentExpressed = roundToOneDecimal(((double) numExpressingCells / numCells) * 100);
+            Tooltip tooltip = new Tooltip("TPM: " + roundToOneDecimal(expression) + "\n" +
+                                                "Cells: " + numExpressingCells + "/" + numCells + " (" + percentExpressed + "%)");
             Tooltip.install(node, tooltip);
         }
     }

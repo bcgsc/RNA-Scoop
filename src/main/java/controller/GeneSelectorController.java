@@ -35,7 +35,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     @FXML private TextField filterField;
     @FXML private TableView genesTable;
     @FXML private TableView shownGenesTable;
-    @FXML private Button addAllButton;
     @FXML private Button addSelectedButton;
     @FXML private Button removeSelectedButton;
     @FXML private Button clearAllButton;
@@ -62,7 +61,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         genesTable.setDisable(true);
         filterField.setDisable(true);
         shownGenesTable.setDisable(true);
-        addAllButton.setDisable(true);
         addSelectedButton.setDisable(true);
         removeSelectedButton.setDisable(true);
         clearAllButton.setDisable(true);
@@ -75,7 +73,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         genesTable.setDisable(false);
         filterField.setDisable(false);
         shownGenesTable.setDisable(false);
-        addAllButton.setDisable(false);
         addSelectedButton.setDisable(false);
         removeSelectedButton.setDisable(false);
         clearAllButton.setDisable(false);
@@ -171,23 +168,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             clearShownGenes();
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("clearing shown genes");
-        } finally {
-            enableAssociatedFunctionality();
-        }
-    }
-
-    /**
-     * Adds all genes to shown genes table and isoform plot
-     */
-    @FXML
-    protected void handleAddAllButtonAction() {
-        disableAssociatedFunctionality();
-        try {
-            shownGenes.clear();
-            shownGenes.addAll(genes);
-            ControllerMediator.getInstance().addGenesToIsoformPlot(shownGenes);
-        } catch (Exception e) {
-            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding all genes");
         } finally {
             enableAssociatedFunctionality();
         }

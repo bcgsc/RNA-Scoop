@@ -212,13 +212,10 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
      * Returns the average expression level of the isoform with the given
      * ID in either all cells in t-SNE plot, or only those selected
      */
-    public double getIsoformExpressionLevel(String isoformID, boolean selectedOnly) {
+    public double getIsoformExpressionLevel(String isoformID, boolean onlySelected) {
         double isoformExpressionSum = 0;
         Collection<CellDataItem> cells;
-        if (selectedOnly)
-            cells = getSelectedCells();
-        else
-            cells = cellNumberCellMap.values();
+        cells = getCells(onlySelected);
         int numCells = cells.size();
 
         for (CellDataItem cell : cells)
@@ -241,32 +238,43 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         return isoformExpressionSum / numSelected;
     }
 
-    public double getFractionOfExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
-        double numExpressingCells = 0;
+    public int getNumExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
+        int numExpressingCells = 0;
         Collection<TSNEPlotController.CellDataItem> cellsInCluster;
         if (onlySelected)
             cellsInCluster = getSelectedCellsInCluster(cluster);
         else
             cellsInCluster = cluster.getCells();
 
-        int numSelected = cellsInCluster.size();
         for (TSNEPlotController.CellDataItem selectedCell : cellsInCluster) {
             if (selectedCell.getIsoformExpressionLevel(isoformID) > 0)
                 numExpressingCells++;
         }
-        return numExpressingCells / numSelected;
+        return numExpressingCells;
     }
 
-    public Set<CellDataItem> getSelectedCells() {
+    public Collection<CellDataItem> getCells(boolean onlySelected) {
         if (isTSNEPlotCleared())
             return new HashSet<>();
-        return cellSelectionManager.getSelectedCells().values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        else if (onlySelected)
+            return cellSelectionManager.getSelectedCells().values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        else
+            return cellNumberCellMap.values();
     }
 
-    public List<Cluster> getSelectedClusters() {
+    public List<Cluster> getClusters(boolean onlySelected) {
         if (isTSNEPlotCleared())
             return new ArrayList<>();
-        return cellSelectionManager.getSelectedClusters();
+        else if (onlySelected)
+            return cellSelectionManager.getSelectedClusters();
+        else
+            return ControllerMediator.getInstance().getLabelSetInUse().getClusters();
+    }
+
+    public Collection<CellDataItem> getSelectedCellsInCluster(Cluster cluster) {
+        if (isTSNEPlotCleared())
+            return new ArrayList<>();
+        return cellSelectionManager.getSelectedCellsInCluster(cluster);
     }
 
     /**
@@ -303,11 +311,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().displayClusterManager();
     }
 
-    private Collection<CellDataItem> getSelectedCellsInCluster(Cluster cluster) {
-        if (isTSNEPlotCleared())
-            return new ArrayList<>();
-        return cellSelectionManager.getSelectedCellsInCluster(cluster);
-    }
 
     private void disableAssociatedFunctionality() {
         disable();

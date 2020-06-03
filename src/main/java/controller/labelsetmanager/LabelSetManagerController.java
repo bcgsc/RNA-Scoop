@@ -43,7 +43,6 @@ public class LabelSetManagerController {
      * Checks if method is running on the JavaFX Application Thread (necessary because Parser calls this
      * method on a different thread). If running on JavaFX Application thread, adds label set right away,
      * else makes JavaFX Application Thread to do it later
-     * @param labelSet
      */
     public void addLabelSet(LabelSet labelSet) {
         if (!Platform.isFxApplicationThread())
@@ -96,13 +95,6 @@ public class LabelSetManagerController {
 
     public LabelSet getLabelSetInUse() {
         return labelSetInUse;
-    }
-
-    /**
-     * Returns all the clusters in the label set in use
-     */
-    public List<Cluster> getAllClusters() {
-       return labelSetInUse.getClusters();
     }
 
     public int getNumLabelSets() {

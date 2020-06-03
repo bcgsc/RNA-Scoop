@@ -44,7 +44,7 @@ public class LabelSet {
      * Adds new cluster to label set containing the selected cells in the t-SNE plot
      */
     public void addClusterFromSelectedCells() {
-        Set<TSNEPlotController.CellDataItem> selectedCells = ControllerMediator.getInstance().getSelectedCells();
+        Set<TSNEPlotController.CellDataItem> selectedCells = (Set<TSNEPlotController.CellDataItem>) ControllerMediator.getInstance().getCells(true);
         int clusterNumber = clusters.size() + 1;
         Cluster newCluster = new Cluster("Cluster " + clusterNumber, this, selectedCells);
         for (TSNEPlotController.CellDataItem selectedCell : selectedCells) {
