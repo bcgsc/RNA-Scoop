@@ -82,21 +82,21 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     /**
      * Adds given genes to isoform plot as long as aren't already added and should be shown
-     * (doesn't add genes without isoforms with junctions if hiding isoforms without junctions)
+     * (doesn't add genes with only single-exon isoforms if hiding single-exon isoforms)
      */
     public void addGenes(Collection<Gene> genes) {
         boolean showGeneNameAndID = ControllerMediator.getInstance().isShowingGeneNameAndID();
         boolean showGeneName = ControllerMediator.getInstance().isShowingGeneName();
         boolean showIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
         boolean showIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
-        boolean hideIsoformsWithNoJunctions = ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions();
+        boolean hideSingleExonIsoforms = ControllerMediator.getInstance().isHidingSingleExonIsoforms();
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
         boolean tSNEPlotCleared = ControllerMediator.getInstance().isTSNEPlotCleared();
         boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
         for (Gene gene : genes) {
-            if (!geneGeneGroupMap.containsKey(gene) && (!hideIsoformsWithNoJunctions || gene.hasIsoformWithJunctions())) {
+            if (!geneGeneGroupMap.containsKey(gene) && (!hideSingleExonIsoforms || gene.hasMultiExonIsoforms())) {
                 GeneGroup geneGroup = new GeneGroup(gene, showGeneNameAndID, showGeneName, showIsoformID, showIsoformName,
-                                                    hideIsoformsWithNoJunctions, reverseComplement, tSNEPlotCleared, cellsSelected);
+                                                    hideSingleExonIsoforms, reverseComplement, tSNEPlotCleared, cellsSelected);
                 geneGroups.getChildren().add(geneGroup);
                 geneGeneGroupMap.put(gene, geneGroup);
                 DotPlot.addDotPlotRowsIfShould(geneGroup);
@@ -158,15 +158,15 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Checks if are currently hiding isoforms without junctions, and hides/shows
+     * Checks if are currently hiding single-exon isoforms, and hides/shows
      * isoforms accordingly
      */
-    public void updateHideIsoformsNoJunctionsStatus() {
-        boolean hideIsoformsWithNoJunctions = ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions();
-        if (hideIsoformsWithNoJunctions)
-            hideIsoformsNoJunctions();
+    public void updateHideSingleExonIsoformsStatus() {
+        boolean hidingSingleExonIsoforms = ControllerMediator.getInstance().isHidingSingleExonIsoforms();
+        if (hidingSingleExonIsoforms)
+            hideSingeExonIsoforms();
         else
-            showIsoformsNoJunctions();
+            showSingleExonIsoforms();
     }
 
     /**
@@ -220,14 +220,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().displayTPMGradientAdjuster();
     }
 
-    private void hideIsoformsNoJunctions() {
+    private void hideSingeExonIsoforms() {
         Collection<Gene> genesToRemove = new ArrayList<>();
         for (Gene gene : geneGeneGroupMap.keySet()) {
-            if (!gene.hasIsoformWithJunctions()) {
+            if (!gene.hasMultiExonIsoforms()) {
                 genesToRemove.add(gene);
             } else {
                 GeneGroup geneGroup = geneGeneGroupMap.get(gene);
-                geneGroup.removeIsoformsNoJunctions();
+                geneGroup.removeSingleExonIsoforms();
             }
         }
         if (genesToRemove.size() > 0)
@@ -235,7 +235,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         DotPlot.updateDotPlotLegend( false);
     }
 
-    private void showIsoformsNoJunctions() {
+    private void showSingleExonIsoforms() {
         Collection<Gene> genesToAdd = new ArrayList<>();
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
         boolean showIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
@@ -247,7 +247,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 genesToAdd.add(gene);
             } else {
                 GeneGroup geneGroup = geneGeneGroupMap.get(gene);
-                geneGroup.addIsoformsNoJunctions(showIsoformName, showIsoformID, reverseComplement, tSNEPlotCleared, cellsSelected);
+                geneGroup.addSingleExonIsoforms(showIsoformName, showIsoformID, reverseComplement, tSNEPlotCleared, cellsSelected);
             }
         }
         if (genesToAdd.size() > 0)
@@ -298,12 +298,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private IsoformGroup firstIsoformGroup;
 
         public GeneGroup(Gene gene, boolean showGeneNameAndID, boolean showGeneName, boolean showIsoformID,
-                         boolean showIsoformName, boolean hideIsoformsWithNoJunctions, boolean reverseComplement,
+                         boolean showIsoformName, boolean hideSingleExonIsoforms, boolean reverseComplement,
                          boolean tSNEPlotCleared, boolean cellsSelected) {
             this.gene = gene;
             isoformsIsoformGroupMap = new HashMap<>();
             addLabel(showGeneNameAndID, showGeneName, reverseComplement);
-            addIsoforms(showIsoformName, showIsoformID, hideIsoformsWithNoJunctions, reverseComplement, tSNEPlotCleared, cellsSelected);
+            addIsoforms(showIsoformName, showIsoformID, hideSingleExonIsoforms, reverseComplement, tSNEPlotCleared, cellsSelected);
             // spacing is spacing between isoforms
             setSpacing(7.5);
         }
@@ -350,18 +350,18 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
         }
 
-        public void removeIsoformsNoJunctions() {
+        public void removeSingleExonIsoforms() {
             for (Isoform isoform :  gene.getIsoforms())
-                if (!isoform.hasExonJunctions())
+                if (!isoform.isMultiExonic())
                     removeIsoform(isoform);
         }
 
-        public void addIsoformsNoJunctions(boolean showIsoformName, boolean showIsoformID, boolean reverseComplement,
-                                           boolean tSNEPlotCleared, boolean cellsSelected) {
+        public void addSingleExonIsoforms(boolean showIsoformName, boolean showIsoformID, boolean reverseComplement,
+                                          boolean tSNEPlotCleared, boolean cellsSelected) {
             double pixelsPerNucleotide = getPixelsPerNucleotide();
 
             for (Isoform isoform : gene.getIsoforms()) {
-                if (!isoform.hasExonJunctions()) {
+                if (!isoform.isMultiExonic()) {
                     IsoformGroup isoformGroup = new IsoformGroup(isoform, pixelsPerNucleotide, showIsoformName, showIsoformID,
                                                                  reverseComplement, tSNEPlotCleared, cellsSelected);
                     addIsoform(isoformGroup);
@@ -376,14 +376,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             getChildren().add(label);
         }
 
-        private void addIsoforms(boolean showIsoformName, boolean showIsoformID, boolean hideIsoformsWithNoJunctions,
+        private void addIsoforms(boolean showIsoformName, boolean showIsoformID, boolean hideSingleExonIsoforms,
                                  boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
             double pixelsPerNucleotide = getPixelsPerNucleotide();
             Collection<String> isoformsID = gene.getIsoformsMap().keySet();
             List<String> sortedIsoformsIDs = Util.asSortedList(isoformsID);
             for (String isoformID : sortedIsoformsIDs) {
                 Isoform isoform = gene.getIsoform(isoformID);
-                if (!hideIsoformsWithNoJunctions || isoform.hasExonJunctions()) {
+                if (!hideSingleExonIsoforms || isoform.isMultiExonic()) {
                     IsoformGroup isoformGroup = new IsoformGroup(isoform, pixelsPerNucleotide, showIsoformName,
                             showIsoformID, reverseComplement, tSNEPlotCleared, cellsSelected);
                     addIsoform(isoformGroup);

@@ -13,7 +13,7 @@
         <VBox.margin>
             <Insets top="10" left="10" right="10"/>
         </VBox.margin>
-        <Button fx:id="changeClusterLabelsButton" onAction="#handleChangeClusterLabelsButton" text="Change Cluster Labels"/>
+        <Button fx:id="changeClusterLabelsButton" onAction="#handleChangeClusterLabelsButton" text="Change cluster labels"/>
         <Button fx:id="drawTSNEButton" onAction="#handleDrawTSNEButton" text="Draw t-SNE">
             <HBox.margin>
                 <Insets left="10"/>

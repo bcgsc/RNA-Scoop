@@ -13,7 +13,7 @@ public class SessionMaker {
     public static final String TSNE_PLOT_OPEN_KEY = "t-sne open";
     public static final String CONSOLE_OPEN_KEY = "console open";
     public static final String REVERSE_COMPLEMENT_KEY = "rev complement";
-    public static final String HIDE_ISOFORMS_WITH_NO_JUNCTIONS_KEY = "hide isoforms with no junctions";
+    public static final String HIDE_SINGLE_EXON_ISOFORMS_KEY = "hide single-exon isoform";
     public static final String HIDE_DOT_PLOT_KEY = "hide dot plot";
     public static final String SHOW_GENE_NAME_AND_ID_KEY = "show gene name and id";
     public static final String SHOW_GENE_NAME_KEY = "show gene name";
@@ -28,8 +28,7 @@ public class SessionMaker {
      * Creates a session containing:
      *   - the current loaded path
      *   - whether the isoform plot, t-sne plot and console are opened or closed
-     *   - whether the reverse complement option is selected
-     *   - whether the show names option is selected
+     *   - the current isoform plot settings
      *   - the console messages
      */
     public static JSONObject makeSession() {
@@ -39,7 +38,7 @@ public class SessionMaker {
         session.put(TSNE_PLOT_OPEN_KEY, ControllerMediator.getInstance().isTSNEPlotOpen());
         session.put(CONSOLE_OPEN_KEY, ControllerMediator.getInstance().isConsoleOpen());
         session.put(REVERSE_COMPLEMENT_KEY, ControllerMediator.getInstance().isReverseComplementing());
-        session.put(HIDE_ISOFORMS_WITH_NO_JUNCTIONS_KEY, ControllerMediator.getInstance().isHidingIsoformsWithNoJunctions());
+        session.put(HIDE_SINGLE_EXON_ISOFORMS_KEY, ControllerMediator.getInstance().isHidingSingleExonIsoforms());
         session.put(HIDE_DOT_PLOT_KEY, ControllerMediator.getInstance().isHidingDotPlot());
         session.put(SHOW_GENE_NAME_AND_ID_KEY, ControllerMediator.getInstance().isShowingGeneNameAndID());
         session.put(SHOW_GENE_NAME_KEY, ControllerMediator.getInstance().isShowingGeneName());

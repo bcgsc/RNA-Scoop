@@ -68,16 +68,12 @@ public class Gene implements Comparable<Gene> {
         return isoforms.size();
     }
 
-    public boolean hasIsoformWithJunctions() {
+    public boolean hasMultiExonIsoforms() {
         for (Isoform isoform : isoforms.values()) {
-            if (isoform.hasExonJunctions())
+            if (isoform.isMultiExonic())
                 return true;
         }
         return false;
-    }
-
-    public Collection<Isoform> getIsoformsWithJunctions() {
-        return isoforms.values().stream().filter(Isoform::hasExonJunctions).collect(Collectors.toList());
     }
 
     public String getName() {

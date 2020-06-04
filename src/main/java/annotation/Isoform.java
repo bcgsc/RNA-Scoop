@@ -8,22 +8,18 @@ public class Isoform {
     private ArrayList<Exon> exons;
     private String id;
     private String name;
-    private boolean hasExonJunctions;
 
     public Isoform(String id, Gene gene) {
         this.gene = gene;
         this.id = id;
         exons = new ArrayList<>();
         name = null;
-        hasExonJunctions = false;
     }
 
     public void addExon(Exon exon) {
         if (!exons.contains(exon)) {
             exons.add(exon);
             exons.sort(Exon::compareTo);
-            if(exons.size() > 1 && !hasExonJunctions)
-                hasExonJunctions = true;
         }
     }
 
@@ -47,7 +43,9 @@ public class Isoform {
         return gene;
     }
 
-    public boolean hasExonJunctions() {return hasExonJunctions;}
+    public boolean isMultiExonic() {
+        return exons.size() > 1;
+    }
 
     /**
      * NOTE: assumes exons are sorted on increasing start coordinate

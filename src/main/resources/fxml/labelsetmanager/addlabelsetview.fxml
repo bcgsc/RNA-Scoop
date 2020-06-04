@@ -22,7 +22,7 @@
                             <Insets right="3" top="3" />
                         </HBox.margin>
                     </Text>
-                    <TextField fx:id="labelSetNameTextField" focusTraversable="false" prefWidth="150" promptText="Label Set Name" />
+                    <TextField fx:id="labelSetNameTextField" focusTraversable="false" prefWidth="150" promptText="Label set name" />
                 </HBox>
                 <HBox>
                     <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
@@ -36,18 +36,18 @@
                                 <Insets bottom="10" />
                             </VBox.margin>
                         </TableView>
-                        <Button onAction="#handleSaveLabelSetButton" text="Save Label Set" />
+                        <Button onAction="#handleSaveLabelSetButton" text="Save label set" />
                     </VBox>
                     <VBox alignment="CENTER">
                         <HBox.margin>
                             <Insets left="10" />
                         </HBox.margin>
-                        <Button onAction="#handleMakeClusterButton" text="Add New Cluster From&#10; Cell Selection" textAlignment="CENTER">
+                        <Button onAction="#handleMakeClusterButton" text="Add new cluster from&#10; cell selection" textAlignment="CENTER">
                             <VBox.margin>
                                 <Insets bottom="10" />
                             </VBox.margin>
                         </Button>
-                        <Button onAction="#handleRemoveClusterButton" text="Remove Label" />
+                        <Button onAction="#handleRemoveClusterButton" text="Remove label" />
                     </VBox>
                 </HBox>
             </VBox>

@@ -34,7 +34,7 @@ public class MainController implements InteractiveElementController {
     // default isoform plot setting toggles
     // NOTE: for the gene name/id settings at least one should be true
     private static final boolean DEFAULT_REVERSE_COMPLEMENT_SETTING = false;
-    private static final boolean DEFAULT_HIDE_ISOFORMS_WITH_NO_JUNCTIONS_SETTING = false;
+    private static final boolean DEFAULT_HIDE_SINGLE_EXON_ISOFORMS_SETTING = false;
     private static final boolean DEFAULT_HIDE_DOT_PLOT_SETTING = false;
     private static final boolean DEFAULT_SHOW_GENE_NAME_AND_ID_SETTING = false;
     private static final boolean DEFAULT_SHOW_GENE_NAME_SETTING = true;
@@ -52,7 +52,7 @@ public class MainController implements InteractiveElementController {
     @FXML private MenuItem consoleToggle;
     @FXML private SplitPane verticalSplitPane;
     @FXML private SplitPane horizontalSplitPane;
-    @FXML private CheckMenuItem hideIsoformsWithNoJunctionsToggle;
+    @FXML private CheckMenuItem hideSingleExonIsoformsToggle;
     @FXML private CheckMenuItem revComplementToggle;
     @FXML private CheckMenuItem hideDotPlotToggle;
     // gene label toggles
@@ -189,8 +189,8 @@ public class MainController implements InteractiveElementController {
         return hideDotPlotToggle.isSelected();
     }
 
-    public boolean isHidingIsoformsWithNoJunctions () {
-        return hideIsoformsWithNoJunctionsToggle.isSelected();
+    public boolean isHidingSingleExonIsoforms() {
+        return hideSingleExonIsoformsToggle.isSelected();
     }
 
     public boolean isShowingGeneAndIDName() {
@@ -275,12 +275,12 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * When hide isoforms with no junctions toggle is selected/deselected changes whether
-     * isoforms without junctions in isoform plot are hidden, accordingly
+     * When hide single-exon isoforms toggle is selected/deselected changes whether
+     * isoforms with only one exon in isoform plot are hidden, accordingly
      */
     @FXML
-    protected void handleHideIsoformsWithNoJunctionsToggle() {
-        ControllerMediator.getInstance().updateHideIsoformsNoJunctionsStatus();
+    protected void handleHideSingleExonIsoformsToggle() {
+        ControllerMediator.getInstance().updateHideSingleExonIsoformsStatus();
     }
 
     /**
@@ -423,7 +423,7 @@ public class MainController implements InteractiveElementController {
      */
     private void restoreIsoformPlotSettingsTogglesFromJSON(Map settings) {
         restoreReverseComplementToggle(settings);
-        restoreHideIsoformsWithNoJunctionsToggle(settings);
+        restoreHideSingleExonIsoformsToggle(settings);
         restoreHideDotPlotToggle(settings);
         restoreShowGeneNameIDToggles(settings);
         restoreShowIsoformNameToggle(settings);
@@ -451,12 +451,12 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * If the hide isoforms with no junctions toggle was selected in the previous session, selects it,
+     * If the hide single-exon isoforms toggle was selected in the previous session, selects it,
      * else deselects it
      */
-    private void restoreHideIsoformsWithNoJunctionsToggle(Map settings) {
-        boolean wasHidingIsoformsWithNoJunctions = (boolean) settings.get(SessionMaker.HIDE_ISOFORMS_WITH_NO_JUNCTIONS_KEY);
-        hideIsoformsWithNoJunctionsToggle.setSelected(wasHidingIsoformsWithNoJunctions);
+    private void restoreHideSingleExonIsoformsToggle(Map settings) {
+        boolean wasHidingSingleExonIsoforms = (boolean) settings.get(SessionMaker.HIDE_SINGLE_EXON_ISOFORMS_KEY);
+        hideSingleExonIsoformsToggle.setSelected(wasHidingSingleExonIsoforms);
     }
 
     /**
@@ -503,7 +503,7 @@ public class MainController implements InteractiveElementController {
 
     private void setIsoformPlotSettingsToDefault() {
         revComplementToggle.setSelected(DEFAULT_REVERSE_COMPLEMENT_SETTING);
-        hideIsoformsWithNoJunctionsToggle.setSelected(DEFAULT_HIDE_ISOFORMS_WITH_NO_JUNCTIONS_SETTING);
+        hideSingleExonIsoformsToggle.setSelected(DEFAULT_HIDE_SINGLE_EXON_ISOFORMS_SETTING);
         hideDotPlotToggle.setSelected(DEFAULT_HIDE_DOT_PLOT_SETTING);
         showGeneNameAndIDToggle.setSelected(DEFAULT_SHOW_GENE_NAME_AND_ID_SETTING);
         showGeneNameToggle.setSelected(DEFAULT_SHOW_GENE_NAME_SETTING);

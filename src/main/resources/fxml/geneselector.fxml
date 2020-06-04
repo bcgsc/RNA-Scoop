@@ -14,7 +14,7 @@
                 <Insets topRightBottomLeft="10"/>
             </VBox.margin>
             <TextField fx:id="filterField" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="3"
-                       promptText="Search Genes by Gene ID / Name">
+                       promptText="Search genes by gene ID / name">
                 <GridPane.margin>
                     <Insets top="10" right="10" left="10" bottom="2"/>
                 </GridPane.margin>
@@ -34,19 +34,19 @@
                 <GridPane.margin>
                     <Insets top="10" bottom="10"/>
                 </GridPane.margin>
-                <Button fx:id="addSelectedButton" onAction="#handleAddSelectedButtonAction" text="Add Selected" textAlignment="CENTER"
+                <Button fx:id="addSelectedButton" onAction="#handleAddSelectedButtonAction" text="Add selected" textAlignment="CENTER"
                         contentDisplay="TOP" wrapText="true" style="-fx-graphic: url('/icons/addSelected.png')">
                     <VBox.margin>
                         <Insets bottom="10"/>
                     </VBox.margin>
                 </Button>
-                <Button fx:id="removeSelectedButton" onAction="#handleRemoveSelectedButtonAction" text="Remove Selected" textAlignment="CENTER"
+                <Button fx:id="removeSelectedButton" onAction="#handleRemoveSelectedButtonAction" text="Remove selected" textAlignment="CENTER"
                         contentDisplay="TOP" wrapText="true" style="-fx-graphic: url('/icons/removeSelected.png')">
                     <VBox.margin>
                         <Insets bottom="10"/>
                     </VBox.margin>
                 </Button>
-                <Button fx:id="clearAllButton" onAction="#handleClearAllButtonAction" text="Clear All" textAlignment="CENTER" wrapText="true"/>
+                <Button fx:id="clearAllButton" onAction="#handleClearAllButtonAction" text="Clear all" textAlignment="CENTER" wrapText="true"/>
             </VBox>
             <VBox alignment="CENTER" GridPane.columnIndex="2" GridPane.rowIndex="1">
                 <GridPane.margin>

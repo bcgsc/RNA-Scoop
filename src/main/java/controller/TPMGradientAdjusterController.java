@@ -51,7 +51,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     // TPM gradient controls
     @FXML private TextField gradientMinTPMField;
     @FXML private TextField gradientMaxTPMField;
-    @FXML private Button useRecommendedMaxMinButton;
+    @FXML private Button useAutoMinMaxButton;
     @FXML private ColorPicker minTPMColorPicker;
     @FXML private ColorPicker midTPMColorPicker;
     @FXML private ColorPicker maxTPMColorPicker;
@@ -79,7 +79,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     public void disable() {
         gradientMinTPMField.setDisable(true);
         gradientMaxTPMField.setDisable(true);
-        useRecommendedMaxMinButton.setDisable(true);
+        useAutoMinMaxButton.setDisable(true);
         scaleChooser.setDisable(true);
         minTPMColorPicker.setDisable(true);
         minTPMColorPicker.hide();
@@ -95,7 +95,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     public void enable() {
         gradientMinTPMField.setDisable(false);
         gradientMaxTPMField.setDisable(false);
-        useRecommendedMaxMinButton.setDisable(false);
+        useAutoMinMaxButton.setDisable(false);
         scaleChooser.setDisable(false);
         minTPMColorPicker.setDisable(false);
         midTPMColorPicker.setDisable(false);
@@ -126,7 +126,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         this.recommendedMaxTPM = recommendedMaxTPM;
     }
 
-    public void setGradientMaxMinToRecommended() {
+    public void setGradientMinMaxToRecommended() {
         gradientMinTPMField.setText(Integer.toString(recommendedMinTPM));
         gradientMaxTPMField.setText(Integer.toString(recommendedMaxTPM));
         gradientMinTPM = recommendedMinTPM;
@@ -193,12 +193,12 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     }
 
     /**
-     * Sets the gradient max and min to the recommended values and redraws the
+     * Sets the gradient min and max to the recommended values and redraws the
      * genes in the isoform plot
      */
     @FXML
-    protected void handleUseRecommendedMaxMinButton() {
-        setGradientMaxMinToRecommended();
+    protected void handleAutoMinMaxButton() {
+        setGradientMinMaxToRecommended();
         ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
     }
 
@@ -296,7 +296,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         maxTPMColorPicker.setValue(DEFAULT_MAX_TPM_COLOR);
         recommendedMinTPM = DEFAULT_RECOMMENDED_MIN_TPM;
         recommendedMaxTPM = DEFAULT_RECOMMENDED_MAX_TPM;
-        setGradientMaxMinToRecommended();
+        setGradientMinMaxToRecommended();
         drawTPMGradient();
     }
 

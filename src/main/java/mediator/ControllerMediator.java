@@ -119,8 +119,8 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.updateGeneReverseComplementStatus();
     }
 
-    public void updateHideIsoformsNoJunctionsStatus() {
-        isoformPlotController.updateHideIsoformsNoJunctionsStatus();
+    public void updateHideSingleExonIsoformsStatus() {
+        isoformPlotController.updateHideSingleExonIsoformsStatus();
     }
 
     public void updateHideDotPlotStatus() {
@@ -305,8 +305,8 @@ public class ControllerMediator implements Mediator{
         return  mainController.isReverseComplementing();
     }
 
-    public boolean isHidingIsoformsWithNoJunctions() {
-        return  mainController.isHidingIsoformsWithNoJunctions();
+    public boolean isHidingSingleExonIsoforms() {
+        return  mainController.isHidingSingleExonIsoforms();
     }
 
     public boolean isHidingDotPlot() {
@@ -367,7 +367,7 @@ public class ControllerMediator implements Mediator{
     }
 
     public void setGradientMaxMinToRecommended() {
-        tpmGradientAdjusterController.setGradientMaxMinToRecommended();
+        tpmGradientAdjusterController.setGradientMinMaxToRecommended();
     }
 
     public void addMinTPMToGradientMinTPMLabel(double realMinTPM) {
