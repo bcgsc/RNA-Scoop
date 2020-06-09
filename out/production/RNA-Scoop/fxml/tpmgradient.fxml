@@ -41,7 +41,7 @@
                 <TextField fx:id="gradientMaxTPMField" onAction="#handleChangedGradientMaxMinTPM" prefWidth="75"/>
             </HBox>
             <HBox alignment="BOTTOM_CENTER" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                <Button fx:id="useRecommendedMaxMinButton" onAction="#handleUseRecommendedMaxMinButton" text="Use Recommended Max/Min"/>
+                <Button fx:id="useAutoMinMaxButton" onAction="#handleAutoMinMaxButton" text="Auto min/max"/>
             </HBox>
             <Rectangle fx:id="tpmGradient" GridPane.rowIndex="1" GridPane.columnSpan="3" GridPane.halignment="CENTER">
                 <GridPane.margin>

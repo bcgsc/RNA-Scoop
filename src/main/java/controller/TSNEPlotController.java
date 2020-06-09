@@ -28,7 +28,6 @@ import org.jfree.chart.entity.XYItemEntity;
 import org.jfree.chart.panel.selectionhandler.*;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.extension.DatasetCursor;
 import org.jfree.data.extension.DatasetSelectionExtension;
 import org.jfree.data.extension.impl.DatasetExtensionManager;
 import org.jfree.data.extension.impl.XYCursor;
@@ -72,7 +71,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
     private HashMap<String, Integer> isoformIndexMap;
     private double[][] cellIsoformExpressionMatrix;
-    private ChartPanel tSNEPlot;
+    private static ChartPanel tSNEPlot;
     private ScrollPane tSNEPlotLegend;
     private CellSelectionManager cellSelectionManager;
     private HashMap<Integer, CellDataItem> cellNumberCellMap;
@@ -173,7 +172,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
     public void redrawTSNEPlot() {
         if (!isTSNEPlotCleared()) {
-            tSNEPlot.getChart().setTitle(tSNEPlot.getChart().getTitle());
+            redrawTSNEPlotSansLegend();
             redrawTSNEPlotLegend();
         }
     }
@@ -328,6 +327,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
     }
 
+    private void redrawTSNEPlotSansLegend() {
+        if (!isTSNEPlotCleared())
+            tSNEPlot.getChart().setTitle(tSNEPlot.getChart().getTitle());
+
+    }
+
     /**
      * Represents a cell in the t-SNE plot
      */
@@ -377,6 +382,13 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             runLater(() -> ControllerMediator.getInstance().deselectAllIsoforms());
             runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
         }
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            super.mouseReleased(e);
+            ChartPanel chartPanel = (ChartPanel) e.getSource();
+            chartPanel.repaint();
+            System.out.println("we repainted?");
+        }
     }
 
     private class TSNEPlotRenderer extends XYLineAndShapeRenderer {
@@ -413,10 +425,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     private class CellSelectionManager implements SelectionManager {
         private DatasetExtensionManager extensionManager;
         private HashMap<Cluster, Collection<CellDataItem>> selectedCells;
+        private boolean redrawOnClear;
 
         public CellSelectionManager(DatasetExtensionManager extensionManager) {
             selectedCells = new HashMap<>();
             this.extensionManager = extensionManager;
+            redrawOnClear = true;
         }
 
         public boolean isCellSelected(CellDataItem cellDataItem) {
@@ -472,7 +486,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             Collection<CellDataItem> cellsToMove = selectedCells.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
             selectedCells.clear();
             for (CellDataItem cell : cellsToMove)
-                addCellToSelectedCells(cell.getCellNumber());
+                select(cell);
         }
 
         /**
@@ -481,16 +495,18 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          */
         public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
             List<XYSeries> cellGroups = cellsInTSNEPlot.getSeries();
-            muteAll();
+            redrawOnClear = false;
             clearSelection();
             for (XYSeries cellGroup : cellGroups) {
                 for (XYDataItem dataItem : cellGroup.getItems()) {
                     CellDataItem cell = (CellDataItem) dataItem;
                     if (shouldSelectCell(cell, isoformIDs))
                         select(cell);
+
                 }
             }
-            unmuteAndTrigger();
+            redrawTSNEPlotSansLegend();
+            redrawOnClear = true;
         }
 
 
@@ -505,15 +521,21 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 x /= scaleX;
                 y /= scaleY;
             }
+            boolean shouldRedraw = false;
             EntityCollection entities = tSNEPlot.getChartRenderingInfo().getEntityCollection();
-            for (ChartEntity chartEntity : entities.getEntities())
+            for (ChartEntity chartEntity : entities.getEntities()) {
                 if (chartEntity instanceof DataItemEntity) {
                     XYItemEntity xyItemEntity = (XYItemEntity) chartEntity;
                     if (xyItemEntity.getArea().contains(new Point2D.Double(x, y))) {
                         select(xyItemEntity);
+                        if (!shouldRedraw)
+                            shouldRedraw = true;
                     }
                 }
             }
+            if (shouldRedraw)
+                redrawTSNEPlotSansLegend();
+        }
 
         /**
          * Selects any cells contained in given lasso selection
@@ -531,7 +553,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 selectionArea.transform(st);
                 selection = new GeneralPath(selectionArea);
             }
-            muteAll();
+            boolean shouldRedraw = false;
             EntityCollection entities = tSNEPlot.getChartRenderingInfo().getEntityCollection();
             for (ChartEntity chartEntity : entities.getEntities()) {
                 if (chartEntity instanceof XYItemEntity) {
@@ -540,15 +562,20 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                     Area entityShape = new Area(xyItemEntity.getArea());
                     if (selectionShape.contains(entityShape.getBounds())) {
                         select(xyItemEntity);
+                        if (!shouldRedraw)
+                            shouldRedraw = true;
                     } else {
                         entityShape.subtract(selectionShape);
                         if (entityShape.isEmpty()) {
                             select(xyItemEntity);
+                            if (!shouldRedraw)
+                                shouldRedraw = true;
                         }
                     }
                 }
             }
-            unmuteAndTrigger();
+            if (shouldRedraw)
+                redrawTSNEPlotSansLegend();
         }
 
         /**
@@ -562,39 +589,28 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          */
         @Override
         public void clearSelection() {
-            if (extensionManager.supports(cellsInTSNEPlot, DatasetSelectionExtension.class)) {
-                DatasetSelectionExtension<?> selectionExtension = extensionManager.getExtension(cellsInTSNEPlot, DatasetSelectionExtension.class);
-                selectedCells.clear();
-                selectionExtension.clearSelection();
-            }
+            selectedCells.clear();
+            if (redrawOnClear)
+                redrawTSNEPlotSansLegend();
         }
 
         public HashMap<Cluster, Collection<CellDataItem>> getSelectedCells() {
             return selectedCells;
         }
 
-        private void muteAll() {
-            this.setNotifyOnListenerExtensions(false);
-        }
-
-        private void unmuteAndTrigger() {
-            this.setNotifyOnListenerExtensions(true);
-        }
-
         /**
-         * Finds actual cell graphic in t-SNE plot associated with given cell data
-         * item and selects it
+         * Selects given cell
          */
         private void select(CellDataItem cell) {
-            EntityCollection entities = tSNEPlot.getChartRenderingInfo().getEntityCollection();
-            for (ChartEntity chartEntity : entities.getEntities()) {
-                if (chartEntity instanceof XYItemEntity) {
-                    XYItemEntity xyItemEntity = (XYItemEntity) chartEntity;
-                    CellDataItem xyItemEntityCell = (CellDataItem) cellsInTSNEPlot.getSeries(xyItemEntity.getSeriesIndex()).getItems().get(xyItemEntity.getItem());
-                    if (cell == xyItemEntityCell)
-                        select(xyItemEntity);
-                }
+            Cluster cluster = ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(cell.getCellNumber());
+            Collection<CellDataItem> selectedCellsOfSameCluster;
+            if (selectedCells.containsKey(cluster)) {
+                selectedCellsOfSameCluster =  selectedCells.get(cluster);
+            } else {
+                selectedCellsOfSameCluster = new ArrayList<>();
+                selectedCells.put(cluster, selectedCellsOfSameCluster);
             }
+            selectedCellsOfSameCluster.add(cell);
         }
 
         /**
@@ -602,13 +618,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          * in the t-SNE plot
          */
         private void select(XYItemEntity xyItemEntity) {
-            if (cellsInTSNEPlot.equals(xyItemEntity.getGeneralDataset()) && extensionManager.supports(xyItemEntity.getGeneralDataset(), DatasetSelectionExtension.class)) {
-                int cellNumber = xyItemEntity.getItem();
-                addCellToSelectedCells(cellNumber);
-                DatasetCursor cursor = xyItemEntity.getItemCursor();
-                DatasetSelectionExtension selectionExtension = extensionManager.getExtension(xyItemEntity.getGeneralDataset(), DatasetSelectionExtension.class);
-                selectionExtension.setSelected(cursor, true);
-            }
+            int cellNumber = xyItemEntity.getItem();
+            select(cellNumberCellMap.get(cellNumber));
         }
 
         /**
@@ -621,24 +632,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                     return true;
             }
             return false;
-        }
-
-        private void setNotifyOnListenerExtensions(boolean notify) {
-            DatasetSelectionExtension<?> selectionExtension = (DatasetSelectionExtension) extensionManager.getExtension(cellsInTSNEPlot, DatasetSelectionExtension.class);
-            selectionExtension.setNotify(notify);
-        }
-
-        private void addCellToSelectedCells(Integer cellNumber) {
-            Cluster cluster = ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(cellNumber);
-            CellDataItem cell = cellNumberCellMap.get(cellNumber);
-            Collection<CellDataItem> selectedCellsOfSameCluster;
-            if (selectedCells.containsKey(cluster)) {
-                selectedCellsOfSameCluster =  selectedCells.get(cluster);
-            } else {
-                selectedCellsOfSameCluster = new ArrayList<>();
-                selectedCells.put(cluster, selectedCellsOfSameCluster);
-            }
-            selectedCellsOfSameCluster.add(cell);
         }
     }
 
