@@ -269,10 +269,6 @@ public class ControllerMediator implements Mediator{
         return tsnePlotController.getCells(onlySelected);
     }
 
-    public double getIsoformExpressionLevel(String isoformID, boolean selectedOnly) {
-        return tsnePlotController.getIsoformExpressionLevel(isoformID, selectedOnly);
-    }
-
     public Color getColorFromTPMGradient(double expression) {
         return tpmGradientAdjusterController.getColorFromTPMGradient(expression);
     }
@@ -283,10 +279,6 @@ public class ControllerMediator implements Mediator{
 
     public int getNumCellsToPlot() {
         return tsnePlotController.getNumCellsToPlot();
-    }
-
-    public double getIsoformExpressionLevelInCluster(String isoformID, Cluster cluster, boolean onlySelected) {
-        return  tsnePlotController.getIsoformExpressionLevelInCluster(isoformID, cluster, onlySelected);
     }
 
     public List<Cluster> getClusters(boolean onlySelected) {

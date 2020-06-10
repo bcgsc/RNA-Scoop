@@ -6,6 +6,7 @@ import com.jujutsu.utils.MatrixOps;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
 import exceptions.TSNEInvalidPerplexityException;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -52,7 +53,7 @@ import java.util.stream.Collectors;
 import static javafx.application.Platform.runLater;
 import static jdk.nashorn.internal.objects.Global.Infinity;
 
-public class TSNEPlotController implements Initializable, InteractiveElementController, SelectionChangeListener<XYCursor> {
+public class TSNEPlotController implements Initializable, InteractiveElementController{
     private static final double LEGEND_DOT_SIZE = 14.5;
     private static final double LEGEND_DOT_CANVAS_WIDTH = 16.5;
     private static final double LEGEND_DOT_CANVAS_HEIGHT = 16.5;
@@ -207,36 +208,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         return 0;
     }
 
-    /**
-     * Returns the average expression level of the isoform with the given
-     * ID in either all cells in t-SNE plot, or only those selected
-     */
-    public double getIsoformExpressionLevel(String isoformID, boolean onlySelected) {
-        double isoformExpressionSum = 0;
-        Collection<CellDataItem> cells;
-        cells = getCells(onlySelected);
-        int numCells = cells.size();
-
-        for (CellDataItem cell : cells)
-                isoformExpressionSum += cell.getIsoformExpressionLevel(isoformID);
-
-        return isoformExpressionSum / numCells;
-    }
-
-    public double getIsoformExpressionLevelInCluster(String isoformID, Cluster cluster, boolean onlySelected) {
-        double isoformExpressionSum = 0;
-        Collection<TSNEPlotController.CellDataItem> cellsInCluster;
-        if (onlySelected)
-            cellsInCluster = getSelectedCellsInCluster(cluster);
-        else
-            cellsInCluster = cluster.getCells();
-
-        int numSelected = cellsInCluster.size();
-        for (TSNEPlotController.CellDataItem selectedCell : cellsInCluster)
-            isoformExpressionSum += selectedCell.getIsoformExpressionLevel(isoformID);
-        return isoformExpressionSum / numSelected;
-    }
-
     public int getNumExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
         int numExpressingCells = 0;
         Collection<TSNEPlotController.CellDataItem> cellsInCluster;
@@ -274,14 +245,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         if (isTSNEPlotCleared())
             return new ArrayList<>();
         return cellSelectionManager.getSelectedCellsInCluster(cluster);
-    }
-
-    /**
-     * When the cells selected in the t-SNE plot changes, redraws the genes in isoform plot
-     */
-    @Override
-    public void selectionChanged(SelectionChangeEvent<XYCursor> selectionChangeEvent) {
-        runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
     }
 
     /**
@@ -381,13 +344,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             super.mousePressed(e);
             runLater(() -> ControllerMediator.getInstance().deselectAllIsoforms());
             runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
-        }
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            super.mouseReleased(e);
-            ChartPanel chartPanel = (ChartPanel) e.getSource();
-            chartPanel.repaint();
-            System.out.println("we repainted?");
         }
     }
 
@@ -506,6 +462,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 }
             }
             redrawTSNEPlotSansLegend();
+            Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
             redrawOnClear = true;
         }
 
@@ -533,8 +490,10 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                     }
                 }
             }
-            if (shouldRedraw)
+            if (shouldRedraw) {
+                Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
                 redrawTSNEPlotSansLegend();
+            }
         }
 
         /**
@@ -574,8 +533,10 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                     }
                 }
             }
-            if (shouldRedraw)
+            if (shouldRedraw) {
+                Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
                 redrawTSNEPlotSansLegend();
+            }
         }
 
         /**
@@ -694,7 +655,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             createDataSet(tSNEMatrix);
             DatasetSelectionExtension<XYCursor> datasetExtension
                     = new XYDatasetSelectionExtension(cellsInNewTSNEPlot);
-            datasetExtension.addChangeListener(TSNEPlotController.this);
 
             JFreeChart chart = createPlot(datasetExtension);
             ChartPanel panel = new ChartPanel(chart);

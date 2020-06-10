@@ -582,7 +582,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
                 toolTip = new Tooltip();
                 toolTipShowing = false;
-                double expression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoform.getId(), cellsSelected);
+                double expression = isoform.getIsoformExpressionLevel(cellsSelected);
                 drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
                 setToolTip(!tSNEPlotCleared, expression);
             }
@@ -593,7 +593,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             public void redraw(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
                 setIsoformGraphicWidth(pixelsPerNucleotide);
                 clear();
-                double expression = ControllerMediator.getInstance().getIsoformExpressionLevel(isoform.getId(), cellsSelected);
+                double expression = isoform.getIsoformExpressionLevel(cellsSelected);
                 drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
                 setToolTip(!tSNEPlotCleared, expression);
             }
@@ -808,7 +808,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
             while(iterator.hasNext()) {
                 Cluster cluster = iterator.next();
-                double expression = ControllerMediator.getInstance().getIsoformExpressionLevelInCluster(isoformGroup.getIsoform().getId(), cluster, onlySelected);
+                double expression = isoformGroup.getIsoform().getIsoformExpressionLevelInCluster(cluster, onlySelected);
                 int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoformGroup.getIsoform().getId(), cluster, onlySelected);
                 int numCells = onlySelected? ControllerMediator.getInstance().getSelectedCellsInCluster(cluster).size() : cluster.getCells().size();
                 double dotSize = getDotSize((double) numExpressingCells/numCells);
