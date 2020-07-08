@@ -639,12 +639,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
             int initial_dims = 55;
             BHTSne tSNE = new BHTSne();
-            double[][] matrix = cellIsoformExpressionMatrix;
-            int numRows = matrix.length;
-            int numColumns = matrix[0].length;
-            if (numColumns > numRows)
-                matrix = MatrixOps.transposeSerial(matrix);
-            TSneConfiguration config = TSneUtils.buildConfig(matrix, 2, initial_dims, perplexityValue, 1000);
+            TSneConfiguration config = TSneUtils.buildConfig(cellIsoformExpressionMatrix, 2, initial_dims, perplexityValue, 1000, false, 0.5D, false);
             return tSNE.tsne(config);
         }
 
