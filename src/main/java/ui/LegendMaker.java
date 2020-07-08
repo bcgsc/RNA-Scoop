@@ -16,7 +16,7 @@ import java.util.List;
 
 public class LegendMaker {
     public static final double LIGHT_COLOR_LUMINENCE_LIMIT = 0.69;
-    public static final int LEGEND_CIRCLE_LABEL_SPACING = 1;
+    public static final int LEGEND_CIRCLE_LABEL_SPACING = 2;
 
     public static Pane createLegend(boolean includeLabels, boolean onlySelected, boolean includeBackground, boolean vertical,
                                     double dotSize, double circleCanvasWidth, double circleCanvasHeight, double elementSpacing) {
@@ -38,6 +38,7 @@ public class LegendMaker {
             legendElement.getChildren().add(legendCircle);
             if (includeLabels) {
                 Text label = new Text(cluster.getName());
+                label.setStyle("-fx-font: 13 segoe");
                 legendElement.getChildren().add(label);
                 HBox.setMargin(legendCircle, new Insets(0, LEGEND_CIRCLE_LABEL_SPACING, 0, 0));
             }
@@ -74,7 +75,11 @@ public class LegendMaker {
         graphicsContext.strokeOval(circleX - dotSize / 2, circleY - dotSize / 2, dotSize, dotSize);
         // add circle label
         graphicsContext.setFill(getLegendCircleLabelColor(circleColor));
-        graphicsContext.fillText(String.valueOf(cluster.getNumber()), circleX - 3, circleY + 4);
+        int number = cluster.getNumber();
+        if (number < 10)
+            graphicsContext.fillText(String.valueOf(number), circleX - 3, circleY + 4);
+        else
+            graphicsContext.fillText(String.valueOf(number), circleX - 6, circleY + 4);
         return legendCircle;
     }
 

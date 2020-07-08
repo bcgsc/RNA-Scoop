@@ -76,7 +76,7 @@ public class SessionIO {
 
         private static void clearAllData() {
             Parser.getParsedGenesMap().clear();
-            ControllerMediator.getInstance().updateGenes();
+            ControllerMediator.getInstance().updateGenesTable();
             ControllerMediator.getInstance().clearShownGenes();
             ControllerMediator.getInstance().clearTSNEPlot();
             ControllerMediator.getInstance().clearPathComboBox();

@@ -35,6 +35,7 @@ public class LabelSetManagerWindow extends Stage {
             if (viewDisplayed == addLabelSetViewScene) {
                 ControllerMediator.getInstance().removeLabelSet(ControllerMediator.getInstance().getLabelSetInUse());
                 displayMainView();
+                ControllerMediator.getInstance().updateFoldChangeAlert();
             }
             event.consume();
             hide();
@@ -50,6 +51,10 @@ public class LabelSetManagerWindow extends Stage {
         ControllerMediator.getInstance().prepareAddLabelSetViewForDisplay();
         setScene(addLabelSetViewScene);
         viewDisplayed = addLabelSetViewScene;
+    }
+
+    public boolean isDisplayingAddLabelSetView() {
+        return viewDisplayed == addLabelSetViewScene;
     }
 
     /**

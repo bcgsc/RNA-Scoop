@@ -581,7 +581,7 @@ public class MainController implements InteractiveElementController {
                 runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + filePath));
                 Parser.loadFiles(filePath);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + filePath));
-                runLater(() -> ControllerMediator.getInstance().updateGenes());
+                runLater(() -> ControllerMediator.getInstance().updateGenesTable());
                 currentLoadedPath = filePath;
                 runLater(MainController.this::addLoadedPath);
             } catch (RNAScoopException e){

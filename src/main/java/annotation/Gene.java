@@ -1,9 +1,14 @@
 package annotation;
 
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import labelset.Cluster;
+import mediator.ControllerMediator;
+import util.Util;
+
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 public class Gene implements Comparable<Gene> {
 
@@ -19,6 +24,7 @@ public class Gene implements Comparable<Gene> {
     private int endNucleotide;
     private String chromosome;
     private boolean onPositiveStrand;
+    private DoubleProperty maxFoldChange;
 
     public Gene(String id, String chromosome, String strand) {
         isoforms = new HashMap<>();
@@ -30,6 +36,8 @@ public class Gene implements Comparable<Gene> {
         endNucleotide = 0;
         this.chromosome = chromosome;
         onPositiveStrand = strand.equals("+");
+        maxFoldChange = new SimpleDoubleProperty();
+        maxFoldChange.setValue(0);
     }
 
     public void addIsoform(String transcriptID, Isoform isoform) {
@@ -46,6 +54,31 @@ public class Gene implements Comparable<Gene> {
 
     public void setEndNucleotide(int endNucleotide) {
         this.endNucleotide = endNucleotide;
+    }
+
+    public DoubleProperty maxFoldChangeProperty() {
+        return maxFoldChange;
+    }
+
+    public void updateMaxFoldChange() {
+        boolean onlySelected = ControllerMediator.getInstance().areCellsSelected();
+        Collection<Cluster> clusters = ControllerMediator.getInstance().getClusters(onlySelected);
+        double newMaxFoldChange = 0;
+        for (Isoform isoform : isoforms.values()) {
+            double minExpression = Integer.MAX_VALUE;
+            double maxExpression = Integer.MIN_VALUE;
+            for (Cluster cluster : clusters) {
+                double expression = isoform.getExpressionLevelInCluster(cluster, onlySelected);
+                if (expression < minExpression)
+                    minExpression = expression;
+                if (expression > maxExpression)
+                    maxExpression = expression;
+            }
+            double foldChange = maxExpression / minExpression;
+            if (foldChange > newMaxFoldChange)
+                newMaxFoldChange = foldChange;
+        }
+        maxFoldChange.setValue(Util.roundToOneDecimal(newMaxFoldChange));
     }
 
     public Boolean hasIsoform(String transcriptID) {

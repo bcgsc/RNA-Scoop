@@ -36,7 +36,14 @@
                                 <Insets bottom="10" />
                             </VBox.margin>
                         </TableView>
-                        <Button onAction="#handleSaveLabelSetButton" text="Save label set" />
+                        <HBox alignment="CENTER">
+                            <Button onAction="#handleSaveLabelSetButton" text="Save label set">
+                                <HBox.margin>
+                                    <Insets right="10"/>
+                                </HBox.margin>
+                            </Button>
+                            <Button onAction="#handleCancelButton" text="Cancel"/>
+                        </HBox>
                     </VBox>
                     <VBox alignment="CENTER">
                         <HBox.margin>

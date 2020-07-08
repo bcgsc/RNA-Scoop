@@ -1,6 +1,7 @@
 package controller;
 
 import annotation.Gene;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -11,11 +12,10 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import labelset.LabelSet;
 import mediator.ControllerMediator;
 import parser.Parser;
 import ui.Main;
@@ -28,20 +28,26 @@ import java.util.ResourceBundle;
 import static javafx.application.Platform.runLater;
 
 public class GeneSelectorController implements Initializable, InteractiveElementController {
-    private static final float GENE_SELECTOR_SCALE_FACTOR = 0.45f;
+    private static final float GENE_SELECTOR_WIDTH_SCALE_FACTOR = 0.52f;
+    private static final float GENE_SELECTOR_HEIGHT_SCALE_FACTOR = 0.45f;
 
     @FXML private ScrollPane geneSelector;
     @FXML private GridPane gridPane;
+    @FXML private VBox genesColumn;
     @FXML private TextField filterField;
     @FXML private TableView genesTable;
     @FXML private TableView shownGenesTable;
     @FXML private Button addSelectedButton;
     @FXML private Button removeSelectedButton;
     @FXML private Button clearAllButton;
+    @FXML private HBox foldChangeAlert;
+    @FXML private Button updateButton;
+    @FXML private HBox updatingFoldChangeMessage;
 
     private Stage window;
     private ObservableList<Gene> genes;
     private ObservableList<Gene> shownGenes;
+    private LabelSet genesFoldChangeLabelSet;
 
     /**
      * Sets up grid pane, window, genes and shown genes tables
@@ -51,6 +57,8 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         setUpGridPane();
         setUpGenesTable();
         setUpShownGenesTable();
+        removeFoldChangeAlert();
+        removeUpdatingFoldChangeMessage();
         setUpWindow();
     }
 
@@ -64,6 +72,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         addSelectedButton.setDisable(true);
         removeSelectedButton.setDisable(true);
         clearAllButton.setDisable(true);
+        updateButton.setDisable(true);
     }
 
     /**
@@ -76,6 +85,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         addSelectedButton.setDisable(false);
         removeSelectedButton.setDisable(false);
         clearAllButton.setDisable(false);
+        updateButton.setDisable(false);
     }
 
 
@@ -92,9 +102,11 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      * Clears all genes in genes table, clears genes being shown and filter field
      */
     public void clearGeneSelector() {
+        genesFoldChangeLabelSet = null;
         clearShownGenes();
         genes.clear();
         filterField.setText(null);
+        removeFoldChangeAlert();
     }
 
     /**
@@ -109,13 +121,30 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         return shownGenes;
     }
 
+    public void updateGenesMaxFoldChange() {
+        for (Gene gene : genes)
+            gene.updateMaxFoldChange();
+        genesFoldChangeLabelSet = ControllerMediator.getInstance().getLabelSetInUse();
+        Platform.runLater(() -> removeFoldChangeAlert());
+    }
+
     /**
      * Retrieves parsed genes and sets as genes in genes table
      */
-    public void updateGenes() {
+    public void updateGenesTable() {
         genes.clear();
         genes.addAll(Parser.getParsedGenesMap().values());
         genes.sort(Gene::compareTo);
+    }
+
+    public void updateFoldChangeAlert() {
+        LabelSet labelSetInUse = ControllerMediator.getInstance().getLabelSetInUse();
+        boolean stillCustomizingLabelSet = ControllerMediator.getInstance().isAddLabelSetViewDisplayed();
+        boolean tSNEPlotCleared = ControllerMediator.getInstance().isTSNEPlotCleared();
+        if (genesFoldChangeLabelSet != labelSetInUse && !stillCustomizingLabelSet && !tSNEPlotCleared)
+            addFoldChangeAlert();
+        else
+            removeFoldChangeAlert();
     }
 
     /**
@@ -171,6 +200,52 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         } finally {
             enableAssociatedFunctionality();
         }
+    }
+
+    @FXML
+    protected void handleUpdateFoldChangeButton() {
+        removeFoldChangeAlert();
+        addUpdatingFoldChangeMessage();
+        disableAssociatedFunctionality();
+        try {
+            Thread maxFoldChangeUpdaterThread = new Thread(new MaxFoldChangeUpdaterThread());
+            maxFoldChangeUpdaterThread.start();
+        } catch (Exception e) {
+            enableAssociatedFunctionality();
+            removeUpdatingFoldChangeMessage();
+            ControllerMediator.getInstance().addConsoleErrorMessage("updating gene maximum fold change values");
+        }
+    }
+
+
+    private class MaxFoldChangeUpdaterThread implements Runnable {
+
+        @Override
+        public void run() {
+            updateGenesMaxFoldChange();
+            Platform.runLater(() -> {
+                removeUpdatingFoldChangeMessage();
+                enableAssociatedFunctionality();
+            });
+        }
+    }
+
+    private void addFoldChangeAlert() {
+        if (!genesColumn.getChildren().contains(foldChangeAlert))
+            genesColumn.getChildren().add(foldChangeAlert);
+    }
+
+    private void addUpdatingFoldChangeMessage() {
+        if (!genesColumn.getChildren().contains(updatingFoldChangeMessage))
+            genesColumn.getChildren().add(updatingFoldChangeMessage);
+    }
+
+    private void removeFoldChangeAlert() {
+        genesColumn.getChildren().remove(foldChangeAlert);
+    }
+
+    private void removeUpdatingFoldChangeMessage() {
+        genesColumn.getChildren().remove(updatingFoldChangeMessage);
     }
 
     /**
@@ -229,13 +304,15 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      * number of isoforms)
      */
     private void setUpGenesTableColumns() {
-        TableColumn<Gene,String> geneIDCol = new TableColumn("Gene ID");
+        TableColumn<Gene,String> geneIDCol = new TableColumn("ID");
         geneIDCol .setCellValueFactory(new PropertyValueFactory("id"));
-        TableColumn<Gene,String> geneName = new TableColumn("Gene Name");
+        TableColumn<Gene,String> geneName = new TableColumn("Name");
         geneName.setCellValueFactory(new PropertyValueFactory("name"));
         TableColumn<Gene,String> numIsoforms = new TableColumn("# Isoforms");
         numIsoforms.setCellValueFactory(new PropertyValueFactory("numIsoforms"));
-        genesTable.getColumns().setAll(geneIDCol , geneName, numIsoforms);
+        TableColumn<Gene,String> maxFoldChange = new TableColumn("Change");
+        maxFoldChange.setCellValueFactory(new PropertyValueFactory("maxFoldChange"));
+        genesTable.getColumns().setAll(geneIDCol , geneName, numIsoforms, maxFoldChange);
         genesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
@@ -253,7 +330,8 @@ public class GeneSelectorController implements Initializable, InteractiveElement
                 return true;
             // Compare gene name and id of every gene with filter text.
             String lowerCaseFilter = newValue.toLowerCase();
-            if (gene.getName().toLowerCase().startsWith(lowerCaseFilter))
+            String name = gene.getName();
+            if (name != null && name.toLowerCase().startsWith(lowerCaseFilter))
                 return true;
             else return gene.getId().toLowerCase().startsWith(lowerCaseFilter);
         }));
@@ -293,6 +371,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
 
     private void setWindowSizeAndDisplay() {
         Rectangle2D screen = Screen.getPrimary().getBounds();
-        window.setScene(new Scene(geneSelector, screen.getWidth() * GENE_SELECTOR_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_SCALE_FACTOR));
+        window.setScene(new Scene(geneSelector, screen.getWidth() * GENE_SELECTOR_WIDTH_SCALE_FACTOR, screen.getHeight() * GENE_SELECTOR_HEIGHT_SCALE_FACTOR));
     }
 }

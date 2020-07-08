@@ -3,6 +3,8 @@ package controller;
 import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -37,6 +39,7 @@ import static util.Util.roundToOneDecimal;
 public class IsoformPlotController implements Initializable, InteractiveElementController {
     private static final int SCROLLBAR_WIDTH = 16;
 
+    @FXML private VBox holder;
     @FXML private VBox isoformPlotPanel;
     @FXML private Button selectGenesButton;
     @FXML private Button setTPMGradientButton;
@@ -52,6 +55,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        holder.prefWidthProperty().bind(isoformPlot.widthProperty());
         selectionModel = new SelectionModel();
         geneGeneGroupMap = new HashMap<>();
         rectangularSelection = new RectangularSelection(isoformPlot);
@@ -372,8 +376,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private void addLabel(boolean showGeneNameAndID, boolean showGeneName, boolean reverseComplement) {
             label = new SelectableText();
             label.setFont(GENE_FONT);
+            VBox holder = new VBox();
+            holder.setFillWidth(false);
+            holder.getChildren().add(label);
             label.setTextAndFitWidthToText(getGeneLabelText(showGeneNameAndID, showGeneName, reverseComplement));
-            getChildren().add(label);
+            getChildren().add(holder);
         }
 
         private void addIsoforms(boolean showIsoformName, boolean showIsoformID, boolean hideSingleExonIsoforms,
@@ -547,7 +554,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private void addLabel(String newLabel) {
             label = new SelectableText();
             label.setFont(ISOFORM_FONT);
-            labelAndLegendHolder.setLeft(label);
+            VBox holder = new VBox();
+            holder.setFillWidth(false);
+            holder.getChildren().add(label);
+            labelAndLegendHolder.setLeft(holder);
             label.setTextAndFitWidthToText(newLabel);
         }
 
@@ -582,7 +592,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
                 toolTip = new Tooltip();
                 toolTipShowing = false;
-                double expression = isoform.getIsoformExpressionLevel(cellsSelected);
+                double expression = isoform.getExpressionLevel(cellsSelected);
                 drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
                 setToolTip(!tSNEPlotCleared, expression);
             }
@@ -593,7 +603,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             public void redraw(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
                 setIsoformGraphicWidth(pixelsPerNucleotide);
                 clear();
-                double expression = isoform.getIsoformExpressionLevel(cellsSelected);
+                double expression = isoform.getExpressionLevel(cellsSelected);
                 drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
                 setToolTip(!tSNEPlotCleared, expression);
             }
@@ -654,7 +664,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                     int geneEnd = gene.getEndNucleotide();
 
                     double isoformExtraOffset = (geneEnd - isoformEnd) * pixelsPerNucleotide;
-                    BorderPane.setMargin(this, new Insets(0, 10, 0, ISOFORM_GROUP_OFFSET + isoformExtraOffset));
+                    BorderPane.setMargin(this, new Insets(0, ISOFORM_GRAPHIC_DOT_PLOT_SPACING, 0, isoformExtraOffset));
                     drawIsoformReverseComplement(pixelsPerNucleotide, isoformColor, exons, isoformEnd, graphicsContext);
                 }
             }
@@ -737,10 +747,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     private static class DotPlot {
         public static final double GRAPHIC_SPACING = 2;
-        private static final double QUARTER_EXPRESS_DOT_SIZE = 4;
-        private static final double HALF_EXPRESS_DOT_SIZE = 7.5;
-        private static final double THREE_QUARTERS_EXPRESS_DOT_SIZE = 11;
-        private static final double ALL_EXPRESS_DOT_SIZE = 14.5;
+        private static final double QUARTER_EXPRESS_DOT_SIZE = 4.5;
+        private static final double HALF_EXPRESS_DOT_SIZE = 9.75;
+        private static final double THREE_QUARTERS_EXPRESS_DOT_SIZE = 14.5;
+        private static final double ALL_EXPRESS_DOT_SIZE = 18;
         private static final double DOT_PLOT_COLUMN_WIDTH = ALL_EXPRESS_DOT_SIZE + GRAPHIC_SPACING;
         private static final double DOT_PLOT_ROW_HEIGHT = ALL_EXPRESS_DOT_SIZE + GRAPHIC_SPACING;
         private static final int DOT_PLOT_COLUMN_SPACING = 1;
@@ -808,7 +818,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
             while(iterator.hasNext()) {
                 Cluster cluster = iterator.next();
-                double expression = isoformGroup.getIsoform().getIsoformExpressionLevelInCluster(cluster, onlySelected);
+                double expression = isoformGroup.getIsoform().getExpressionLevelInCluster(cluster, onlySelected);
                 int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoformGroup.getIsoform().getId(), cluster, onlySelected);
                 int numCells = onlySelected? ControllerMediator.getInstance().getSelectedCellsInCluster(cluster).size() : cluster.getCells().size();
                 double dotSize = getDotSize((double) numExpressingCells/numCells);

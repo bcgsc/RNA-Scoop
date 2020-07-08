@@ -14,7 +14,6 @@ import mediator.ControllerMediator;
 import ui.LabelSetManagerWindow;
 
 import java.util.*;
-import java.util.List;
 
 import static javafx.application.Platform.runLater;
 
@@ -109,8 +108,9 @@ public class LabelSetManagerController {
     @FXML
     protected void handleAddLabelSetButton() {
         LabelSet labelSet = new LabelSet();
-        addLabelSetHelper(labelSet);
+        labelSetInUse = labelSet;
         window.displayAddLabelSetView();
+        addLabelSetHelper(labelSet);
     }
 
     /**
@@ -127,9 +127,8 @@ public class LabelSetManagerController {
      * label set in use)
      */
     private void addLabelSetHelper(LabelSet labelSet) {
-        labelSetInUse = labelSet;
         labelSets.add(labelSet);
-        labelSetsListView.getSelectionModel().select(labelSetInUse);
+        labelSetsListView.getSelectionModel().select(labelSet);
     }
 
     private void setUpLabelSetsListView() {
@@ -145,7 +144,8 @@ public class LabelSetManagerController {
     private void makeLabelSetInUseBeSelected() {
         labelSetsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             labelSetInUse = (LabelSet) newValue;
-            ControllerMediator.getInstance().TSNEPlotHandleChangedLabelSetInUse();
+            ControllerMediator.getInstance().tSNEPlotHandleChangedLabelSetInUse();
+            ControllerMediator.getInstance().updateFoldChangeAlert();
             ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
         });
     }

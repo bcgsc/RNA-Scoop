@@ -135,8 +135,16 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.updateIsoformLabels();
     }
 
-    public void updateGenes() {
-        geneSelectorController.updateGenes();
+    public void updateGenesTable() {
+        geneSelectorController.updateGenesTable();
+    }
+
+    public void updateGenesMaxFoldChange() {
+        geneSelectorController.updateGenesMaxFoldChange();
+    }
+
+    public void updateFoldChangeAlert() {
+        geneSelectorController.updateFoldChangeAlert();
     }
 
     public void clearShownGenes() {
@@ -206,7 +214,7 @@ public class ControllerMediator implements Mediator{
         tsnePlotController.handleRemovedCluster(removedCluster, clusterMergedInto);
     }
 
-    public void TSNEPlotHandleChangedLabelSetInUse(){
+    public void tSNEPlotHandleChangedLabelSetInUse(){
         tsnePlotController.handleChangedLabelSetInUse();
     }
 
@@ -339,6 +347,10 @@ public class ControllerMediator implements Mediator{
 
     public boolean isTSNEPlotCleared() {
         return tsnePlotController.isTSNEPlotCleared();
+    }
+
+    public boolean isAddLabelSetViewDisplayed() {
+        return addLabelSetViewController.isDisplayed();
     }
 
     //Setters

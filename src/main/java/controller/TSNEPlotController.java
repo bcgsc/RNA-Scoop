@@ -6,7 +6,6 @@ import com.jujutsu.utils.MatrixOps;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
 import exceptions.TSNEInvalidPerplexityException;
-import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -33,8 +32,6 @@ import org.jfree.data.extension.DatasetSelectionExtension;
 import org.jfree.data.extension.impl.DatasetExtensionManager;
 import org.jfree.data.extension.impl.XYCursor;
 import org.jfree.data.extension.impl.XYDatasetSelectionExtension;
-import org.jfree.data.general.SelectionChangeEvent;
-import org.jfree.data.general.SelectionChangeListener;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -54,9 +51,10 @@ import static javafx.application.Platform.runLater;
 import static jdk.nashorn.internal.objects.Global.Infinity;
 
 public class TSNEPlotController implements Initializable, InteractiveElementController{
-    private static final double LEGEND_DOT_SIZE = 14.5;
-    private static final double LEGEND_DOT_CANVAS_WIDTH = 16.5;
-    private static final double LEGEND_DOT_CANVAS_HEIGHT = 16.5;
+    private static final double LEGEND_DOT_SIZE = 18;
+    private static final double GRAPHIC_SPACING = 2;
+    private static final double LEGEND_DOT_CANVAS_WIDTH = LEGEND_DOT_SIZE + GRAPHIC_SPACING;
+    private static final double LEGEND_DOT_CANVAS_HEIGHT = LEGEND_DOT_SIZE + GRAPHIC_SPACING;
     private static final double LEGEND_ELEMENT_SPACING  = 5;
     private static final boolean INCLUDE_LEGEND_LABELS = true;
     private static final boolean LEGEND_SHOW_ONLY_SELECTED = false;
@@ -72,7 +70,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
     private HashMap<String, Integer> isoformIndexMap;
     private double[][] cellIsoformExpressionMatrix;
-    private static ChartPanel tSNEPlot;
+    private ChartPanel tSNEPlot;
     private ScrollPane tSNEPlotLegend;
     private CellSelectionManager cellSelectionManager;
     private HashMap<Integer, CellDataItem> cellNumberCellMap;
@@ -172,15 +170,14 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     public void redrawTSNEPlot() {
-        if (!isTSNEPlotCleared()) {
-            redrawTSNEPlotSansLegend();
-            redrawTSNEPlotLegend();
-        }
+        redrawTSNEPlotSansLegend();
+        redrawTSNEPlotLegend();
     }
 
     public void redrawTSNEPlotLegend() {
-        tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
-                LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
+        if (!isTSNEPlotCleared())
+            tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
+                    LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
     }
 
     public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
@@ -197,7 +194,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     public boolean areCellsSelected() {
-        if (cellSelectionManager != null)
+        if (!isTSNEPlotCleared())
             return cellSelectionManager.getSelectedCells().size() > 0;
         return false;
     }
@@ -342,8 +339,10 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         @Override
         public void mousePressed(MouseEvent e) {
             super.mousePressed(e);
-            runLater(() -> ControllerMediator.getInstance().deselectAllIsoforms());
-            runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+            runLater(() -> {
+                ControllerMediator.getInstance().deselectAllIsoforms();
+                ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+            });
         }
     }
 
@@ -462,7 +461,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 }
             }
             redrawTSNEPlotSansLegend();
-            Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+            runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
             redrawOnClear = true;
         }
 
@@ -491,7 +490,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 }
             }
             if (shouldRedraw) {
-                Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+                runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
                 redrawTSNEPlotSansLegend();
             }
         }
@@ -534,7 +533,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 }
             }
             if (shouldRedraw) {
-                Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+                runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
                 redrawTSNEPlotSansLegend();
             }
         }
@@ -553,6 +552,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             selectedCells.clear();
             if (redrawOnClear)
                 redrawTSNEPlotSansLegend();
+
         }
 
         public HashMap<Cluster, Collection<CellDataItem>> getSelectedCells() {
@@ -612,6 +612,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                 drawTsne(tSNEMatrix);
                 setTPMGradientValues();
                 ControllerMediator.getInstance().addCellsToLabelSetClusters();
+                ControllerMediator.getInstance().updateGenesMaxFoldChange();
                 runLater(() -> {
                     ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
                     ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot");

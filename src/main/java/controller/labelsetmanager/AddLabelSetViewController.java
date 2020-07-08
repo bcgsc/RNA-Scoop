@@ -26,6 +26,10 @@ public class AddLabelSetViewController {
         setUpLabelSetNameTextField();
     }
 
+    public boolean isDisplayed() {
+        return window.isDisplayingAddLabelSetView();
+    }
+
     /**
      * To be run before before "Add Label Set" view is displayed in the Label Set Manager
      * window
@@ -75,8 +79,17 @@ public class AddLabelSetViewController {
     @FXML
     protected void handleSaveLabelSetButton() {
         window.displayMainView();
+        ControllerMediator.getInstance().updateFoldChangeAlert();
     }
 
+    @FXML
+    protected void handleCancelButton() {
+        ControllerMediator.getInstance().removeLabelSet(ControllerMediator.getInstance().getLabelSetInUse());
+        window.displayMainView();
+        ControllerMediator.getInstance().updateFoldChangeAlert();
+        window.hide();
+    }
+    
     /**
      * Creates editable clusters table with two columns, one for cluster name and one
      * for cluster color

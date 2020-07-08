@@ -36,7 +36,7 @@ public class Isoform {
      * Returns the average expression level of the isoform with the given
      * ID in either all cells in t-SNE plot, or only those selected
      */
-    public double getIsoformExpressionLevel(boolean onlySelected) {
+    public double getExpressionLevel(boolean onlySelected) {
         double isoformExpressionSum = 0;
         Collection<TSNEPlotController.CellDataItem> cells;
         cells = ControllerMediator.getInstance().getCells(onlySelected);
@@ -48,7 +48,7 @@ public class Isoform {
         return isoformExpressionSum / numCells;
     }
 
-    public double getIsoformExpressionLevelInCluster(Cluster cluster, boolean onlySelected) {
+    public double getExpressionLevelInCluster(Cluster cluster, boolean onlySelected) {
         double isoformExpressionSum = 0;
         Collection<TSNEPlotController.CellDataItem> cellsInCluster;
         if (onlySelected)
