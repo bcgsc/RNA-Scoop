@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/bcgsc/RNA-Scoop/blob/master/src/main/resources/icons/RNA-ScoopLogo.png" width="250" height="250"/>
+  <img src="https://i.ibb.co/93BM9VW/RNA-Scoop-logo-small.png"/>
 </p>
 
 **RNA Scoop** is a tool to visualize isoforms in single cell transcriptomes. Through use of an interactive t-SNE plot,
@@ -11,7 +11,7 @@ Specifically, users are able to:
 * Identify isoform expression levels within cells
 * Compare isoform expression across clusters
 
-Written by [Maria Stephenson](mailto:mstephenson@bcgsc.ca) and [Ka Ming Nip](kmnip@bcgsc.ca) :email:
+Written by [Maria Stephenson](mailto:mstephenson@bcgsc.ca) and [Ka Ming Nip](mailto:kmnip@bcgsc.ca) :email:
 
 ---    
 
