@@ -249,9 +249,8 @@ public class MainController implements InteractiveElementController {
 
     /**
      * Resets the current session to have all the default settings. Opens all panels,
-     * resets isoform plot settings to default, clears isoform plot, gene selector, t-SNE
-     * plot, console, path combo box (basically sets screen so it's as if you're opening RNA-Scoop
-     * for the first time)
+     * clears all data, sets isoform view settings to default (basically sets screen so it's as if you're opening
+     * RNA-Scoop for the first time)
      */
     @FXML
     protected void handleResetSessionButton() {
@@ -259,10 +258,7 @@ public class MainController implements InteractiveElementController {
         openTSNEPlot();
         openConsole();
         setIsoformPlotSettingsToDefault();
-        ControllerMediator.getInstance().clearGeneSelector();
-        ControllerMediator.getInstance().clearTSNEPlot();
-        ControllerMediator.getInstance().clearConsole();
-        clearPathComboBox();
+        SessionIO.clearCurrentSessionData();
     }
 
     /**
@@ -513,28 +509,27 @@ public class MainController implements InteractiveElementController {
     }
 
     private File getFileFromFileChooser() {
-        ControllerMediator.getInstance().disableGeneSelector();
         File file = fileChooser.showOpenDialog(window);
-        ControllerMediator.getInstance().enableGeneSelector();
         return file;
     }
 
     private File getSavedFileFromFileChooser() {
-        ControllerMediator.getInstance().disableGeneSelector();
         File file = fileChooser.showSaveDialog(window);
-        ControllerMediator.getInstance().enableGeneSelector();
         return file;
     }
 
     /**
-     * Clears t-SNE plot, all genes being shown in isoform plot, label sets, gene selector window,
+     * Clears t-SNE plot (include loaded matrix data), loaded genes, label sets, gene selector window,
      * current loaded path (as will be updated), disables associated functionality
      * Loads file from path in path combo box on different thread
      * Displays error (and successful completion) messages in console
      */
     private void loadFile() {
+        Parser.removeParsedGenes();
         ControllerMediator.getInstance().clearGeneSelector();
         ControllerMediator.getInstance().clearTSNEPlot();
+        ControllerMediator.getInstance().setIsoformIndexMap(null);
+        ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
         ControllerMediator.getInstance().clearLabelSets();
         currentLoadedPath = null;
         disableAssociatedFunctionality();

@@ -252,6 +252,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     protected void handleDrawTSNEButton() {
         clearTSNEPlot();
         ControllerMediator.getInstance().deselectAllIsoforms();
+        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
         disableAssociatedFunctionality();
         try {
             Thread tSNEPlotMaker = new Thread(new TSNEPlotMaker());
@@ -320,6 +321,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
          */
         public double getIsoformExpressionLevel(String isoformID) {
             Integer isoformIndex = isoformIndexMap.get(isoformID);
+
             if (isoformIndex != null) {
                 return isoformExpressionLevels[isoformIndex];
             }

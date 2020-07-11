@@ -13,8 +13,8 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 /**
- * Class responsible for writing and reading to a JSON file in which the user's
- * current session information is saved
+ * Class responsible for writing and reading to a JSON file in which
+ * session information is saved
  */
 public class SessionIO {
     private static final String USERS_HOME_DIR = System.getProperty("user.home");
@@ -63,24 +63,29 @@ public class SessionIO {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         String prevSessionString = new String(encoded, Charset.defaultCharset());
         JSONObject prevSession = new JSONObject(prevSessionString);
-        SessionParser.setSavedSettings(prevSession);
+        setSavedSettings(prevSession);
     }
 
-    private static class SessionParser {
-        private static void setSavedSettings(JSONObject prevSession) {
-            Map settings = prevSession.toMap();
-            clearAllData();
-            ControllerMediator.getInstance().restoreMainFromJSON(settings);
-            ControllerMediator.getInstance().restoreConsoleFromJSON(settings);
-        }
-
-        private static void clearAllData() {
-            Parser.getParsedGenesMap().clear();
-            ControllerMediator.getInstance().updateGenesTable();
-            ControllerMediator.getInstance().clearShownGenes();
-            ControllerMediator.getInstance().clearTSNEPlot();
-            ControllerMediator.getInstance().clearPathComboBox();
-        }
-
+    /**
+     * Clears all data from current session (isoforms from GTF, matrix, console messages, path to
+     * JSON file...)
+     */
+    public static void clearCurrentSessionData() {
+        Parser.removeParsedGenes();
+        ControllerMediator.getInstance().clearGeneSelector();
+        ControllerMediator.getInstance().clearTSNEPlot();
+        ControllerMediator.getInstance().clearConsole();
+        ControllerMediator.getInstance().clearLabelSets();
+        ControllerMediator.getInstance().clearPathComboBox();
+        ControllerMediator.getInstance().setIsoformIndexMap(null);
+        ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
     }
+
+    private static void setSavedSettings(JSONObject prevSession) {
+        Map settings = prevSession.toMap();
+        clearCurrentSessionData();
+        ControllerMediator.getInstance().restoreMainFromJSON(settings);
+        ControllerMediator.getInstance().restoreConsoleFromJSON(settings);
+    }
+
 }
