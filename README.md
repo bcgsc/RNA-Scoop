@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://i.ibb.co/93BM9VW/RNA-Scoop-logo-small.png"/>
+  <img src="https://github.com/bcgsc/RNA-Scoop/blob/master/src/wiki/images/RNA-Scoop_logo_small.png?raw=true"/>
 </p>
 
 **RNA Scoop** is a tool to visualize isoforms in single cell transcriptomes. Through use of an interactive t-SNE plot,
