@@ -23,12 +23,12 @@
                    </VBox.margin>
                </ListView>
                <HBox alignment="CENTER">
-                   <Button onAction="#handleAddLabelSetButton" text="Add new">
+                   <Button fx:id="addLabelSetButton" onAction="#handleAddLabelSetButton" text="Add new">
                        <HBox.margin>
                            <Insets right="10" />
                        </HBox.margin>
                    </Button>
-                   <Button onAction="#handleRemoveLabelSetButton" text="Remove selected" />
+                   <Button fx:id="removeLabelSetButton" onAction="#handleRemoveLabelSetButton" text="Remove selected" />
                </HBox>
            </VBox>
        </VBox>

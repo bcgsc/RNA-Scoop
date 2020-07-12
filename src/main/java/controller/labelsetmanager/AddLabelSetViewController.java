@@ -41,6 +41,18 @@ public class AddLabelSetViewController {
         labelSet = ControllerMediator.getInstance().getLabelSetInUse();
         clustersTable.setItems(labelSet.getClusters());
         labelSetNameTextField.setText(labelSet.getName());
+        disableAssociatedFunctionality();
+    }
+
+    /**
+     * If shouldn't save label set, deletes it. Updates fold change alert
+     * and enables associated functionality
+     */
+    public void prepareForClose(boolean saveLabelSet) {
+        if (!saveLabelSet)
+            ControllerMediator.getInstance().removeLabelSet(ControllerMediator.getInstance().getLabelSetInUse());
+        ControllerMediator.getInstance().updateFoldChangeAlert();
+        enableAssociatedFunctionality();
     }
 
     /**
@@ -78,18 +90,27 @@ public class AddLabelSetViewController {
      */
     @FXML
     protected void handleSaveLabelSetButton() {
+        prepareForClose(true);
         window.displayMainView();
-        ControllerMediator.getInstance().updateFoldChangeAlert();
     }
 
     @FXML
     protected void handleCancelButton() {
-        ControllerMediator.getInstance().removeLabelSet(ControllerMediator.getInstance().getLabelSetInUse());
+        prepareForClose(false);
         window.displayMainView();
-        ControllerMediator.getInstance().updateFoldChangeAlert();
         window.hide();
     }
-    
+
+    private void enableAssociatedFunctionality() {
+        ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableTSNEPlot();
+    }
+
+    private void disableAssociatedFunctionality() {
+        ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableTSNEPlot();
+    }
+
     /**
      * Creates editable clusters table with two columns, one for cluster name and one
      * for cluster color

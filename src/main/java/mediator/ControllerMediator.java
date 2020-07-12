@@ -173,6 +173,10 @@ public class ControllerMediator implements Mediator{
         addLabelSetViewController.prepareForDisplay();
     }
 
+    public void prepareAddLabelSetViewForClose(boolean saveLabelSet) {
+        addLabelSetViewController.prepareForClose(saveLabelSet);
+    }
+
     public void addLabelSet(LabelSet labelSet) {
         labelSetManagerController.addLabelSet(labelSet);
     }
@@ -403,6 +407,10 @@ public class ControllerMediator implements Mediator{
         tpmGradientAdjusterController.disable();
     }
 
+    public void disableLabelSetManager() {
+        labelSetManagerController.disable();
+    }
+
     //Enable Functionality
     public void enableMain() {
         mainController.enable();
@@ -422,6 +430,10 @@ public class ControllerMediator implements Mediator{
 
     public void enableTPMGradientAdjuster() {
         tpmGradientAdjusterController.enable();
+    }
+
+    public void enableLabelSetManager() {
+        labelSetManagerController.enable();
     }
 
     // Everything below here is in support of Singleton pattern

@@ -219,7 +219,7 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleSaveSessionButton() {
-        File file = getSavedFileFromFileChooser();
+        File file = fileChooser.showSaveDialog(window);
         if (file != null) {
             try {
                 SessionIO.saveSessionAtPath(file.getPath());
@@ -236,7 +236,7 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleLoadSessionButton() {
-        File file = getFileFromFileChooser();
+        File file = fileChooser.showOpenDialog(window);
         if (file != null) {
             try {
                 SessionIO.loadSessionAtPath(file.getPath());
@@ -366,12 +366,11 @@ public class MainController implements InteractiveElementController {
 
     /**
      * When open file chooser button is pressed, opens file chooser
-     * Gene selector is disabled when user is choosing file
      * The chosen file's path given to the path combo box, and the file is loaded
      */
     @FXML
     protected void handleOpenFileChooserButton() {
-        File file = getFileFromFileChooser();
+        File file = fileChooser.showOpenDialog(window);
         if (file != null) {
             pathComboBox.setValue(file.getAbsolutePath());
             loadFile();
@@ -508,16 +507,6 @@ public class MainController implements InteractiveElementController {
         showIsoformIDToggle.setSelected(DEFAULT_SHOW_ISOFORM_ID_SETTING);
     }
 
-    private File getFileFromFileChooser() {
-        File file = fileChooser.showOpenDialog(window);
-        return file;
-    }
-
-    private File getSavedFileFromFileChooser() {
-        File file = fileChooser.showSaveDialog(window);
-        return file;
-    }
-
     /**
      * Clears t-SNE plot (include loaded matrix data), loaded genes, label sets, gene selector window,
      * current loaded path (as will be updated), disables associated functionality
@@ -548,6 +537,9 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableTSNEPlot();
         ControllerMediator.getInstance().disableTPMGradientAdjuster();
+        ControllerMediator.getInstance().disableLabelSetManager();
+        // doesn't disable add label set view, because main should be disabled when
+        // that view is active
     }
 
     private void enableAssociatedFunctionality() {
@@ -556,6 +548,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableTSNEPlot();
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
+        ControllerMediator.getInstance().enableLabelSetManager();
     }
 
     /**

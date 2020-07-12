@@ -20,6 +20,8 @@ import static javafx.application.Platform.runLater;
 public class LabelSetManagerController {
     @FXML private ScrollPane labelSetManager;
     @FXML private ListView labelSetsListView;
+    @FXML private Button addLabelSetButton;
+    @FXML private Button removeLabelSetButton;
 
     private ObservableList<LabelSet> labelSets;
     private LabelSet labelSetInUse;
@@ -29,6 +31,25 @@ public class LabelSetManagerController {
         this.window = window;
         setUpLabelSetsListView();
     }
+
+    /**
+     * Disables all functionality
+     */
+    public void disable() {
+        labelSetsListView.setDisable(true);
+        addLabelSetButton.setDisable(true);
+        removeLabelSetButton.setDisable(true);
+    }
+
+    /**
+     * Enables all functionality
+     */
+    public void enable() {
+        labelSetsListView.setDisable(false);
+        addLabelSetButton.setDisable(false);
+        removeLabelSetButton.setDisable(false);
+    }
+
     /**
      * Displays the label set manager window
      */

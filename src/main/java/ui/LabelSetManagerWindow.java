@@ -23,8 +23,7 @@ public class LabelSetManagerWindow extends Stage {
      * Window is always on top, and can display either main view, or view which
      * allows users to add and customize a new label set
      * Makes it so window is hidden when X button is pressed, if "Add Label Set" view
-     * is currently being displayed, deletes the label set the user was adding, and switches
-     * the display to the main view
+     * is currently being displayed,switches to the main view
      */
     public LabelSetManagerWindow(Parent mainView, Parent addLabelSetView) {
         setTitle("RNA-Scoop - Cluster Label Set Manager");
@@ -33,9 +32,8 @@ public class LabelSetManagerWindow extends Stage {
         setUpViews(mainView, addLabelSetView);
         setOnCloseRequest(event -> {
             if (viewDisplayed == addLabelSetViewScene) {
-                ControllerMediator.getInstance().removeLabelSet(ControllerMediator.getInstance().getLabelSetInUse());
+                ControllerMediator.getInstance().prepareAddLabelSetViewForClose(false);
                 displayMainView();
-                ControllerMediator.getInstance().updateFoldChangeAlert();
             }
             event.consume();
             hide();

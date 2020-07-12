@@ -125,7 +125,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         for (Gene gene : genes)
             gene.updateMaxFoldChange();
         genesFoldChangeLabelSet = ControllerMediator.getInstance().getLabelSetInUse();
-        Platform.runLater(() -> removeFoldChangeAlert());
+        Platform.runLater(this::removeFoldChangeAlert);
     }
 
     /**
@@ -152,7 +152,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      */
     @FXML
     protected void handleAddSelectedButtonAction() {
-        disableAssociatedFunctionality();
         try {
             ObservableList<Gene> selectedGenes = genesTable.getSelectionModel().getSelectedItems();
             Collection<Gene> genesToAdd = new ArrayList<>();
@@ -167,8 +166,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding selected genes");
             e.printStackTrace();
-        } finally {
-            enableAssociatedFunctionality();
         }
     }
 
@@ -178,27 +175,21 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      */
     @FXML
     protected void handleRemoveSelectedButtonAction() {
-        disableAssociatedFunctionality();
         try {
             ObservableList<Gene> genesToRemove = shownGenesTable.getSelectionModel().getSelectedItems();
             ControllerMediator.getInstance().removeGenesFromIsoformPlot(genesToRemove);
             shownGenes.removeAll(genesToRemove);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("removing selected genes");
-        } finally {
-            enableAssociatedFunctionality();
         }
     }
 
     @FXML
     protected void handleClearAllButtonAction() {
-        disableAssociatedFunctionality();
         try {
             clearShownGenes();
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("clearing shown genes");
-        } finally {
-            enableAssociatedFunctionality();
         }
     }
 
@@ -356,17 +347,15 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     private void disableAssociatedFunctionality() {
         disable();
         ControllerMediator.getInstance().disableMain();
-        ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableTSNEPlot();
-        ControllerMediator.getInstance().disableTPMGradientAdjuster();
+        ControllerMediator.getInstance().disableLabelSetManager();
     }
 
     private void enableAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableMain();
-        ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableTSNEPlot();
-        ControllerMediator.getInstance().enableTPMGradientAdjuster();
+        ControllerMediator.getInstance().enableLabelSetManager();
     }
 
     private void setWindowSizeAndDisplay() {

@@ -278,6 +278,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableTPMGradientAdjuster();
+        ControllerMediator.getInstance().disableLabelSetManager();
+        // doesn't disable add label set view because t-SNE plot should be
+        // disabled when that view is active
     }
 
     private void enableAssociatedFunctionality() {
@@ -286,6 +289,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
+        ControllerMediator.getInstance().enableLabelSetManager();
     }
 
     private void redrawTSNEPlotSansLegend() {
