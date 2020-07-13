@@ -113,6 +113,10 @@ public class LabelSet {
         return name;
     }
 
+    public int getNumCellsInLabelSet() {
+        return cellNumberClusterMap.size();
+    }
+
     /**
      * Creates a cluster and adds it to this label set. This cluster has all of the cells
      * in the t-SNE plot.

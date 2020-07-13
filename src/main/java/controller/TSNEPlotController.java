@@ -260,6 +260,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         } catch (Exception e) {
             enableAssociatedFunctionality();
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the t-SNE plot");
+            e.printStackTrace();
         }
     }
 
@@ -295,7 +296,6 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     private void redrawTSNEPlotSansLegend() {
         if (!isTSNEPlotCleared())
             tSNEPlot.getChart().setTitle(tSNEPlot.getChart().getTitle());
-
     }
 
     /**
@@ -623,9 +623,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
                     ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
                     ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot");
                 });
-            } catch(RNAScoopException e) {
+           } catch(RNAScoopException e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
-            } catch (Exception e) {
+           } catch (Exception e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the t-SNE plot"));
                 e.printStackTrace();
             } finally {

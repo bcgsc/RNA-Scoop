@@ -181,6 +181,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             shownGenes.removeAll(genesToRemove);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("removing selected genes");
+            e.printStackTrace();
         }
     }
 
@@ -190,6 +191,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             clearShownGenes();
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("clearing shown genes");
+            e.printStackTrace();
         }
     }
 
@@ -197,12 +199,12 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     protected void handleUpdateFoldChangeButton() {
         removeFoldChangeAlert();
         addUpdatingFoldChangeMessage();
-        disableAssociatedFunctionality();
+        disableUpdateFoldChangeAssociatedFunctionality();
         try {
             Thread maxFoldChangeUpdaterThread = new Thread(new MaxFoldChangeUpdaterThread());
             maxFoldChangeUpdaterThread.start();
         } catch (Exception e) {
-            enableAssociatedFunctionality();
+            enableUpdateFoldChangeAssociatedFunctionality();
             removeUpdatingFoldChangeMessage();
             ControllerMediator.getInstance().addConsoleErrorMessage("updating gene maximum fold change values");
         }
@@ -216,7 +218,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             updateGenesMaxFoldChange();
             Platform.runLater(() -> {
                 removeUpdatingFoldChangeMessage();
-                enableAssociatedFunctionality();
+                enableUpdateFoldChangeAssociatedFunctionality();
             });
         }
     }
@@ -344,14 +346,14 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         shownGenesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
-    private void disableAssociatedFunctionality() {
+    private void disableUpdateFoldChangeAssociatedFunctionality() {
         disable();
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableTSNEPlot();
         ControllerMediator.getInstance().disableLabelSetManager();
     }
 
-    private void enableAssociatedFunctionality() {
+    private void enableUpdateFoldChangeAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableTSNEPlot();

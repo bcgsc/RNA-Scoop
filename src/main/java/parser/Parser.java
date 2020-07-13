@@ -219,9 +219,20 @@ public class Parser {
     private static class TSNEInfoLoader {
 
         public static void loadTSNEInfo(String pathToMatrix, String pathToIsoformLabels, String pathToCellLabels) throws IOException, RNAScoopException {
-            ControllerMediator.getInstance().setCellIsoformExpressionMatrix(getCellIsoformExpressionMatrix(pathToMatrix));
-            ControllerMediator.getInstance().setIsoformIndexMap(getIsoformIndexMap(pathToIsoformLabels));
-            ControllerMediator.getInstance().addLabelSet(getCellLabels(pathToCellLabels));
+            double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix(pathToMatrix);
+            HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap(pathToIsoformLabels);
+
+            if (isoformIndexMap.size() != cellIsoformExpressionMatrix[0].length)
+                throw new TSNEColumnLabelsLengthException();
+
+            LabelSet cellLabels = getCellLabels(pathToCellLabels);
+
+            if (cellLabels.getNumCellsInLabelSet() != cellIsoformExpressionMatrix.length)
+                throw new TSNERowLabelsLengthException();
+
+            ControllerMediator.getInstance().setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
+            ControllerMediator.getInstance().setIsoformIndexMap(isoformIndexMap);
+            ControllerMediator.getInstance().addLabelSet(cellLabels);
         }
 
         /**

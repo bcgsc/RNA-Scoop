@@ -226,6 +226,7 @@ public class MainController implements InteractiveElementController {
                 ControllerMediator.getInstance().addConsoleMessage("Successfully saved session");
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("saving session at path: " + file.getPath());
+                e.printStackTrace();
             }
         }
     }
@@ -243,6 +244,7 @@ public class MainController implements InteractiveElementController {
                 ControllerMediator.getInstance().addConsoleMessage("Successfully loaded session");
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading session from path: " + file.getPath());
+                e.printStackTrace();
             }
         }
     }
@@ -508,13 +510,12 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Clears t-SNE plot (include loaded matrix data), loaded genes, label sets, gene selector window,
+     * Clears t-SNE plot (include loaded matrix data), label sets, gene selector window,
      * current loaded path (as will be updated), disables associated functionality
      * Loads file from path in path combo box on different thread
      * Displays error (and successful completion) messages in console
      */
     private void loadFile() {
-        Parser.removeParsedGenes();
         ControllerMediator.getInstance().clearGeneSelector();
         ControllerMediator.getInstance().clearTSNEPlot();
         ControllerMediator.getInstance().setIsoformIndexMap(null);
@@ -573,17 +574,22 @@ public class MainController implements InteractiveElementController {
                 currentLoadedPath = filePath;
                 runLater(MainController.this::addLoadedPath);
             } catch (RNAScoopException e){
-                Parser.removeParsedGenes();
+                clearLoadedData();
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
-            } catch (FileNotFoundException e) {
-                Parser.removeParsedGenes();
-                runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage("Could not find file at path: " + pathComboBox.getValue()));
             } catch (Exception e) {
-                Parser.removeParsedGenes();
-                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("reading file from path: " + pathComboBox.getValue()));
+                clearLoadedData();
+                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading file from path: " + pathComboBox.getValue()));
+                e.printStackTrace();
             } finally {
                 runLater(MainController.this::enableAssociatedFunctionality);
             }
+        }
+
+        private void clearLoadedData() {
+            Parser.removeParsedGenes();
+            ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
+            ControllerMediator.getInstance().setIsoformIndexMap(null);
+            ControllerMediator.getInstance().clearLabelSets();
         }
     }
 
