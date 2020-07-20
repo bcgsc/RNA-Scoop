@@ -141,6 +141,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         LabelSet labelSetInUse = ControllerMediator.getInstance().getLabelSetInUse();
         boolean stillCustomizingLabelSet = ControllerMediator.getInstance().isAddLabelSetViewDisplayed();
         boolean tSNEPlotCleared = ControllerMediator.getInstance().isTSNEPlotCleared();
+
         if (genesFoldChangeLabelSet != labelSetInUse && !stillCustomizingLabelSet && !tSNEPlotCleared)
             addFoldChangeAlert();
         else

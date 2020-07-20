@@ -45,14 +45,20 @@ public class AddLabelSetViewController {
     }
 
     /**
-     * If shouldn't save label set, deletes it. Updates fold change alert
-     * and enables associated functionality
+     * If shouldn't save label set, deletes it. Enables associated functionality
      */
     public void prepareForClose(boolean saveLabelSet) {
         if (!saveLabelSet)
             ControllerMediator.getInstance().removeLabelSet(ControllerMediator.getInstance().getLabelSetInUse());
-        ControllerMediator.getInstance().updateFoldChangeAlert();
         enableAssociatedFunctionality();
+    }
+
+    /**
+     * To be called when add label set view closes, updates fold change column in gene
+     * selector
+     */
+    public void handleClose() {
+        ControllerMediator.getInstance().updateFoldChangeAlert();
     }
 
     /**
@@ -92,6 +98,7 @@ public class AddLabelSetViewController {
     protected void handleSaveLabelSetButton() {
         prepareForClose(true);
         window.displayMainView();
+        handleClose();
     }
 
     @FXML
@@ -99,6 +106,7 @@ public class AddLabelSetViewController {
         prepareForClose(false);
         window.displayMainView();
         window.hide();
+        handleClose();
     }
 
     private void enableAssociatedFunctionality() {

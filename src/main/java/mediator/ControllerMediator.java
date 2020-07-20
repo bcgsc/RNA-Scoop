@@ -147,10 +147,6 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.updateFoldChangeAlert();
     }
 
-    public void clearShownGenes() {
-        geneSelectorController.clearShownGenes();
-    }
-
     public void clearGeneSelector() {
         geneSelectorController.clearGeneSelector();
     }
@@ -175,6 +171,10 @@ public class ControllerMediator implements Mediator{
 
     public void prepareAddLabelSetViewForClose(boolean saveLabelSet) {
         addLabelSetViewController.prepareForClose(saveLabelSet);
+    }
+
+    public void handleCloseAddLabelSetView() {
+        addLabelSetViewController.handleClose();
     }
 
     public void addLabelSet(LabelSet labelSet) {

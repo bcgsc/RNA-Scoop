@@ -34,6 +34,7 @@ public class LabelSetManagerWindow extends Stage {
             if (viewDisplayed == addLabelSetViewScene) {
                 ControllerMediator.getInstance().prepareAddLabelSetViewForClose(false);
                 displayMainView();
+                ControllerMediator.getInstance().handleCloseAddLabelSetView();
             }
             event.consume();
             hide();
@@ -41,14 +42,18 @@ public class LabelSetManagerWindow extends Stage {
     }
 
     public void displayMainView() {
-        setScene(mainViewScene);
-        viewDisplayed = mainViewScene;
+        if (viewDisplayed != mainViewScene) {
+            setScene(mainViewScene);
+            viewDisplayed = mainViewScene;
+        }
     }
 
     public void displayAddLabelSetView() {
-        ControllerMediator.getInstance().prepareAddLabelSetViewForDisplay();
-        setScene(addLabelSetViewScene);
-        viewDisplayed = addLabelSetViewScene;
+        if (viewDisplayed != addLabelSetViewScene) {
+            ControllerMediator.getInstance().prepareAddLabelSetViewForDisplay();
+            setScene(addLabelSetViewScene);
+            viewDisplayed = addLabelSetViewScene;
+        }
     }
 
     public boolean isDisplayingAddLabelSetView() {
