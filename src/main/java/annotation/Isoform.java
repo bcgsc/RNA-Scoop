@@ -48,18 +48,23 @@ public class Isoform {
         return isoformExpressionSum / numCells;
     }
 
-    public double getExpressionLevelInCluster(Cluster cluster, boolean onlySelected) {
-        double isoformExpressionSum = 0;
+    public double getExpressionLevelInCluster(Cluster cluster, boolean onlySelected, boolean includeZeros) {
+        double expressionSum = 0;
         Collection<TSNEPlotController.CellDataItem> cellsInCluster;
         if (onlySelected)
             cellsInCluster = ControllerMediator.getInstance().getSelectedCellsInCluster(cluster);
         else
             cellsInCluster = cluster.getCells();
-
-        int numSelected = cellsInCluster.size();
-        for (TSNEPlotController.CellDataItem selectedCell : cellsInCluster)
-            isoformExpressionSum += selectedCell.getIsoformExpressionLevel(id);
-        return isoformExpressionSum / numSelected;
+        int numCells = 0;
+        
+        for (TSNEPlotController.CellDataItem cell : cellsInCluster) {
+            double expression = cell.getIsoformExpressionLevel(id);
+            if (includeZeros || expression > 0) {
+                expressionSum += expression;
+                numCells++;
+            }
+        }
+        return expressionSum / numCells;
     }
 
     public String getName() {

@@ -3,8 +3,6 @@ package controller;
 import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -635,7 +633,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
              */
             private void setToolTip(boolean shouldShowToolTip, double expression) {
                 if (shouldShowToolTip) {
-                    toolTip.setText("TPM: " + roundToOneDecimal(expression));
+                    toolTip.setText("Average TPM: " + roundToOneDecimal(expression));
                     if (!toolTipShowing) {
                         Tooltip.install(this, toolTip);
                         toolTipShowing = true;
@@ -818,7 +816,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
             while(iterator.hasNext()) {
                 Cluster cluster = iterator.next();
-                double expression = isoformGroup.getIsoform().getExpressionLevelInCluster(cluster, onlySelected);
+                double expression = isoformGroup.getIsoform().getExpressionLevelInCluster(cluster, onlySelected, false);
                 int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoformGroup.getIsoform().getId(), cluster, onlySelected);
                 int numCells = onlySelected? ControllerMediator.getInstance().getSelectedCellsInCluster(cluster).size() : cluster.getCells().size();
                 double dotSize = getDotSize((double) numExpressingCells/numCells);
@@ -855,7 +853,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         private static void addExpressionLevelToolTip(double expression, int numExpressingCells, int numCells, Node node) {
             double percentExpressed = roundToOneDecimal(((double) numExpressingCells / numCells) * 100);
-            Tooltip tooltip = new Tooltip("TPM: " + roundToOneDecimal(expression) + "\n" +
+            Tooltip tooltip = new Tooltip("Average non-zero TPM: " + roundToOneDecimal(expression) + "\n" +
                                                 "Cells: " + numExpressingCells + "/" + numCells + " (" + percentExpressed + "%)");
             Tooltip.install(node, tooltip);
         }

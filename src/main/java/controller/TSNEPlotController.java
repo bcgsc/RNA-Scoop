@@ -2,7 +2,6 @@ package controller;
 
 import com.jujutsu.tsne.*;
 import com.jujutsu.tsne.barneshut.BHTSne;
-import com.jujutsu.utils.MatrixOps;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
 import exceptions.TSNEInvalidPerplexityException;
