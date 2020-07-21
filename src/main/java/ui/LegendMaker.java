@@ -1,8 +1,10 @@
 package ui;
 
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -18,7 +20,7 @@ public class LegendMaker {
     public static final double LIGHT_COLOR_LUMINENCE_LIMIT = 0.69;
     public static final int LEGEND_CIRCLE_LABEL_SPACING = 2;
 
-    public static Pane createLegend(boolean includeLabels, boolean onlySelected, boolean includeBackground, boolean vertical,
+    public static Pane createLegend(boolean includeLabels, boolean selectable, boolean onlySelected, boolean includeBackground, boolean vertical,
                                     double dotSize, double circleCanvasWidth, double circleCanvasHeight, double elementSpacing) {
         Pane legend;
         if (vertical)
@@ -32,13 +34,11 @@ public class LegendMaker {
         Iterator<Cluster> iterator = clusters.iterator();
         while(iterator.hasNext()) {
             Cluster cluster= iterator.next();
-            Canvas legendCircle = createLegendCircle(dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
-            legend.getChildren().add(legendCircle);
+            Canvas legendCircle = createLegendCircle(selectable, dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
             HBox legendElement = new HBox();
             legendElement.getChildren().add(legendCircle);
             if (includeLabels) {
-                Text label = new Text(cluster.getName());
-                label.setStyle("-fx-font: 13 segoe");
+                Text label = createLabel(selectable, cluster);
                 legendElement.getChildren().add(label);
                 HBox.setMargin(legendCircle, new Insets(0, LEGEND_CIRCLE_LABEL_SPACING, 0, 0));
             }
@@ -49,19 +49,38 @@ public class LegendMaker {
             legend.getChildren().add(legendElement);
         }
 
-        if (includeBackground) {
-            Pane legendElements = legend;
-            legend = new HBox();
-            HBox.setMargin(legendElements, new Insets(5));
-            legend.getChildren().add(legendElements);
-            legend.setStyle("-fx-background-color: rgba(255, 255, 255, 0.65);" +
-                            "-fx-border-color: transparent transparent rgba(173, 173, 173, 0.65) rgba(173, 173, 173, 0.65);");
-        }
+        if (includeBackground)
+            legend = addBackgroundToLegend(legend);
+
         return legend;
     }
 
-    private static Canvas createLegendCircle(double dotSize, double circleCanvasWidth, double circleCanvasHeight,
-                                             Cluster cluster) {
+    private static Canvas createLegendCircle(boolean selectable, double dotSize, double circleCanvasWidth,
+                                             double circleCanvasHeight, Cluster cluster) {
+        Canvas legendCircle = drawLegendCircleShape(dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
+        if (selectable)
+            legendCircle.setOnMouseClicked(new LegendMouseHandler(cluster));
+        return legendCircle;
+    }
+
+    private static Text createLabel(boolean selectable, Cluster cluster) {
+        Text label = new Text(cluster.getName());
+        if (selectable)
+            label.setOnMouseClicked(new LegendMouseHandler(cluster));
+        return label;
+    }
+
+    private static Pane addBackgroundToLegend(Pane legend) {
+        Pane legendElements = legend;
+        legend = new HBox();
+        HBox.setMargin(legendElements, new Insets(5));
+        legend.getChildren().add(legendElements);
+        legend.setStyle("-fx-background-color: rgba(255, 255, 255, 0.65);" +
+                "-fx-border-color: transparent transparent rgba(173, 173, 173, 0.65) rgba(173, 173, 173, 0.65);");
+        return legend;
+    }
+
+    private static Canvas drawLegendCircleShape(double dotSize, double circleCanvasWidth, double circleCanvasHeight, Cluster cluster) {
         Canvas legendCircle = new Canvas(circleCanvasWidth, circleCanvasHeight);
         double circleX = circleCanvasWidth / 2;
         double circleY = circleCanvasHeight / 2;
@@ -99,5 +118,19 @@ public class LegendMaker {
         double min = Math.min(r, Math.min(g, b));
         double max = Math.max(r, Math.max(g, b));
         return (max + min) / 2;
+    }
+
+    private static class LegendMouseHandler implements EventHandler<MouseEvent> {
+        Cluster cluster;
+
+        public LegendMouseHandler(Cluster cluster) {
+            this.cluster = cluster;
+        }
+
+        @Override
+        public void handle(MouseEvent event) {
+            ControllerMediator.getInstance().deselectAllIsoforms();
+            ControllerMediator.getInstance().selectCluster(cluster);
+        }
     }
 }

@@ -56,6 +56,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     private static final double LEGEND_DOT_CANVAS_HEIGHT = LEGEND_DOT_SIZE + GRAPHIC_SPACING;
     private static final double LEGEND_ELEMENT_SPACING  = 5;
     private static final boolean INCLUDE_LEGEND_LABELS = true;
+    private static final boolean LEGEND_SELECTABLE = true;
     private static final boolean LEGEND_SHOW_ONLY_SELECTED = false;
     private static final boolean LEGEND_SHOW_BACKGROUND = true;
     private static final boolean LEGEND_IS_VERTICAL = true;
@@ -175,7 +176,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
     public void redrawTSNEPlotLegend() {
         if (!isTSNEPlotCleared())
-            tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
+            tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
                     LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
     }
 
@@ -183,6 +184,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         cellSelectionManager.selectCellsIsoformsExpressedIn(isoformIDs);
     }
 
+    public void selectCluster(Cluster cluster) {
+        cellSelectionManager.selectCluster(cluster);
+    }
 
     public boolean isTSNEPlotCleared() {
         return tSNEPlot == null;
@@ -355,8 +359,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
         public TSNEPlotRenderer() {
             super(false, true);
-            //setDrawOutlines(true);
             setUseOutlinePaint(true);
+            setSeriesOutlineStroke(0, new BasicStroke(1.5f));
         }
 
         @Override
@@ -469,6 +473,17 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
             redrawOnClear = true;
         }
+
+        public void selectCluster(Cluster cluster) {
+            redrawOnClear = false;
+            clearSelection();
+            for (CellDataItem cell : cluster.getCells())
+                select(cell);
+            redrawTSNEPlotSansLegend();
+            runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+            redrawOnClear = true;
+        }
+
 
 
         /**
@@ -713,7 +728,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         private void addLegend() {
             runLater(() -> {
                 tSNEPlotLegend = new ScrollPane();
-                tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SHOW_ONLY_SELECTED,
+                tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED,
                         LEGEND_SHOW_BACKGROUND, LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH,
                         LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
                 StackPane.setAlignment(tSNEPlotLegend, Pos.TOP_RIGHT);

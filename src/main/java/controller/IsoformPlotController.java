@@ -767,8 +767,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 boolean shouldDrawDotPlot = shouldDrawDotPlot();
                 if (shouldDrawDotPlot && (dotPlotLegend == null || redraw)) {
                     boolean onlySelectedClusters = ControllerMediator.getInstance().areCellsSelected();
-                    firstIsoformGroup.setDotPlotLegend(LegendMaker.createLegend(false, onlySelectedClusters, false, false,
-                            ALL_EXPRESS_DOT_SIZE, DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT, DOT_PLOT_COLUMN_SPACING));
+                    firstIsoformGroup.setDotPlotLegend(LegendMaker.createLegend(false, false, onlySelectedClusters,
+                            false, false, ALL_EXPRESS_DOT_SIZE, DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT, DOT_PLOT_COLUMN_SPACING));
                 }  else if (dotPlotLegend != null && !shouldDrawDotPlot) {
                     firstIsoformGroup.setDotPlotLegend(null);
                 }

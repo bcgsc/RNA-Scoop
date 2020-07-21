@@ -61,14 +61,13 @@ public class Gene implements Comparable<Gene> {
     }
 
     public void updateMaxFoldChange() {
-        boolean onlySelected = ControllerMediator.getInstance().areCellsSelected();
-        Collection<Cluster> clusters = ControllerMediator.getInstance().getClusters(onlySelected);
+        Collection<Cluster> clusters = ControllerMediator.getInstance().getClusters(false);
         double newMaxFoldChange = 0;
         for (Isoform isoform : isoforms.values()) {
             double minExpression = Integer.MAX_VALUE;
             double maxExpression = Integer.MIN_VALUE;
             for (Cluster cluster : clusters) {
-                double expression = isoform.getExpressionLevelInCluster(cluster, onlySelected, true);
+                double expression = isoform.getExpressionLevelInCluster(cluster, false, true);
                 if (expression < minExpression)
                     minExpression = expression;
                 if (expression > maxExpression)
