@@ -23,6 +23,7 @@ public class Parser {
     private static final String MATRIX_PATH_KEY = "matrix";
     private static final String ISOFORM_LABELS_PATH_KEY = "isoform ids";
     private static final String CELL_LABELS_PATH_KEY = "cell labels";
+    private static final String TSNE_PATH_KEY = "t-sne";
     /**
      * Map of all genes parser has parsed so far
      * Key is the gene's ID, value is the gene
@@ -40,7 +41,8 @@ public class Parser {
         GTFLoader.loadGTF((String) paths.get(GTF_PATH_KEY));
         TSNEInfoLoader.loadTSNEInfo((String) paths.get(MATRIX_PATH_KEY),
                                     (String) paths.get(ISOFORM_LABELS_PATH_KEY),
-                                    (String) paths.get(CELL_LABELS_PATH_KEY));
+                                    (String) paths.get(CELL_LABELS_PATH_KEY),
+                                     paths.has(TSNE_PATH_KEY)? (String) paths.get(TSNE_PATH_KEY) : null);
     }
 
     /**
@@ -218,17 +220,26 @@ public class Parser {
 
     private static class TSNEInfoLoader {
 
-        public static void loadTSNEInfo(String pathToMatrix, String pathToIsoformLabels, String pathToCellLabels) throws IOException, RNAScoopException {
+        public static void loadTSNEInfo(String pathToMatrix, String pathToIsoformLabels, String pathToCellLabels, String pathToTSNE) throws IOException, RNAScoopException {
             double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix(pathToMatrix);
             HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap(pathToIsoformLabels);
 
             if (isoformIndexMap.size() != cellIsoformExpressionMatrix[0].length)
-                throw new TSNEColumnLabelsLengthException();
+                throw new ColumnLabelsLengthException();
 
             LabelSet cellLabels = getCellLabels(pathToCellLabels);
 
             if (cellLabels.getNumCellsInLabelSet() != cellIsoformExpressionMatrix.length)
-                throw new TSNERowLabelsLengthException();
+                throw new RowLabelsLengthException();
+
+            if (pathToTSNE != null) {
+                double[][] tSNEMatrix = getTSNEMatrix(pathToTSNE);
+
+
+                if (tSNEMatrix.length != cellIsoformExpressionMatrix.length)
+                    throw new TSNEMatrixLengthException();
+                ControllerMediator.getInstance().setTSNEMatrix(tSNEMatrix);
+            }
 
             ControllerMediator.getInstance().setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
             ControllerMediator.getInstance().setIsoformIndexMap(isoformIndexMap);
@@ -240,15 +251,15 @@ public class Parser {
          * Throws exceptions if size of the matrix is 0, or if the matrix contains negative
          * expression values
          */
-        private static double[][] getCellIsoformExpressionMatrix(String pathToMatrix) throws TSNEMatrixSizeZeroException, TSNENegativeExpressionInMatrixException {
+        private static double[][] getCellIsoformExpressionMatrix(String pathToMatrix) throws MatrixSizeZeroException, NegativeExpressionInMatrixException {
             File matrixFile = new File(pathToMatrix);
             double[][] cellIsoformExpressionMatrix = MatrixUtils.simpleRead2DMatrix(matrixFile, "\t");
             if (cellIsoformExpressionMatrix.length == 0)
-                throw new TSNEMatrixSizeZeroException();
+                throw new MatrixSizeZeroException();
 
             double[] negativeExpressions = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).filter(expression -> expression < 0).toArray();
             if (negativeExpressions.length > 0)
-                throw new TSNENegativeExpressionInMatrixException();
+                throw new NegativeExpressionInMatrixException();
 
             return cellIsoformExpressionMatrix;
         }
@@ -299,5 +310,34 @@ public class Parser {
             }
             return new LabelSet(cellNumberClusterMap);
         }
+
+        private static double[][] getTSNEMatrix(String pathToTSNE) throws IOException, TSNEMatrixColumnsException, TSNEMatrixNotNumberException {
+            String currentLabel;
+            int lineNumber = 1;
+            ArrayList<double[]> tSNEArrayList = new ArrayList();
+
+            File tSNEFile = new File(pathToTSNE);
+            BufferedReader reader= new BufferedReader(new FileReader(tSNEFile));
+            while ((currentLabel = reader.readLine()) != null) {
+                String[] cellCoordsString = currentLabel.split("\t");
+
+                if (cellCoordsString.length != 2)
+                    throw new TSNEMatrixColumnsException(lineNumber);
+
+                try {
+                    double[] cellCoords = Arrays.stream(cellCoordsString).mapToDouble(Double::parseDouble).toArray();
+                    tSNEArrayList.add(cellCoords);
+                } catch (NumberFormatException e) {
+                    throw new TSNEMatrixNotNumberException("(" + cellCoordsString[0] + ", " + cellCoordsString[1] + ")", lineNumber);
+                }
+                lineNumber++;
+            }
+
+            double[][] tSNEMatrix = new double[tSNEArrayList.size()][];
+            for (int i = 0; i < tSNEArrayList.size(); i++)
+                tSNEMatrix[i] = tSNEArrayList.get(i);
+            return tSNEMatrix;
+        }
+
     }
 }

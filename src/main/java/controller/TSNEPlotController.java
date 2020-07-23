@@ -4,7 +4,7 @@ import com.jujutsu.tsne.*;
 import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.utils.TSneUtils;
 import exceptions.RNAScoopException;
-import exceptions.TSNEInvalidPerplexityException;
+import exceptions.InvalidPerplexityException;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -70,6 +70,7 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
     private HashMap<String, Integer> isoformIndexMap;
     private double[][] cellIsoformExpressionMatrix;
+    private double[][] tSNEMatrix; // optional t-SNE matrix user can load
     private ChartPanel tSNEPlot;
     private ScrollPane tSNEPlotLegend;
     private CellSelectionManager cellSelectionManager;
@@ -127,6 +128,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         if (!isTSNEPlotCleared())
             clearTSNEPlot();
         this.isoformIndexMap = isoformIndexMap;
+    }
+
+    public void setTSNEMatrix(double[][] tSNEMatrix) {
+        if (!isTSNEPlotCleared())
+            clearTSNEPlot();
+        this.tSNEMatrix = tSNEMatrix;
     }
 
     public void clearTSNEPlot() {
@@ -628,15 +635,13 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing t-SNE plot..."));
             try {
                 cellsInNewTSNEPlot = new XYSeriesCollection();
-                double[][] tSNEMatrix = generateTSNEMatrix();
-                drawTsne(tSNEMatrix);
+                double[][] matrix = (tSNEMatrix == null ? generateTSNEMatrix() : tSNEMatrix);
+                drawTsne(matrix);
                 setTPMGradientValues();
                 ControllerMediator.getInstance().addCellsToLabelSetClusters();
+                runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
                 ControllerMediator.getInstance().updateGenesMaxFoldChange();
-                runLater(() -> {
-                    ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
-                    ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot");
-                });
+                runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing t-SNE plot"));
            } catch(RNAScoopException e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
            } catch (Exception e) {
@@ -647,15 +652,15 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             }
         }
 
-        private double [][] generateTSNEMatrix() throws TSNEInvalidPerplexityException {
+        private double[][] generateTSNEMatrix() throws InvalidPerplexityException {
             double perplexityValue;
             try {
                 perplexityValue = Double.parseDouble(perplexity.getText());
             } catch (NumberFormatException e) {
-                throw new TSNEInvalidPerplexityException();
+                throw new InvalidPerplexityException();
             }
             if(perplexityValue < 0)
-                throw new TSNEInvalidPerplexityException();
+                throw new InvalidPerplexityException();
 
             int initial_dims = 55;
             BHTSne tSNE = new BHTSne();

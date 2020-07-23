@@ -370,6 +370,10 @@ public class ControllerMediator implements Mediator{
         tsnePlotController.setIsoformIndexMap(isoformIndexMap);
     }
 
+    public void setTSNEMatrix(double[][] tSNEMatrix) {
+        tsnePlotController.setTSNEMatrix(tSNEMatrix);
+    }
+
     public void setRecommendedMinTPM(int recommendedMinTPM) {
         tpmGradientAdjusterController.setRecommendedMinTPM(recommendedMinTPM);
     }

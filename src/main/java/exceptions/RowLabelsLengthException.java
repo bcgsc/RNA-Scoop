@@ -1,8 +1,8 @@
 package exceptions;
 
-public class TSNERowLabelsLengthException extends RNAScoopException {
+public class RowLabelsLengthException extends RNAScoopException {
 
-    public TSNERowLabelsLengthException() {
+    public RowLabelsLengthException() {
         message = "The number of row labels does not equal the number of rows in the matrix";
     }
 

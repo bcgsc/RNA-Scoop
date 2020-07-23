@@ -520,6 +520,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().clearTSNEPlot();
         ControllerMediator.getInstance().setIsoformIndexMap(null);
         ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
+        ControllerMediator.getInstance().setTSNEMatrix(null);
         ControllerMediator.getInstance().clearLabelSets();
         currentLoadedPath = null;
         disableAssociatedFunctionality();
@@ -589,6 +590,7 @@ public class MainController implements InteractiveElementController {
             Parser.removeParsedGenes();
             ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
             ControllerMediator.getInstance().setIsoformIndexMap(null);
+            ControllerMediator.getInstance().setTSNEMatrix(null);
             ControllerMediator.getInstance().clearLabelSets();
         }
     }

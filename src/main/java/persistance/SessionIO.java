@@ -79,6 +79,7 @@ public class SessionIO {
         ControllerMediator.getInstance().clearPathComboBox();
         ControllerMediator.getInstance().setIsoformIndexMap(null);
         ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
+        ControllerMediator.getInstance().setTSNEMatrix(null);
     }
 
     private static void setSavedSettings(JSONObject prevSession) {

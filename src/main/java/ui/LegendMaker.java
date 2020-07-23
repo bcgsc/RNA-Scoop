@@ -2,6 +2,7 @@ package ui;
 
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
@@ -59,14 +60,14 @@ public class LegendMaker {
                                              double circleCanvasHeight, Cluster cluster) {
         Canvas legendCircle = drawLegendCircleShape(dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
         if (selectable)
-            legendCircle.setOnMouseClicked(new LegendMouseHandler(cluster));
+            legendCircle.setOnMouseClicked(new LegendMouseHandler(cluster, legendCircle));
         return legendCircle;
     }
 
     private static Text createLabel(boolean selectable, Cluster cluster) {
         Text label = new Text(cluster.getName());
         if (selectable)
-            label.setOnMouseClicked(new LegendMouseHandler(cluster));
+            label.setOnMouseClicked(new LegendMouseHandler(cluster, label));
         return label;
     }
 
@@ -122,15 +123,18 @@ public class LegendMaker {
 
     private static class LegendMouseHandler implements EventHandler<MouseEvent> {
         Cluster cluster;
+        Node node;
 
-        public LegendMouseHandler(Cluster cluster) {
+        public LegendMouseHandler(Cluster cluster, Node node) {
             this.cluster = cluster;
+            this.node = node;
         }
 
         @Override
         public void handle(MouseEvent event) {
             ControllerMediator.getInstance().deselectAllIsoforms();
             ControllerMediator.getInstance().selectCluster(cluster);
+            node.setStyle("-fx-effect: dropshadow(one-pass-box, #ffafff, 7, 7, 0, 0);");
         }
     }
 }
