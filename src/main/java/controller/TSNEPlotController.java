@@ -34,7 +34,7 @@ import org.jfree.data.extension.impl.XYDatasetSelectionExtension;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import ui.LegendMaker;
+import ui.Legend;
 import util.Util;
 
 import javax.swing.*;
@@ -72,7 +72,8 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     private double[][] cellIsoformExpressionMatrix;
     private double[][] tSNEMatrix; // optional t-SNE matrix user can load
     private ChartPanel tSNEPlot;
-    private ScrollPane tSNEPlotLegend;
+    private ScrollPane tSNEPlotLegendHolder;
+    private Legend tSNEPlotLegend;
     private CellSelectionManager cellSelectionManager;
     private HashMap<Integer, CellDataItem> cellNumberCellMap;
     private XYSeriesCollection cellsInTSNEPlot;
@@ -141,8 +142,9 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             JPanel whiteBackground = new JPanel();
             whiteBackground.setBackground(Color.WHITE);
             swingNode.setContent(whiteBackground);
-            tSNEPlotHolder.getChildren().remove(tSNEPlotLegend);
+            tSNEPlotHolder.getChildren().remove(tSNEPlotLegendHolder);
             tSNEPlot = null;
+            tSNEPlotLegendHolder = null;
             tSNEPlotLegend = null;
             cellSelectionManager = null;
             cellsInTSNEPlot.removeAllSeries();
@@ -182,17 +184,23 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
     }
 
     public void redrawTSNEPlotLegend() {
-        if (!isTSNEPlotCleared())
-            tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
-                    LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
+        if (!isTSNEPlotCleared()) {
+            tSNEPlotLegend = new Legend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
+                    LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING);
+            tSNEPlotLegendHolder.setContent(tSNEPlotLegend.getLegendGraphic());
+        }
     }
 
     public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
         cellSelectionManager.selectCellsIsoformsExpressedIn(isoformIDs);
     }
 
-    public void selectCluster(Cluster cluster) {
-        cellSelectionManager.selectCluster(cluster);
+    public void selectCluster(Cluster cluster, boolean unselectRest) {
+        cellSelectionManager.selectCluster(cluster, unselectRest);
+    }
+
+    public void unselectCluster(Cluster cluster) {
+        cellSelectionManager.unselectCluster(cluster);
     }
 
     public boolean isTSNEPlotCleared() {
@@ -481,16 +489,21 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
             redrawOnClear = true;
         }
 
-        public void selectCluster(Cluster cluster) {
-            redrawOnClear = false;
-            clearSelection();
+        public void selectCluster(Cluster cluster, boolean unselectRest) {
+            if (unselectRest)
+                selectedCells.clear();
             for (CellDataItem cell : cluster.getCells())
                 select(cell);
             redrawTSNEPlotSansLegend();
             runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
-            redrawOnClear = true;
         }
 
+        public void unselectCluster(Cluster cluster) {
+            if (selectedCells.containsKey(cluster)) {
+                selectedCells.remove(cluster);
+                redrawTSNEPlotSansLegend();
+            }
+        }
 
 
         /**
@@ -572,11 +585,12 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
         public void select(Rectangle2D rectangle2D) {}
 
         /**
-         * Clears all selected cells in t-SNE plot
+         * Clears all selected cells in t-SNE plot and selected legend elements
          */
         @Override
         public void clearSelection() {
             selectedCells.clear();
+            tSNEPlotLegend.clearSelectedLegendElements();
             if (redrawOnClear)
                 redrawTSNEPlotSansLegend();
 
@@ -732,16 +746,17 @@ public class TSNEPlotController implements Initializable, InteractiveElementCont
 
         private void addLegend() {
             runLater(() -> {
-                tSNEPlotLegend = new ScrollPane();
-                tSNEPlotLegend.setContent(LegendMaker.createLegend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED,
+                tSNEPlotLegendHolder = new ScrollPane();
+                tSNEPlotLegend = new Legend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED,
                         LEGEND_SHOW_BACKGROUND, LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH,
-                        LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING));
-                StackPane.setAlignment(tSNEPlotLegend, Pos.TOP_RIGHT);
-                tSNEPlotLegend.setPickOnBounds(false);
-                tSNEPlotLegend.setMaxWidth(-Infinity);
-                tSNEPlotLegend.setMaxHeight(-Infinity);
-                tSNEPlotHolder.getChildren().add(tSNEPlotLegend);
-                tSNEPlotLegend.setStyle("-fx-background-color: transparent;");
+                        LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING);
+                tSNEPlotLegendHolder.setContent(tSNEPlotLegend.getLegendGraphic());
+                StackPane.setAlignment(tSNEPlotLegendHolder, Pos.TOP_RIGHT);
+                tSNEPlotLegendHolder.setPickOnBounds(false);
+                tSNEPlotLegendHolder.setMaxWidth(-Infinity);
+                tSNEPlotLegendHolder.setMaxHeight(-Infinity);
+                tSNEPlotHolder.getChildren().add(tSNEPlotLegendHolder);
+                tSNEPlotLegendHolder.setStyle("-fx-background-color: transparent;");
             });
         }
 

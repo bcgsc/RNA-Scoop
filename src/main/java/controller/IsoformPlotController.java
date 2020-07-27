@@ -25,7 +25,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import labelset.Cluster;
 import mediator.ControllerMediator;
-import ui.LegendMaker;
+import ui.Legend;
 import util.Util;
 
 import java.net.URL;
@@ -767,8 +767,9 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 boolean shouldDrawDotPlot = shouldDrawDotPlot();
                 if (shouldDrawDotPlot && (dotPlotLegend == null || redraw)) {
                     boolean onlySelectedClusters = ControllerMediator.getInstance().areCellsSelected();
-                    firstIsoformGroup.setDotPlotLegend(LegendMaker.createLegend(false, false, onlySelectedClusters,
-                            false, false, ALL_EXPRESS_DOT_SIZE, DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT, DOT_PLOT_COLUMN_SPACING));
+                    Legend legend = new Legend(false, false, onlySelectedClusters,
+                            false, false, ALL_EXPRESS_DOT_SIZE, DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT, DOT_PLOT_COLUMN_SPACING);
+                    firstIsoformGroup.setDotPlotLegend(legend.getLegendGraphic());
                 }  else if (dotPlotLegend != null && !shouldDrawDotPlot) {
                     firstIsoformGroup.setDotPlotLegend(null);
                 }

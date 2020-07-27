@@ -234,8 +234,12 @@ public class ControllerMediator implements Mediator{
         tsnePlotController.selectCellsIsoformsExpressedIn(isoformIDs);
     }
 
-    public void selectCluster(Cluster cluster) {
-        tsnePlotController.selectCluster(cluster);
+    public void selectCluster(Cluster cluster, boolean unselectRest) {
+        tsnePlotController.selectCluster(cluster, unselectRest);
+    }
+
+    public void unselectCluster(Cluster cluster) {
+        tsnePlotController.unselectCluster(cluster);
     }
 
     //Load from JSON

@@ -21,9 +21,9 @@ import java.util.regex.Pattern;
 public class Parser {
     private static final String GTF_PATH_KEY = "gtf";
     private static final String MATRIX_PATH_KEY = "matrix";
-    private static final String ISOFORM_LABELS_PATH_KEY = "isoform ids";
-    private static final String CELL_LABELS_PATH_KEY = "cell labels";
-    private static final String TSNE_PATH_KEY = "t-sne";
+    private static final String ISOFORM_LABELS_PATH_KEY = "isoform_ids";
+    private static final String CELL_LABELS_PATH_KEY = "cell_labels";
+    private static final String TSNE_PATH_KEY = "tsne";
     /**
      * Map of all genes parser has parsed so far
      * Key is the gene's ID, value is the gene
