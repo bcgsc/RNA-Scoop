@@ -123,8 +123,8 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.updateHideSingleExonIsoformsStatus();
     }
 
-    public void updateHideDotPlotStatus() {
-        isoformPlotController.updateHideDotPlotStatus();
+    public void handleColoringOrDotPlotChange() {
+        isoformPlotController.handleColoringOrDotPlotChange();
     }
 
     public void updateGeneLabels() {
@@ -323,6 +323,22 @@ public class ControllerMediator implements Mediator{
 
     public boolean isHidingDotPlot() {
         return mainController.isHidingDotPlot();
+    }
+
+    public boolean isShowingMedian() {
+        return mainController.isShowingMedian();
+    }
+
+    public boolean isShowingNonZeroMedian() {
+        return mainController.isShowingNonZeroMedian();
+    }
+
+    public boolean isShowingAverage() {
+        return mainController.isShowingAverage();
+    }
+
+    public boolean isShowingNonZeroAverage() {
+        return mainController.isShowingNonZeroAverage();
     }
 
     public boolean isShowingGeneNameAndID() {

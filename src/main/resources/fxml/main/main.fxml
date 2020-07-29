@@ -21,9 +21,17 @@
                         <fx:define>
                             <ToggleGroup fx:id="geneLabelToggles"/>
                         </fx:define>
+                        <fx:define>
+                            <ToggleGroup fx:id="expressionToggles"/>
+                        </fx:define>
                         <CheckMenuItem fx:id="revComplementToggle" onAction="#handleReverseComplementToggle" text="Reverse complement (-) strand"/>
                         <CheckMenuItem fx:id="hideSingleExonIsoformsToggle" onAction="#handleHideSingleExonIsoformsToggle" text="Hide single-exon isoforms"/>
                         <CheckMenuItem fx:id="hideDotPlotToggle" onAction="#handleHideDotPlotToggle" text="Hide dot plot"/>
+                        <SeparatorMenuItem/>
+                        <RadioMenuItem fx:id="showMedianToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show median expression" selected="true"/>
+                        <RadioMenuItem fx:id="showNonZeroMedianToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show non-zero median expression"/>
+                        <RadioMenuItem fx:id="showAverageToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show average expression"/>
+                        <RadioMenuItem fx:id="showNonZeroAverageToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show non-zero average expression"/>
                         <SeparatorMenuItem/>
                         <RadioMenuItem fx:id="showGeneNameAndIDToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show gene name and ID"/>
                         <RadioMenuItem fx:id="showGeneNameToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show gene name" selected="true"/>

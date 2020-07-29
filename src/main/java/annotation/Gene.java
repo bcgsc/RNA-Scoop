@@ -67,7 +67,7 @@ public class Gene implements Comparable<Gene> {
             double minExpression = Integer.MAX_VALUE;
             double maxExpression = Integer.MIN_VALUE;
             for (Cluster cluster : clusters) {
-                double expression = isoform.getExpressionLevelInCluster(cluster, false, true);
+                double expression = isoform.getAverageExpressionInCluster(cluster, false, true);
                 if (expression < minExpression)
                     minExpression = expression;
                 if (expression > maxExpression)

@@ -9,20 +9,24 @@ import java.util.ArrayList;
 
 public class SessionMaker {
     public static final String PATH_KEY = "path";
-    public static final String ISOFORM_PLOT_OPEN_KEY = "isoform open";
-    public static final String TSNE_PLOT_OPEN_KEY = "t-sne open";
-    public static final String CONSOLE_OPEN_KEY = "console open";
-    public static final String REVERSE_COMPLEMENT_KEY = "rev complement";
-    public static final String HIDE_SINGLE_EXON_ISOFORMS_KEY = "hide single-exon isoform";
-    public static final String HIDE_DOT_PLOT_KEY = "hide dot plot";
-    public static final String SHOW_GENE_NAME_AND_ID_KEY = "show gene name and id";
-    public static final String SHOW_GENE_NAME_KEY = "show gene name";
-    public static final String SHOW_GENE_ID_KEY = "show gene id";
-    public static final String SHOW_ISOFORM_NAME_KEY = "show isoform name";
-    public static final String SHOW_ISOFORM_ID_KEY = "show isoform id";
-    public static final String CONSOLE_MESSAGES_KEY = "console messages";
-    public static final String MESSAGE_TEXT_KEY = "message text";
-    public static final String MESSAGE_IS_ERROR_KEY = "message is error";
+    public static final String ISOFORM_PLOT_OPEN_KEY = "isoform_open";
+    public static final String TSNE_PLOT_OPEN_KEY = "tsne_open";
+    public static final String CONSOLE_OPEN_KEY = "console_open";
+    public static final String REVERSE_COMPLEMENT_KEY = "rev_complement";
+    public static final String HIDE_SINGLE_EXON_ISOFORMS_KEY = "hide_single_exon_isoforms";
+    public static final String HIDE_DOT_PLOT_KEY = "hide_dot_plot";
+    public static final String SHOW_MEDIAN_KEY = "show_median";
+    public static final String SHOW_NON_ZERO_MEDIAN_KEY = "show_non_zero_median";
+    public static final String SHOW_AVERAGE_KEY = "show_average";
+    public static final String SHOW_NON_ZERO_AVERAGE_KEY = "show_non_zero_average";
+    public static final String SHOW_GENE_NAME_AND_ID_KEY = "show_gene_name_and_id";
+    public static final String SHOW_GENE_NAME_KEY = "show_gene_name";
+    public static final String SHOW_GENE_ID_KEY = "show_gene_id";
+    public static final String SHOW_ISOFORM_NAME_KEY = "show_isoform_name";
+    public static final String SHOW_ISOFORM_ID_KEY = "show_isoform_id";
+    public static final String CONSOLE_MESSAGES_KEY = "console_messages";
+    public static final String MESSAGE_TEXT_KEY = "message_text";
+    public static final String MESSAGE_IS_ERROR_KEY = "message_is_error";
 
     /**
      * Creates a session containing:
@@ -40,6 +44,10 @@ public class SessionMaker {
         session.put(REVERSE_COMPLEMENT_KEY, ControllerMediator.getInstance().isReverseComplementing());
         session.put(HIDE_SINGLE_EXON_ISOFORMS_KEY, ControllerMediator.getInstance().isHidingSingleExonIsoforms());
         session.put(HIDE_DOT_PLOT_KEY, ControllerMediator.getInstance().isHidingDotPlot());
+        session.put(SHOW_MEDIAN_KEY, ControllerMediator.getInstance().isShowingMedian());
+        session.put(SHOW_NON_ZERO_MEDIAN_KEY, ControllerMediator.getInstance().isShowingNonZeroMedian());
+        session.put(SHOW_AVERAGE_KEY, ControllerMediator.getInstance().isShowingAverage());
+        session.put(SHOW_NON_ZERO_AVERAGE_KEY, ControllerMediator.getInstance().isShowingNonZeroAverage());
         session.put(SHOW_GENE_NAME_AND_ID_KEY, ControllerMediator.getInstance().isShowingGeneNameAndID());
         session.put(SHOW_GENE_NAME_KEY, ControllerMediator.getInstance().isShowingGeneName());
         session.put(SHOW_GENE_ID_KEY, ControllerMediator.getInstance().isShowingGeneID());

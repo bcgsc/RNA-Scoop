@@ -6,6 +6,9 @@ import mediator.ControllerMediator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Isoform {
 
@@ -32,39 +35,32 @@ public class Isoform {
         this.name = name;
     }
 
-    /**
-     * Returns the average expression level of the isoform with the given
-     * ID in either all cells in t-SNE plot, or only those selected
-     */
-    public double getExpressionLevel(boolean onlySelected) {
-        double isoformExpressionSum = 0;
-        Collection<TSNEPlotController.CellDataItem> cells;
-        cells = ControllerMediator.getInstance().getCells(onlySelected);
-        int numCells = cells.size();
-
-        for (TSNEPlotController.CellDataItem cell : cells)
-            isoformExpressionSum += cell.getIsoformExpressionLevel(id);
-
-        return isoformExpressionSum / numCells;
+    public double getAverageExpression(boolean onlySelected, boolean includeZeros) {
+        Collection<TSNEPlotController.CellDataItem> cells = ControllerMediator.getInstance().getCells(onlySelected);
+        return getAverageExpressionInCells(includeZeros, cells);
     }
 
-    public double getExpressionLevelInCluster(Cluster cluster, boolean onlySelected, boolean includeZeros) {
-        double expressionSum = 0;
+    public double getAverageExpressionInCluster(Cluster cluster, boolean onlySelected, boolean includeZeros) {
         Collection<TSNEPlotController.CellDataItem> cellsInCluster;
         if (onlySelected)
             cellsInCluster = ControllerMediator.getInstance().getSelectedCellsInCluster(cluster);
         else
             cellsInCluster = cluster.getCells();
-        int numCells = 0;
-        
-        for (TSNEPlotController.CellDataItem cell : cellsInCluster) {
-            double expression = cell.getIsoformExpressionLevel(id);
-            if (includeZeros || expression > 0) {
-                expressionSum += expression;
-                numCells++;
-            }
-        }
-        return expressionSum / numCells;
+        return getAverageExpressionInCells(includeZeros, cellsInCluster);
+    }
+
+    public double getMedianExpression(boolean onlySelected, boolean includeZeros) {
+        Collection<TSNEPlotController.CellDataItem> cells = ControllerMediator.getInstance().getCells(onlySelected);
+        return getMedianExpressionInCells(includeZeros, cells);
+    }
+
+    public double getMedianExpressionInCluster(Cluster cluster, boolean onlySelected, boolean includeZeros) {
+        Collection<TSNEPlotController.CellDataItem> cellsInCluster;
+        if (onlySelected)
+            cellsInCluster = ControllerMediator.getInstance().getSelectedCellsInCluster(cluster);
+        else
+            cellsInCluster = cluster.getCells();
+        return getMedianExpressionInCells(includeZeros, cellsInCluster);
     }
 
     public String getName() {
@@ -99,5 +95,45 @@ public class Isoform {
      */
     public int getEndNucleotide(){
         return exons.get(exons.size() - 1).getEndNucleotide();
+    }
+
+    private double getAverageExpressionInCells(boolean includeZeros, Collection<TSNEPlotController.CellDataItem> cells) {
+        double expressionSum = 0;
+        int numCells = 0;
+
+        for (TSNEPlotController.CellDataItem cell : cells) {
+            double expression = cell.getIsoformExpressionLevel(id);
+            if (includeZeros || expression > 0) {
+                expressionSum += expression;
+                numCells++;
+            }
+        }
+
+        return expressionSum / numCells;
+    }
+
+    private double getMedianExpressionInCells(boolean includeZeros, Collection<TSNEPlotController.CellDataItem> cells) {
+        List<TSNEPlotController.CellDataItem> cellList;
+        if (!includeZeros)
+            cellList = cells.stream().filter(cell -> cell.getIsoformExpressionLevel(id) > 0).collect(Collectors.toList());
+        else if (!(cells instanceof List))
+            cellList = new ArrayList<>(cells);
+        else
+            cellList = (List) cells;
+
+        int numCells = cellList.size();
+        if (numCells == 0) {
+            return 0;
+        } else {
+            cellList.sort((cell, otherCell) -> (int) Math.round(cell.getIsoformExpressionLevel(id) - otherCell.getIsoformExpressionLevel(id)));
+            TSNEPlotController.CellDataItem medianCell = cellList.get(numCells / 2);
+
+            if (numCells % 2 != 0) {
+                return medianCell.getIsoformExpressionLevel(id);
+            } else {
+                TSNEPlotController.CellDataItem medianCellTwo = cellList.get(numCells / 2 - 1);
+                return (medianCell.getIsoformExpressionLevel(id) + medianCellTwo.getIsoformExpressionLevel(id)) / 2;
+            }
+        }
     }
 }

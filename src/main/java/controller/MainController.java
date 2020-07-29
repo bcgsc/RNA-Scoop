@@ -23,7 +23,6 @@ import persistance.SessionMaker;
 import ui.Main;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -31,16 +30,6 @@ import static javafx.application.Platform.runLater;
 
 public class MainController implements InteractiveElementController {
     private static final float MAIN_SCALE_FACTOR = 0.7f;
-    // default isoform plot setting toggles
-    // NOTE: for the gene name/id settings at least one should be true
-    private static final boolean DEFAULT_REVERSE_COMPLEMENT_SETTING = false;
-    private static final boolean DEFAULT_HIDE_SINGLE_EXON_ISOFORMS_SETTING = false;
-    private static final boolean DEFAULT_HIDE_DOT_PLOT_SETTING = false;
-    private static final boolean DEFAULT_SHOW_GENE_NAME_AND_ID_SETTING = false;
-    private static final boolean DEFAULT_SHOW_GENE_NAME_SETTING = true;
-    private static final boolean DEFAULT_SHOW_GENE_ID_SETTING = false;
-    private static final boolean DEFAULT_SHOW_ISOFORM_ID_SETTING = false;
-    private static final boolean DEFAULT_SHOW_ISOFORM_NAME_SETTING = false;
 
     @FXML private BorderPane borderPane;
     @FXML private ComboBox pathComboBox;
@@ -55,6 +44,11 @@ public class MainController implements InteractiveElementController {
     @FXML private CheckMenuItem hideSingleExonIsoformsToggle;
     @FXML private CheckMenuItem revComplementToggle;
     @FXML private CheckMenuItem hideDotPlotToggle;
+    // expression toggles
+    @FXML private RadioMenuItem showMedianToggle;
+    @FXML private RadioMenuItem showNonZeroMedianToggle;
+    @FXML private RadioMenuItem showAverageToggle;
+    @FXML private RadioMenuItem showNonZeroAverageToggle;
     // gene label toggles
     @FXML private RadioMenuItem showGeneNameAndIDToggle;
     @FXML private RadioMenuItem showGeneNameToggle;
@@ -193,6 +187,22 @@ public class MainController implements InteractiveElementController {
         return hideSingleExonIsoformsToggle.isSelected();
     }
 
+    public boolean isShowingMedian() {
+        return showMedianToggle.isSelected();
+    }
+
+    public boolean isShowingNonZeroMedian() {
+        return showNonZeroMedianToggle.isSelected();
+    }
+
+    public boolean isShowingAverage() {
+        return showAverageToggle.isSelected();
+    }
+
+    public boolean isShowingNonZeroAverage() {
+        return showNonZeroAverageToggle.isSelected();
+    }
+
     public boolean isShowingGeneAndIDName() {
         return showGeneNameAndIDToggle.isSelected();
     }
@@ -287,7 +297,16 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleHideDotPlotToggle() {
-        ControllerMediator.getInstance().updateHideDotPlotStatus();
+        ControllerMediator.getInstance().handleColoringOrDotPlotChange();
+    }
+
+    /**
+     * When one of the expression toggles is selected/deselected alerts
+     * the dot plot of the change
+     */
+    @FXML
+    protected void handleExpressionToggle() {
+        ControllerMediator.getInstance().handleColoringOrDotPlotChange();
     }
 
 
@@ -422,6 +441,7 @@ public class MainController implements InteractiveElementController {
         restoreReverseComplementToggle(settings);
         restoreHideSingleExonIsoformsToggle(settings);
         restoreHideDotPlotToggle(settings);
+        restoreExpressionToggles(settings);
         restoreShowGeneNameIDToggles(settings);
         restoreShowIsoformNameToggle(settings);
         restoreShowIsoformIDToggle(settings);
@@ -466,6 +486,24 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
+     * Selects the expression toggle that was selected in the previous session, deselects the
+     * rest
+     */
+    private void restoreExpressionToggles(Map settings) {
+        boolean wasShowingMedian = (boolean) settings.get(SessionMaker.SHOW_MEDIAN_KEY);
+        boolean wasShowingNonZeroMedian = (boolean) settings.get(SessionMaker.SHOW_NON_ZERO_MEDIAN_KEY);
+        boolean wasShowingAverage = (boolean) settings.get(SessionMaker.SHOW_AVERAGE_KEY);
+        if (wasShowingMedian)
+            showMedianToggle.setSelected(true);
+        else if (wasShowingNonZeroMedian)
+            showNonZeroMedianToggle.setSelected(true);
+        else if (wasShowingAverage)
+            showAverageToggle.setSelected(true);
+        else
+            showNonZeroAverageToggle.setSelected(true);
+    }
+
+    /**
      * Selects the show gene name/ID toggle that was selected in the previous session, deselects the
      * rest
      */
@@ -499,14 +537,13 @@ public class MainController implements InteractiveElementController {
     }
 
     private void setIsoformPlotSettingsToDefault() {
-        revComplementToggle.setSelected(DEFAULT_REVERSE_COMPLEMENT_SETTING);
-        hideSingleExonIsoformsToggle.setSelected(DEFAULT_HIDE_SINGLE_EXON_ISOFORMS_SETTING);
-        hideDotPlotToggle.setSelected(DEFAULT_HIDE_DOT_PLOT_SETTING);
-        showGeneNameAndIDToggle.setSelected(DEFAULT_SHOW_GENE_NAME_AND_ID_SETTING);
-        showGeneNameToggle.setSelected(DEFAULT_SHOW_GENE_NAME_SETTING);
-        showGeneIDToggle.setSelected(DEFAULT_SHOW_GENE_ID_SETTING);
-        showIsoformNameToggle.setSelected(DEFAULT_SHOW_ISOFORM_NAME_SETTING);
-        showIsoformIDToggle.setSelected(DEFAULT_SHOW_ISOFORM_ID_SETTING);
+        revComplementToggle.setSelected(false);
+        hideSingleExonIsoformsToggle.setSelected(false);
+        hideDotPlotToggle.setSelected(false);
+        showMedianToggle.setSelected(true);
+        showGeneNameToggle.setSelected(true);
+        showIsoformNameToggle.setSelected(false);
+        showIsoformIDToggle.setSelected(false);
     }
 
     /**

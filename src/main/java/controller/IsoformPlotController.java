@@ -172,10 +172,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Should be called when hide dot plot status changes.
+     * Should be called when hide dot plot status changes, or when how isoforms/dots are coloured
+     * changes
      * Updates isoform graphics and dot plot if necessary (i.e. if t-SNE plot isn't cleared)
      */
-    public void updateHideDotPlotStatus() {
+    public void handleColoringOrDotPlotChange() {
         if (!ControllerMediator.getInstance().isTSNEPlotCleared())
             updateIsoformGraphicsAndDotPlot();
     }
@@ -286,6 +287,26 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     private void setGeneGroupsStyling() {
         geneGroups.setSpacing(10);
+    }
+
+    /**
+     * Returns text describing the type of expression that should be displayed
+     * (ex. median, average...). Used for tooltips in the isoform plot
+     */
+    private static String getToolTipExpressionText(double expression) {
+        boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
+        boolean showNonZeroMedian = ControllerMediator.getInstance().isShowingNonZeroMedian();
+        boolean showAverage = ControllerMediator.getInstance().isShowingAverage();
+
+        if (showMedian)
+            return "Median TPM: " + roundToOneDecimal(expression);
+        else if (showNonZeroMedian)
+            return "Median non-zero TPM: " + roundToOneDecimal(expression);
+        else if (showAverage)
+            return "Average TPM: " + roundToOneDecimal(expression);
+        else
+            return "Average non-zero TPM: " + roundToOneDecimal(expression);
+
     }
 
     /**
@@ -590,7 +611,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
                 toolTip = new Tooltip();
                 toolTipShowing = false;
-                double expression = isoform.getExpressionLevel(cellsSelected);
+                double expression = getIsoformExpression(cellsSelected);
                 drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
                 setToolTip(!tSNEPlotCleared, expression);
             }
@@ -601,9 +622,23 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             public void redraw(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
                 setIsoformGraphicWidth(pixelsPerNucleotide);
                 clear();
-                double expression = isoform.getExpressionLevel(cellsSelected);
+                double expression = getIsoformExpression(cellsSelected);
                 drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
                 setToolTip(!tSNEPlotCleared, expression);
+            }
+
+            private double getIsoformExpression(boolean onlySelected) {
+                boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
+                boolean showNonZeroMedian = ControllerMediator.getInstance().isShowingNonZeroMedian();
+                boolean showAverage = ControllerMediator.getInstance().isShowingAverage();
+                if (showMedian)
+                    return isoform.getMedianExpression(onlySelected, true);
+                else if (showNonZeroMedian)
+                    return isoform.getMedianExpression(onlySelected, false);
+                else if (showAverage)
+                    return isoform.getAverageExpression(onlySelected, true);
+                else
+                    return  isoform.getAverageExpression(onlySelected, false);
             }
 
             /**
@@ -633,7 +668,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
              */
             private void setToolTip(boolean shouldShowToolTip, double expression) {
                 if (shouldShowToolTip) {
-                    toolTip.setText("Average TPM: " + roundToOneDecimal(expression));
+                    toolTip.setText(getToolTipExpressionText(expression));
                     if (!toolTipShowing) {
                         Tooltip.install(this, toolTip);
                         toolTipShowing = true;
@@ -817,7 +852,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
             while(iterator.hasNext()) {
                 Cluster cluster = iterator.next();
-                double expression = isoformGroup.getIsoform().getExpressionLevelInCluster(cluster, onlySelected, false);
+                double expression = getIsoformExpressionInCluster(cluster, isoformGroup.getIsoform(), onlySelected);
                 int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoformGroup.getIsoform().getId(), cluster, onlySelected);
                 int numCells = onlySelected? ControllerMediator.getInstance().getSelectedCellsInCluster(cluster).size() : cluster.getCells().size();
                 double dotSize = getDotSize((double) numExpressingCells/numCells);
@@ -828,6 +863,20 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 dotPlotRow.getChildren().add(dotPlotRowCircle);
             }
             return dotPlotRow;
+        }
+
+        private static double getIsoformExpressionInCluster(Cluster cluster, Isoform isoform, boolean onlySelected) {
+            boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
+            boolean showNonZeroMedian = ControllerMediator.getInstance().isShowingNonZeroMedian();
+            boolean showAverage = ControllerMediator.getInstance().isShowingAverage();
+            if (showMedian)
+                return isoform.getMedianExpressionInCluster(cluster, onlySelected, true);
+            else if (showNonZeroMedian)
+                return isoform.getMedianExpressionInCluster(cluster, onlySelected, false);
+            else if (showAverage)
+                return isoform.getAverageExpressionInCluster(cluster, onlySelected, true);
+            else
+                return  isoform.getAverageExpressionInCluster(cluster, onlySelected, false);
         }
 
         private static double getDotSize(double fractionExpressingCells) {
@@ -854,7 +903,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         private static void addExpressionLevelToolTip(double expression, int numExpressingCells, int numCells, Node node) {
             double percentExpressed = roundToOneDecimal(((double) numExpressingCells / numCells) * 100);
-            Tooltip tooltip = new Tooltip("Average non-zero TPM: " + roundToOneDecimal(expression) + "\n" +
+
+            Tooltip tooltip = new Tooltip(getToolTipExpressionText(expression) + "\n" +
                                                 "Cells: " + numExpressingCells + "/" + numCells + " (" + percentExpressed + "%)");
             Tooltip.install(node, tooltip);
         }
