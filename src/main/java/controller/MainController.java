@@ -46,9 +46,8 @@ public class MainController implements InteractiveElementController {
     @FXML private CheckMenuItem hideDotPlotToggle;
     // expression toggles
     @FXML private RadioMenuItem showMedianToggle;
-    @FXML private RadioMenuItem showNonZeroMedianToggle;
     @FXML private RadioMenuItem showAverageToggle;
-    @FXML private RadioMenuItem showNonZeroAverageToggle;
+    @FXML private CheckMenuItem includeZerosToggle;
     // gene label toggles
     @FXML private RadioMenuItem showGeneNameAndIDToggle;
     @FXML private RadioMenuItem showGeneNameToggle;
@@ -191,20 +190,19 @@ public class MainController implements InteractiveElementController {
         return showMedianToggle.isSelected();
     }
 
-    public boolean isShowingNonZeroMedian() {
-        return showNonZeroMedianToggle.isSelected();
-    }
-
     public boolean isShowingAverage() {
         return showAverageToggle.isSelected();
     }
 
-    public boolean isShowingNonZeroAverage() {
-        return showNonZeroAverageToggle.isSelected();
-    }
-
     public boolean isShowingGeneAndIDName() {
         return showGeneNameAndIDToggle.isSelected();
+    }
+
+    /**
+     * Returns if should be including zeros when calculating expression or not
+     */
+    public boolean isIncludingZeros() {
+        return includeZerosToggle.isSelected();
     }
 
     public boolean isShowingGeneName() {
@@ -486,21 +484,19 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Selects the expression toggle that was selected in the previous session, deselects the
+     * Selects the expression toggles that were selected in the previous session, deselects the
      * rest
      */
     private void restoreExpressionToggles(Map settings) {
         boolean wasShowingMedian = (boolean) settings.get(SessionMaker.SHOW_MEDIAN_KEY);
-        boolean wasShowingNonZeroMedian = (boolean) settings.get(SessionMaker.SHOW_NON_ZERO_MEDIAN_KEY);
-        boolean wasShowingAverage = (boolean) settings.get(SessionMaker.SHOW_AVERAGE_KEY);
+        boolean wasIncludingZeros = (boolean) settings.get(SessionMaker.INCLUDE_ZEROS_KEY);
+
         if (wasShowingMedian)
             showMedianToggle.setSelected(true);
-        else if (wasShowingNonZeroMedian)
-            showNonZeroMedianToggle.setSelected(true);
-        else if (wasShowingAverage)
-            showAverageToggle.setSelected(true);
         else
-            showNonZeroAverageToggle.setSelected(true);
+            showAverageToggle.setSelected(true);
+
+        includeZerosToggle.setSelected(wasIncludingZeros);
     }
 
     /**
@@ -541,6 +537,7 @@ public class MainController implements InteractiveElementController {
         hideSingleExonIsoformsToggle.setSelected(false);
         hideDotPlotToggle.setSelected(false);
         showMedianToggle.setSelected(true);
+        includeZerosToggle.setSelected(true);
         showGeneNameToggle.setSelected(true);
         showIsoformNameToggle.setSelected(false);
         showIsoformIDToggle.setSelected(false);

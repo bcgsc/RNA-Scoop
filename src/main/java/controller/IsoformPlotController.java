@@ -295,14 +295,13 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     private static String getToolTipExpressionText(double expression) {
         boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
-        boolean showNonZeroMedian = ControllerMediator.getInstance().isShowingNonZeroMedian();
-        boolean showAverage = ControllerMediator.getInstance().isShowingAverage();
+        boolean includingZeros = ControllerMediator.getInstance().isIncludingZeros();
 
-        if (showMedian)
+        if (showMedian && includingZeros)
             return "Median TPM: " + roundToOneDecimal(expression);
-        else if (showNonZeroMedian)
+        else if (showMedian)
             return "Median non-zero TPM: " + roundToOneDecimal(expression);
-        else if (showAverage)
+        else if (includingZeros)
             return "Average TPM: " + roundToOneDecimal(expression);
         else
             return "Average non-zero TPM: " + roundToOneDecimal(expression);
@@ -629,16 +628,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
             private double getIsoformExpression(boolean onlySelected) {
                 boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
-                boolean showNonZeroMedian = ControllerMediator.getInstance().isShowingNonZeroMedian();
-                boolean showAverage = ControllerMediator.getInstance().isShowingAverage();
+                boolean includeZeros = ControllerMediator.getInstance().isIncludingZeros();
                 if (showMedian)
-                    return isoform.getMedianExpression(onlySelected, true);
-                else if (showNonZeroMedian)
-                    return isoform.getMedianExpression(onlySelected, false);
-                else if (showAverage)
-                    return isoform.getAverageExpression(onlySelected, true);
+                    return isoform.getMedianExpression(onlySelected, includeZeros);
                 else
-                    return  isoform.getAverageExpression(onlySelected, false);
+                    return  isoform.getAverageExpression(onlySelected, includeZeros);
             }
 
             /**
@@ -867,16 +861,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         private static double getIsoformExpressionInCluster(Cluster cluster, Isoform isoform, boolean onlySelected) {
             boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
-            boolean showNonZeroMedian = ControllerMediator.getInstance().isShowingNonZeroMedian();
-            boolean showAverage = ControllerMediator.getInstance().isShowingAverage();
+            boolean includeZeros = ControllerMediator.getInstance().isIncludingZeros();
             if (showMedian)
-                return isoform.getMedianExpressionInCluster(cluster, onlySelected, true);
-            else if (showNonZeroMedian)
-                return isoform.getMedianExpressionInCluster(cluster, onlySelected, false);
-            else if (showAverage)
-                return isoform.getAverageExpressionInCluster(cluster, onlySelected, true);
+                return isoform.getMedianExpressionInCluster(cluster, onlySelected, includeZeros);
             else
-                return  isoform.getAverageExpressionInCluster(cluster, onlySelected, false);
+                return  isoform.getAverageExpressionInCluster(cluster, onlySelected, includeZeros);
         }
 
         private static double getDotSize(double fractionExpressingCells) {

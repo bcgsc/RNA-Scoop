@@ -34,6 +34,7 @@ import org.jfree.data.extension.impl.XYDatasetSelectionExtension;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import tagbio.umap.Umap;
 import ui.Legend;
 import util.Util;
 

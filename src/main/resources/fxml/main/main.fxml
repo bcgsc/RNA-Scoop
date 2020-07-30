@@ -29,9 +29,8 @@
                         <CheckMenuItem fx:id="hideDotPlotToggle" onAction="#handleHideDotPlotToggle" text="Hide dot plot"/>
                         <SeparatorMenuItem/>
                         <RadioMenuItem fx:id="showMedianToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show median expression" selected="true"/>
-                        <RadioMenuItem fx:id="showNonZeroMedianToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show non-zero median expression"/>
                         <RadioMenuItem fx:id="showAverageToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show average expression"/>
-                        <RadioMenuItem fx:id="showNonZeroAverageToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show non-zero average expression"/>
+                        <CheckMenuItem fx:id="includeZerosToggle" onAction="#handleExpressionToggle" text="Include zeros" selected="true"/>
                         <SeparatorMenuItem/>
                         <RadioMenuItem fx:id="showGeneNameAndIDToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show gene name and ID"/>
                         <RadioMenuItem fx:id="showGeneNameToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show gene name" selected="true"/>

@@ -16,9 +16,8 @@ public class SessionMaker {
     public static final String HIDE_SINGLE_EXON_ISOFORMS_KEY = "hide_single_exon_isoforms";
     public static final String HIDE_DOT_PLOT_KEY = "hide_dot_plot";
     public static final String SHOW_MEDIAN_KEY = "show_median";
-    public static final String SHOW_NON_ZERO_MEDIAN_KEY = "show_non_zero_median";
     public static final String SHOW_AVERAGE_KEY = "show_average";
-    public static final String SHOW_NON_ZERO_AVERAGE_KEY = "show_non_zero_average";
+    public static final String INCLUDE_ZEROS_KEY = "include_zeros";
     public static final String SHOW_GENE_NAME_AND_ID_KEY = "show_gene_name_and_id";
     public static final String SHOW_GENE_NAME_KEY = "show_gene_name";
     public static final String SHOW_GENE_ID_KEY = "show_gene_id";
@@ -45,9 +44,8 @@ public class SessionMaker {
         session.put(HIDE_SINGLE_EXON_ISOFORMS_KEY, ControllerMediator.getInstance().isHidingSingleExonIsoforms());
         session.put(HIDE_DOT_PLOT_KEY, ControllerMediator.getInstance().isHidingDotPlot());
         session.put(SHOW_MEDIAN_KEY, ControllerMediator.getInstance().isShowingMedian());
-        session.put(SHOW_NON_ZERO_MEDIAN_KEY, ControllerMediator.getInstance().isShowingNonZeroMedian());
         session.put(SHOW_AVERAGE_KEY, ControllerMediator.getInstance().isShowingAverage());
-        session.put(SHOW_NON_ZERO_AVERAGE_KEY, ControllerMediator.getInstance().isShowingNonZeroAverage());
+        session.put(INCLUDE_ZEROS_KEY, ControllerMediator.getInstance().isIncludingZeros());
         session.put(SHOW_GENE_NAME_AND_ID_KEY, ControllerMediator.getInstance().isShowingGeneNameAndID());
         session.put(SHOW_GENE_NAME_KEY, ControllerMediator.getInstance().isShowingGeneName());
         session.put(SHOW_GENE_ID_KEY, ControllerMediator.getInstance().isShowingGeneID());

@@ -329,16 +329,12 @@ public class ControllerMediator implements Mediator{
         return mainController.isShowingMedian();
     }
 
-    public boolean isShowingNonZeroMedian() {
-        return mainController.isShowingNonZeroMedian();
-    }
-
     public boolean isShowingAverage() {
         return mainController.isShowingAverage();
     }
 
-    public boolean isShowingNonZeroAverage() {
-        return mainController.isShowingNonZeroAverage();
+    public boolean isIncludingZeros() {
+        return mainController.isIncludingZeros();
     }
 
     public boolean isShowingGeneNameAndID() {
