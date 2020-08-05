@@ -268,13 +268,15 @@ public class Parser {
          * Creates map that maps each isoform ID to its column number in the matrix (e.g. if the
          * first column represents IsoformA, IsoformA's ID will be mapped to 0)
          */
-        private static HashMap<String, Integer> getIsoformIndexMap(String pathToIsoformLabels) throws IOException {
+        private static HashMap<String, Integer> getIsoformIndexMap(String pathToIsoformLabels) throws IOException, DuplicateColumnLabelException {
             File isoformLabelsFile = new File(pathToIsoformLabels);
             BufferedReader reader= new BufferedReader(new FileReader(isoformLabelsFile));
             HashMap<String, Integer> isoformIndexMap = new HashMap<>();
             String currentLabel;
             int index = 0;
             while ((currentLabel = reader.readLine()) != null) {
+                if (isoformIndexMap.containsKey(currentLabel))
+                    throw new DuplicateColumnLabelException(currentLabel);
                 isoformIndexMap.put(currentLabel, index);
                 index++;
             }
