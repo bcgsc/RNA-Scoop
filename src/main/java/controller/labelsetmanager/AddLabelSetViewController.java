@@ -63,19 +63,19 @@ public class AddLabelSetViewController {
 
     /**
      * Adds new cluster from the select cells to the label set user is customizing,
-     * alerts the t-SNE plot of the change, and updates the isoform plot
+     * alerts the cluster view of the change, and updates the isoform plot
      */
     @FXML
     protected void handleMakeClusterButton() {
         labelSet.addClusterFromSelectedCells();
-        ControllerMediator.getInstance().TSNEPlotHandleClusterAddedFromSelectedCells();
+        ControllerMediator.getInstance().ClusterViewHandleClusterAddedFromSelectedCells();
         ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
     }
 
     /**
      * If label set only has one cluster adds error message to console saying label set
      * must have at least one cluster
-     * Else, removes cluster currently selected from label set, alerts the t-SNE plot
+     * Else, removes cluster currently selected from label set, alerts the cluster view
      * of the change and updates the isoform plot
      */
     @FXML
@@ -84,7 +84,7 @@ public class AddLabelSetViewController {
             Cluster clusterToRemove = (Cluster) clustersTable.getSelectionModel().getSelectedItem();
             Cluster clusterCombiningWith = labelSet.getClusterToCombineWith(clusterToRemove);
             labelSet.removeCluster(clusterToRemove);
-            ControllerMediator.getInstance().TSNEPlotHandleRemovedCluster(clusterToRemove, clusterCombiningWith);
+            ControllerMediator.getInstance().ClusterViewHandleRemovedCluster(clusterToRemove, clusterCombiningWith);
             ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
         } else {
             ControllerMediator.getInstance().addConsoleErrorMessage("Label set must have at least one cluster");
@@ -111,12 +111,12 @@ public class AddLabelSetViewController {
 
     private void enableAssociatedFunctionality() {
         ControllerMediator.getInstance().enableMain();
-        ControllerMediator.getInstance().enableTSNEPlot();
+        ControllerMediator.getInstance().enableClusterView();
     }
 
     private void disableAssociatedFunctionality() {
         ControllerMediator.getInstance().disableMain();
-        ControllerMediator.getInstance().disableTSNEPlot();
+        ControllerMediator.getInstance().disableClusterView();
     }
 
     /**
@@ -142,7 +142,7 @@ public class AddLabelSetViewController {
     /**
      * Returns column that displays the names of clusters in the table. Cells are editable.
      * When the value of a cell changes, the name of the cluster is changed to be the
-     * name in the cell and the t-SNE plot legend is redrawn.
+     * name in the cell and the cell plot legend is redrawn.
      */
     private TableColumn<Cluster, String> getClusterNameColumn() {
         TableColumn<Cluster,String> clusterNameCol = new TableColumn("Name");
@@ -152,7 +152,7 @@ public class AddLabelSetViewController {
                 (TableColumn.CellEditEvent<Cluster, String> t) -> {
                     Cluster cluster = t.getTableView().getItems().get(t.getTablePosition().getRow());
                     cluster.setName(t.getNewValue());
-                    ControllerMediator.getInstance().redrawTSNEPlotLegend();
+                    ControllerMediator.getInstance().redrawLegend();
                 });
         return clusterNameCol;
     }
@@ -161,7 +161,7 @@ public class AddLabelSetViewController {
      * Returns column that displays the colors of clusters in the table. Cells are editable
      * (have color pickers in them).
      * When the value of a cell changes, the color of the cluster is changed to be the
-     * color in the cell and the t-SNE plot is redrawn, and the dot plot legend is updated
+     * color in the cell and the cell plot is redrawn, and the dot plot legend is updated
      */
     private TableColumn<Cluster, Color> getClusterColorColumn() {
         TableColumn<Cluster, Color> colorCol = new TableColumn("Color");
@@ -171,7 +171,7 @@ public class AddLabelSetViewController {
                 (TableColumn.CellEditEvent<Cluster, Color> t) -> {
                     Cluster cluster = t.getTableView().getItems().get(t.getTablePosition().getRow());
                     cluster.setColor(t.getNewValue());
-                    ControllerMediator.getInstance().redrawTSNEPlot();
+                    ControllerMediator.getInstance().redrawCellPlot();
                     ControllerMediator.getInstance().updateDotPlotLegend();
                 });
         return colorCol;

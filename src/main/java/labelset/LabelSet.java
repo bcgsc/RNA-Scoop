@@ -1,6 +1,6 @@
 package labelset;
 
-import controller.TSNEPlotController;
+import controller.clusterview.ClusterViewController;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import mediator.ControllerMediator;
@@ -35,7 +35,7 @@ public class LabelSet {
     /**
      * Adds given cell to the cluster it belongs
      */
-    public void addCell(TSNEPlotController.CellDataItem cell) {
+    public void addCell(ClusterViewController.CellDataItem cell) {
         Cluster cluster = cellNumberClusterMap.get(cell.getCellNumber());
         cluster.addCell(cell);
     }
@@ -44,12 +44,12 @@ public class LabelSet {
      * Adds new cluster to label set containing the selected cells in the t-SNE plot
      */
     public void addClusterFromSelectedCells() {
-        Set<TSNEPlotController.CellDataItem> selectedCells = (Set<TSNEPlotController.CellDataItem>) ControllerMediator.getInstance().getCells(true);
+        Set<ClusterViewController.CellDataItem> selectedCells = (Set<ClusterViewController.CellDataItem>) ControllerMediator.getInstance().getCells(true);
         int clusterNumber = clusters.size() + 1;
         Cluster newCluster = new Cluster("Cluster " + clusterNumber, this, selectedCells);
-        for (TSNEPlotController.CellDataItem selectedCell : selectedCells) {
+        for (ClusterViewController.CellDataItem selectedCell : selectedCells) {
             for (Cluster cluster : clusters) {
-                Set<TSNEPlotController.CellDataItem> clusterCells = cluster.getCells();
+                Set<ClusterViewController.CellDataItem> clusterCells = cluster.getCells();
                 if (clusterCells.contains(selectedCell)) {
                     clusterCells.remove(selectedCell);
                     break;
@@ -76,7 +76,7 @@ public class LabelSet {
         Cluster clusterToCombineWith = getClusterToCombineWith(cluster);
         int indexOfClusterToRemove = clusters.lastIndexOf(cluster);
         clusters.remove(indexOfClusterToRemove);
-        for (TSNEPlotController.CellDataItem cell : cluster.getCells()) {
+        for (ClusterViewController.CellDataItem cell : cluster.getCells()) {
             cellNumberClusterMap.put(cell.getCellNumber(), clusterToCombineWith);
             clusterToCombineWith.addCell(cell);
         }
@@ -124,8 +124,8 @@ public class LabelSet {
     private void setUpClusters() {
         Cluster cluster = new Cluster("Cluster 1", this);
         clusters.add(cluster);
-        if (!ControllerMediator.getInstance().isTSNEPlotCleared()) {
-            for (TSNEPlotController.CellDataItem cell : ControllerMediator.getInstance().getCellNumberCellMap().values()) {
+        if (!ControllerMediator.getInstance().isCellPlotCleared()) {
+            for (ClusterViewController.CellDataItem cell : ControllerMediator.getInstance().getCellNumberCellMap().values()) {
                 cluster.addCell(cell);
                 cellNumberClusterMap.put(cell.getCellNumber(), cluster);
             }

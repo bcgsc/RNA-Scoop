@@ -73,13 +73,13 @@ public class SessionIO {
     public static void clearCurrentSessionData() {
         Parser.removeParsedGenes();
         ControllerMediator.getInstance().clearGeneSelector();
-        ControllerMediator.getInstance().clearTSNEPlot();
+        ControllerMediator.getInstance().clearCellPlot();
         ControllerMediator.getInstance().clearConsole();
         ControllerMediator.getInstance().clearLabelSets();
         ControllerMediator.getInstance().clearPathComboBox();
         ControllerMediator.getInstance().setIsoformIndexMap(null);
         ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
-        ControllerMediator.getInstance().setTSNEMatrix(null);
+        ControllerMediator.getInstance().setEmbedding(null);
     }
 
     private static void setSavedSettings(JSONObject prevSession) {

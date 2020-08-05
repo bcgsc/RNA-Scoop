@@ -1,7 +1,6 @@
 package labelset;
 
-import controller.TSNEPlotController;
-import controller.labelsetmanager.LabelSetManagerController;
+import controller.clusterview.ClusterViewController;
 import ui.PointColor;
 
 import java.awt.*;
@@ -15,7 +14,7 @@ public class Cluster implements Comparable<Cluster> {
     private String name;
     private Color color;
     private LabelSet labelSet;
-    private Set<TSNEPlotController.CellDataItem> cells;
+    private Set<ClusterViewController.CellDataItem> cells;
 
     public Cluster(String name) {
         this.name = name;
@@ -28,14 +27,14 @@ public class Cluster implements Comparable<Cluster> {
         this.labelSet = labelSet;
     }
 
-    public Cluster(String name, LabelSet labelSet, Set<TSNEPlotController.CellDataItem> cells) {
+    public Cluster(String name, LabelSet labelSet, Set<ClusterViewController.CellDataItem> cells) {
         this.name = name;
         this.labelSet = labelSet;
         this.cells = cells;
         color = PointColor.getColor();
     }
 
-    public void addCell(TSNEPlotController.CellDataItem cell) {
+    public void addCell(ClusterViewController.CellDataItem cell) {
         cells.add(cell);
     }
 
@@ -84,7 +83,7 @@ public class Cluster implements Comparable<Cluster> {
                                              (double) color.getBlue() / 255);
     }
 
-    public Set<TSNEPlotController.CellDataItem> getCells() {
+    public Set<ClusterViewController.CellDataItem> getCells() {
         return cells;
     }
 }

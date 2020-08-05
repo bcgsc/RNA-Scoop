@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class SessionMaker {
     public static final String PATH_KEY = "path";
     public static final String ISOFORM_PLOT_OPEN_KEY = "isoform_open";
-    public static final String TSNE_PLOT_OPEN_KEY = "tsne_open";
+    public static final String CLUSTER_VIEW_OPEN_KEY = "cluster_view_open";
     public static final String CONSOLE_OPEN_KEY = "console_open";
     public static final String REVERSE_COMPLEMENT_KEY = "rev_complement";
     public static final String HIDE_SINGLE_EXON_ISOFORMS_KEY = "hide_single_exon_isoforms";
@@ -30,7 +30,7 @@ public class SessionMaker {
     /**
      * Creates a session containing:
      *   - the current loaded path
-     *   - whether the isoform plot, t-sne plot and console are opened or closed
+     *   - whether the isoform plot, cluster view and console are opened or closed
      *   - the current isoform plot settings
      *   - the console messages
      */
@@ -38,7 +38,7 @@ public class SessionMaker {
         JSONObject session = new JSONObject();
         session.put(PATH_KEY, ControllerMediator.getInstance().getCurrentLoadedPath());
         session.put(ISOFORM_PLOT_OPEN_KEY, ControllerMediator.getInstance().isIsoformPlotOpen());
-        session.put(TSNE_PLOT_OPEN_KEY, ControllerMediator.getInstance().isTSNEPlotOpen());
+        session.put(CLUSTER_VIEW_OPEN_KEY, ControllerMediator.getInstance().isClusterViewOpen());
         session.put(CONSOLE_OPEN_KEY, ControllerMediator.getInstance().isConsoleOpen());
         session.put(REVERSE_COMPLEMENT_KEY, ControllerMediator.getInstance().isReverseComplementing());
         session.put(HIDE_SINGLE_EXON_ISOFORMS_KEY, ControllerMediator.getInstance().isHidingSingleExonIsoforms());

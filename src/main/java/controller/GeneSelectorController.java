@@ -140,9 +140,9 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     public void updateFoldChangeAlert() {
         LabelSet labelSetInUse = ControllerMediator.getInstance().getLabelSetInUse();
         boolean stillCustomizingLabelSet = ControllerMediator.getInstance().isAddLabelSetViewDisplayed();
-        boolean tSNEPlotCleared = ControllerMediator.getInstance().isTSNEPlotCleared();
+        boolean cellPlotCleared = ControllerMediator.getInstance().isCellPlotCleared();
 
-        if (genesFoldChangeLabelSet != labelSetInUse && !stillCustomizingLabelSet && !tSNEPlotCleared)
+        if (genesFoldChangeLabelSet != labelSetInUse && !stillCustomizingLabelSet && !cellPlotCleared)
             addFoldChangeAlert();
         else
             removeFoldChangeAlert();
@@ -350,14 +350,14 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     private void disableUpdateFoldChangeAssociatedFunctionality() {
         disable();
         ControllerMediator.getInstance().disableMain();
-        ControllerMediator.getInstance().disableTSNEPlot();
+        ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableLabelSetManager();
     }
 
     private void enableUpdateFoldChangeAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableMain();
-        ControllerMediator.getInstance().enableTSNEPlot();
+        ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableLabelSetManager();
     }
 

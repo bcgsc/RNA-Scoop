@@ -23,7 +23,7 @@ public class Parser {
     private static final String MATRIX_PATH_KEY = "matrix";
     private static final String ISOFORM_LABELS_PATH_KEY = "isoform_ids";
     private static final String CELL_LABELS_PATH_KEY = "cell_labels";
-    private static final String TSNE_PATH_KEY = "tsne";
+    private static final String EMBEDDING_PATH_KEY = "embedding";
     /**
      * Map of all genes parser has parsed so far
      * Key is the gene's ID, value is the gene
@@ -32,17 +32,17 @@ public class Parser {
 
     /**
      * Reads in JSON file at given path. File specifies paths to the
-     * GTF and t-SNE info. Loads both from it
+     * GTF and cell plot info. Loads both from it
      */
     public static void loadFiles(String pathToPaths) throws IOException, RNAScoopException {
         byte[] encoded = Files.readAllBytes(Paths.get(pathToPaths));
         String pathsString = new String(encoded, Charset.defaultCharset());
         JSONObject paths = new JSONObject(pathsString);
         GTFLoader.loadGTF((String) paths.get(GTF_PATH_KEY));
-        TSNEInfoLoader.loadTSNEInfo((String) paths.get(MATRIX_PATH_KEY),
-                                    (String) paths.get(ISOFORM_LABELS_PATH_KEY),
-                                    (String) paths.get(CELL_LABELS_PATH_KEY),
-                                     paths.has(TSNE_PATH_KEY)? (String) paths.get(TSNE_PATH_KEY) : null);
+        CellPlotInfoLoader.loadCellPlotInfo((String) paths.get(MATRIX_PATH_KEY),
+                                            (String) paths.get(ISOFORM_LABELS_PATH_KEY),
+                                            (String) paths.get(CELL_LABELS_PATH_KEY),
+                                            paths.has(EMBEDDING_PATH_KEY)? (String) paths.get(EMBEDDING_PATH_KEY) : null);
     }
 
     /**
@@ -218,9 +218,9 @@ public class Parser {
         }
     }
 
-    private static class TSNEInfoLoader {
+    private static class CellPlotInfoLoader {
 
-        public static void loadTSNEInfo(String pathToMatrix, String pathToIsoformLabels, String pathToCellLabels, String pathToTSNE) throws IOException, RNAScoopException {
+        public static void loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, String pathToCellLabels, String pathToEmbedding) throws IOException, RNAScoopException {
             double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix(pathToMatrix);
             HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap(pathToIsoformLabels);
 
@@ -232,13 +232,13 @@ public class Parser {
             if (cellLabels.getNumCellsInLabelSet() != cellIsoformExpressionMatrix.length)
                 throw new RowLabelsLengthException();
 
-            if (pathToTSNE != null) {
-                double[][] tSNEMatrix = getTSNEMatrix(pathToTSNE);
+            if (pathToEmbedding != null) {
+                double[][] embedding = getEmbedding(pathToEmbedding);
 
 
-                if (tSNEMatrix.length != cellIsoformExpressionMatrix.length)
-                    throw new TSNEMatrixLengthException();
-                ControllerMediator.getInstance().setTSNEMatrix(tSNEMatrix);
+                if (embedding.length != cellIsoformExpressionMatrix.length)
+                    throw new EmbeddingLengthException();
+                ControllerMediator.getInstance().setEmbedding(embedding);
             }
 
             ControllerMediator.getInstance().setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
@@ -311,32 +311,32 @@ public class Parser {
             return new LabelSet(cellNumberClusterMap);
         }
 
-        private static double[][] getTSNEMatrix(String pathToTSNE) throws IOException, TSNEMatrixColumnsException, TSNEMatrixNotNumberException {
+        private static double[][] getEmbedding(String pathToEmbedding) throws IOException, EmbeddingColumnsException, EmbeddingNotNumberException {
             String currentLabel;
             int lineNumber = 1;
-            ArrayList<double[]> tSNEArrayList = new ArrayList();
+            ArrayList<double[]> embeddingArrayList = new ArrayList();
 
-            File tSNEFile = new File(pathToTSNE);
-            BufferedReader reader= new BufferedReader(new FileReader(tSNEFile));
+            File embeddingFile = new File(pathToEmbedding);
+            BufferedReader reader= new BufferedReader(new FileReader(embeddingFile));
             while ((currentLabel = reader.readLine()) != null) {
                 String[] cellCoordsString = currentLabel.split("\t");
 
                 if (cellCoordsString.length != 2)
-                    throw new TSNEMatrixColumnsException(lineNumber);
+                    throw new EmbeddingColumnsException(lineNumber);
 
                 try {
                     double[] cellCoords = Arrays.stream(cellCoordsString).mapToDouble(Double::parseDouble).toArray();
-                    tSNEArrayList.add(cellCoords);
+                    embeddingArrayList.add(cellCoords);
                 } catch (NumberFormatException e) {
-                    throw new TSNEMatrixNotNumberException("(" + cellCoordsString[0] + ", " + cellCoordsString[1] + ")", lineNumber);
+                    throw new EmbeddingNotNumberException("(" + cellCoordsString[0] + ", " + cellCoordsString[1] + ")", lineNumber);
                 }
                 lineNumber++;
             }
 
-            double[][] tSNEMatrix = new double[tSNEArrayList.size()][];
-            for (int i = 0; i < tSNEArrayList.size(); i++)
-                tSNEMatrix[i] = tSNEArrayList.get(i);
-            return tSNEMatrix;
+            double[][] embedding = new double[embeddingArrayList.size()][];
+            for (int i = 0; i < embeddingArrayList.size(); i++)
+                embedding[i] = embeddingArrayList.get(i);
+            return embedding;
         }
 
     }

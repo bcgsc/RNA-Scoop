@@ -41,8 +41,8 @@
                         <SeparatorMenuItem/>
                         <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close isoform plot"/>
                     </Menu>
-                    <Menu text="t-SNE Plot">
-                        <MenuItem fx:id="tSNEToggle" onAction="#handleTSNEViewToggle" text="Close t-SNE plot"/>
+                    <Menu text="Cluster View">
+                        <MenuItem fx:id="clusterViewToggle" onAction="#handleClusterViewToggle" text="Close cluster view"/>
                     </Menu>
                     <Menu text="Console">
                         <MenuItem onAction="#handleClearConsoleButton" text="Clear console"/>

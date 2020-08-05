@@ -93,12 +93,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         boolean showIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
         boolean hideSingleExonIsoforms = ControllerMediator.getInstance().isHidingSingleExonIsoforms();
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
-        boolean tSNEPlotCleared = ControllerMediator.getInstance().isTSNEPlotCleared();
+        boolean cellPlotCleared = ControllerMediator.getInstance().isCellPlotCleared();
         boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
         for (Gene gene : genes) {
             if (!geneGeneGroupMap.containsKey(gene) && (!hideSingleExonIsoforms || gene.hasMultiExonIsoforms())) {
                 GeneGroup geneGroup = new GeneGroup(gene, showGeneNameAndID, showGeneName, showIsoformID, showIsoformName,
-                                                    hideSingleExonIsoforms, reverseComplement, tSNEPlotCleared, cellsSelected);
+                                                    hideSingleExonIsoforms, reverseComplement, cellPlotCleared, cellsSelected);
                 geneGroups.getChildren().add(geneGroup);
                 geneGeneGroupMap.put(gene, geneGroup);
                 DotPlot.addDotPlotRowsIfShould(geneGroup);
@@ -148,14 +148,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     public void updateGeneReverseComplementStatus() {
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
         boolean showGeneNameAndID = ControllerMediator.getInstance().isShowingGeneNameAndID();
-        boolean tSNEPlotCleared = ControllerMediator.getInstance().isTSNEPlotCleared();
+        boolean cellPlotCleared = ControllerMediator.getInstance().isCellPlotCleared();
         boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
         boolean showGeneName = ControllerMediator.getInstance().isShowingGeneName();
         for (Gene gene : geneGeneGroupMap.keySet()) {
             GeneGroup geneGroup = geneGeneGroupMap.get(gene);
             geneGroup.updateLabel(showGeneNameAndID, showGeneName, reverseComplement);
             if (!gene.isOnPositiveStrand())
-                geneGroup.redrawIsoforms(reverseComplement, tSNEPlotCleared, cellsSelected);
+                geneGroup.redrawIsoforms(reverseComplement, cellPlotCleared, cellsSelected);
         }
     }
 
@@ -174,10 +174,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     /**
      * Should be called when hide dot plot status changes, or when how isoforms/dots are coloured
      * changes
-     * Updates isoform graphics and dot plot if necessary (i.e. if t-SNE plot isn't cleared)
+     * Updates isoform graphics and dot plot if necessary (i.e. if cell plot isn't cleared)
      */
     public void handleColoringOrDotPlotChange() {
-        if (!ControllerMediator.getInstance().isTSNEPlotCleared())
+        if (!ControllerMediator.getInstance().isCellPlotCleared())
             updateIsoformGraphicsAndDotPlot();
     }
 
@@ -243,14 +243,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
         boolean showIsoformID = ControllerMediator.getInstance().isShowingIsoformID();
         boolean showIsoformName = ControllerMediator.getInstance().isShowingIsoformName();
-        boolean tSNEPlotCleared = ControllerMediator.getInstance().isTSNEPlotCleared();
+        boolean cellPlotCleared = ControllerMediator.getInstance().isCellPlotCleared();
         boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
         for (Gene gene : ControllerMediator.getInstance().getShownGenes()) {
             if (!geneGeneGroupMap.containsKey(gene)) {
                 genesToAdd.add(gene);
             } else {
                 GeneGroup geneGroup = geneGeneGroupMap.get(gene);
-                geneGroup.addSingleExonIsoforms(showIsoformName, showIsoformID, reverseComplement, tSNEPlotCleared, cellsSelected);
+                geneGroup.addSingleExonIsoforms(showIsoformName, showIsoformID, reverseComplement, cellPlotCleared, cellsSelected);
             }
         }
         if (genesToAdd.size() > 0)
@@ -259,10 +259,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     private void redrawIsoforms() {
         boolean reverseComplement = ControllerMediator.getInstance().isReverseComplementing();
-        boolean tSNEPlotCleared = ControllerMediator.getInstance().isTSNEPlotCleared();
+        boolean cellPlotCleared = ControllerMediator.getInstance().isCellPlotCleared();
         boolean cellsSelected = ControllerMediator.getInstance().areCellsSelected();
         for(GeneGroup geneGroup : geneGeneGroupMap.values())
-            geneGroup.redrawIsoforms(reverseComplement, tSNEPlotCleared, cellsSelected);
+            geneGroup.redrawIsoforms(reverseComplement, cellPlotCleared, cellsSelected);
     }
 
     private void updateFirstGeneGroup() {
@@ -321,11 +321,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         public GeneGroup(Gene gene, boolean showGeneNameAndID, boolean showGeneName, boolean showIsoformID,
                          boolean showIsoformName, boolean hideSingleExonIsoforms, boolean reverseComplement,
-                         boolean tSNEPlotCleared, boolean cellsSelected) {
+                         boolean cellPlotCleared, boolean cellsSelected) {
             this.gene = gene;
             isoformsIsoformGroupMap = new HashMap<>();
             addLabel(showGeneNameAndID, showGeneName, reverseComplement);
-            addIsoforms(showIsoformName, showIsoformID, hideSingleExonIsoforms, reverseComplement, tSNEPlotCleared, cellsSelected);
+            addIsoforms(showIsoformName, showIsoformID, hideSingleExonIsoforms, reverseComplement, cellPlotCleared, cellsSelected);
             // spacing is spacing between isoforms
             setSpacing(7.5);
         }
@@ -358,10 +358,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return firstIsoformGroup;
         }
 
-        public void redrawIsoforms(boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+        public void redrawIsoforms(boolean reverseComplement, boolean cellPlotCleared, boolean cellsSelected) {
             double pixelsPerNucleotide = getPixelsPerNucleotide();
             for (IsoformGroup isoformGroup : isoformsIsoformGroupMap.values())
-                isoformGroup.redrawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
+                isoformGroup.redrawIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellPlotCleared, cellsSelected);
 
         }
 
@@ -379,13 +379,13 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         public void addSingleExonIsoforms(boolean showIsoformName, boolean showIsoformID, boolean reverseComplement,
-                                          boolean tSNEPlotCleared, boolean cellsSelected) {
+                                          boolean cellPlotCleared, boolean cellsSelected) {
             double pixelsPerNucleotide = getPixelsPerNucleotide();
 
             for (Isoform isoform : gene.getIsoforms()) {
                 if (!isoform.isMultiExonic()) {
                     IsoformGroup isoformGroup = new IsoformGroup(isoform, pixelsPerNucleotide, showIsoformName, showIsoformID,
-                                                                 reverseComplement, tSNEPlotCleared, cellsSelected);
+                                                                 reverseComplement, cellPlotCleared, cellsSelected);
                     addIsoform(isoformGroup);
                 }
             }
@@ -402,7 +402,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         private void addIsoforms(boolean showIsoformName, boolean showIsoformID, boolean hideSingleExonIsoforms,
-                                 boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+                                 boolean reverseComplement, boolean cellPlotCleared, boolean cellsSelected) {
             double pixelsPerNucleotide = getPixelsPerNucleotide();
             Collection<String> isoformsID = gene.getIsoformsMap().keySet();
             List<String> sortedIsoformsIDs = Util.asSortedList(isoformsID);
@@ -410,7 +410,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 Isoform isoform = gene.getIsoform(isoformID);
                 if (!hideSingleExonIsoforms || isoform.isMultiExonic()) {
                     IsoformGroup isoformGroup = new IsoformGroup(isoform, pixelsPerNucleotide, showIsoformName,
-                            showIsoformID, reverseComplement, tSNEPlotCleared, cellsSelected);
+                            showIsoformID, reverseComplement, cellPlotCleared, cellsSelected);
                     addIsoform(isoformGroup);
                 }
             }
@@ -479,7 +479,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private Pane dotPlotLegend;
 
         public IsoformGroup(Isoform isoform, double pixelsPerNucleotide, boolean showIsoformName,
-                            boolean showIsoformID, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+                            boolean showIsoformID, boolean reverseComplement, boolean cellPlotCleared, boolean cellsSelected) {
             this.isoform = isoform;
             graphicsHolder = new BorderPane();
             labelAndLegendHolder = new BorderPane();
@@ -489,7 +489,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             getChildren().addAll(labelAndLegendHolder, graphicsHolder);
             if (shouldHaveLabel(showIsoformName, showIsoformID))
                 addLabel(getIsoformLabelText(showIsoformName, showIsoformID));
-            addIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
+            addIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellPlotCleared, cellsSelected);
             // spacing between these isoform and those above/below it
             setSpacing(5);
         }
@@ -506,8 +506,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
         }
 
-        public void redrawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
-            isoformGraphic.redraw(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
+        public void redrawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean cellPlotCleared, boolean cellsSelected) {
+            isoformGraphic.redraw(pixelsPerNucleotide, reverseComplement, cellPlotCleared, cellsSelected);
         }
 
         public void removeLabel() {
@@ -558,8 +558,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 return dotPlotWidth + ISOFORM_GRAPHIC_DOT_PLOT_SPACING;
         }
 
-        private void addIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
-            isoformGraphic = new IsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, cellsSelected);
+        private void addIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean cellPlotCleared, boolean cellsSelected) {
+            isoformGraphic = new IsoformGraphic(pixelsPerNucleotide, reverseComplement, cellPlotCleared, cellsSelected);
             graphicsHolder.setLeft(isoformGraphic);
             rectangularSelection.addSelectableIsoformGraphic(isoformGraphic, isoform.getId());
         }
@@ -604,26 +604,26 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             private Tooltip toolTip;
             boolean toolTipShowing;
 
-            public IsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+            public IsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean cellPlotCleared, boolean cellsSelected) {
                 setWidth(getIsoformGraphicWidth(pixelsPerNucleotide));
                 setHeight(EXON_HEIGHT + IsoformGraphic.ISOFORM_GRAPHIC_SPACING);
 
                 toolTip = new Tooltip();
                 toolTipShowing = false;
                 double expression = getIsoformExpression(cellsSelected);
-                drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
-                setToolTip(!tSNEPlotCleared, expression);
+                drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellPlotCleared, expression);
+                setToolTip(!cellPlotCleared, expression);
             }
 
             /**
              * Redraws the isoform graphic and updates the tool tip text (or removes it if it should not be shown)
              */
-            public void redraw(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, boolean cellsSelected) {
+            public void redraw(double pixelsPerNucleotide, boolean reverseComplement, boolean cellPlotCleared, boolean cellsSelected) {
                 setIsoformGraphicWidth(pixelsPerNucleotide);
                 clear();
                 double expression = getIsoformExpression(cellsSelected);
-                drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, tSNEPlotCleared, expression);
-                setToolTip(!tSNEPlotCleared, expression);
+                drawIsoformGraphic(pixelsPerNucleotide, reverseComplement, cellPlotCleared, expression);
+                setToolTip(!cellPlotCleared, expression);
             }
 
             private double getIsoformExpression(boolean onlySelected) {
@@ -673,8 +673,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 }
             }
 
-            private void drawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean tSNEPlotCleared, double expression) {
-                Color isoformColor = getIsoformColor(!tSNEPlotCleared, expression);
+            private void drawIsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean cellPlotCleared, double expression) {
+                Color isoformColor = getIsoformColor(!cellPlotCleared, expression);
                 ArrayList<Exon> exons = isoform.getExons();
                 Gene gene = isoform.getGene();
                 GraphicsContext graphicsContext = getGraphicsContext2D();
@@ -833,7 +833,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         private static boolean shouldDrawDotPlot() {
-            return !(ControllerMediator.getInstance().isHidingDotPlot() || ControllerMediator.getInstance().isTSNEPlotCleared());
+            return !(ControllerMediator.getInstance().isHidingDotPlot() || ControllerMediator.getInstance().isCellPlotCleared());
         }
 
         private static HBox createDotPlotRow(IsoformGroup isoformGroup) {
@@ -1035,7 +1035,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                     }
                 }
                 clearRectangularSelection();
-                if (!ControllerMediator.getInstance().isTSNEPlotCleared()) {
+                if (!ControllerMediator.getInstance().isCellPlotCleared()) {
                     List<String> isoformIDs = selectionModel.getSelectedIsoformGraphics().stream().map(isoformGraphic -> selectableIsoformGraphics.get(isoformGraphic)).collect(Collectors.toList());
                     ControllerMediator.getInstance().selectCellsIsoformsExpressedIn(isoformIDs);
                 }

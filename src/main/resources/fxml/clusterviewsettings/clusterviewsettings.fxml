@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.clusterview.ClusterViewSettingsController"
+            fx:id="clusterViewSettings" style="-fx-background-color: #fcfcfc;" fitToWidth="true" fitToHeight="true">
+    <VBox>
+        <VBox style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets topRightBottomLeft="10"/>
+            </VBox.margin>
+            <HBox>
+                <VBox.margin>
+                    <Insets top="10" right="10" left="10" bottom="15"/>
+                </VBox.margin>
+                <Text text="Algorithm: ">
+                    <HBox.margin>
+                        <Insets top="5" right="5"/>
+                    </HBox.margin>
+                </Text>
+                <ComboBox fx:id="algorithmComboBox" onAction="#handleClusterViewAlgorithmChange"/>
+            </HBox>
+            <Separator/>
+            <VBox fx:id="holder"/>
+        </VBox>
+    </VBox>
+</ScrollPane>

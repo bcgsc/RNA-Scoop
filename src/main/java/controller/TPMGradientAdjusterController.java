@@ -103,7 +103,7 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     }
 
     /**
-     * Displays the gene selector window
+     * Displays the TPM gradient adjuster window
      */
     public void display() {
         window.hide();

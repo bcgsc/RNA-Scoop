@@ -36,7 +36,7 @@ public class MainController implements InteractiveElementController {
     @FXML private Button openFileChooserButton;
     @FXML private Menu fileMenu;
     @FXML private Menu viewMenu;
-    @FXML private MenuItem tSNEToggle;
+    @FXML private MenuItem clusterViewToggle;
     @FXML private MenuItem isoformPlotToggle;
     @FXML private MenuItem consoleToggle;
     @FXML private SplitPane verticalSplitPane;
@@ -58,15 +58,15 @@ public class MainController implements InteractiveElementController {
 
     private Stage window;
     private FileChooser fileChooser;
-    private boolean tSNEPlotIsOpen;
+    private boolean clusterViewIsOpen;
     private boolean consoleIsOpen;
     private boolean isoformPlotIsOpen;
     private String currentLoadedPath;
 
-    public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
+    public void initializeMain(Parent console, Parent isoformPlot, Parent clusterView) {
         fileChooser = new FileChooser();
         setUpWindow();
-        addPanels(console, isoformPlot, tSNEPlot);
+        addPanels(console, isoformPlot, clusterView);
         setIsoformPlotSettingsToDefault();
         setUpPathComboBox();
     }
@@ -94,7 +94,7 @@ public class MainController implements InteractiveElementController {
     public void openIsoformPlot() {
         if (!isoformPlotIsOpen) {
             horizontalSplitPane.getItems().add(0, ControllerMediator.getInstance().getIsoformPlot());
-            isoformPlotToggle.setText("Close Isoform Plot");
+            isoformPlotToggle.setText("Close Isoform plot");
             isoformPlotIsOpen = true;
         }
     }
@@ -102,24 +102,24 @@ public class MainController implements InteractiveElementController {
     public void closeIsoformPlot() {
         if (isoformPlotIsOpen) {
             horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getIsoformPlot());
-            isoformPlotToggle.setText("Open Isoform Plot");
+            isoformPlotToggle.setText("Open Isoform plot");
             isoformPlotIsOpen = false;
         }
     }
 
-    public void openTSNEPlot() {
-        if (!tSNEPlotIsOpen) {
-            horizontalSplitPane.getItems().add(ControllerMediator.getInstance().getTSNEPlot());
-            tSNEToggle.setText("Close t-SNE Plot");
-            tSNEPlotIsOpen = true;
+    public void openClusterView() {
+        if (!clusterViewIsOpen) {
+            horizontalSplitPane.getItems().add(ControllerMediator.getInstance().getClusterView());
+            clusterViewToggle.setText("Close cluster view");
+            clusterViewIsOpen = true;
         }
     }
 
-    public void closeTSNEPlot() {
-        if (tSNEPlotIsOpen) {
-            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getTSNEPlot());
-            tSNEToggle.setText("Open t-SNE Plot");
-            tSNEPlotIsOpen = false;
+    public void closeClusterView() {
+        if (clusterViewIsOpen) {
+            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getClusterView());
+            clusterViewToggle.setText("Open cluster view");
+            clusterViewIsOpen = false;
         }
     }
 
@@ -152,14 +152,14 @@ public class MainController implements InteractiveElementController {
 
     public void restoreMainFromJSON(Map settings) {
         restoreIsoformPlotFromJSON(settings);
-        restoreTSNEPlotFromJSON(settings);
+        restoreClusterViewFromJSON(settings);
         restoreConsoleFromJSON(settings);
         restorePathComboBoxFromJSON(settings);
         restoreIsoformPlotSettingsTogglesFromJSON(settings);
     }
 
-    public boolean isTSNEPlotOpen() {
-        return tSNEPlotIsOpen;
+    public boolean isClusterViewOpen() {
+        return clusterViewIsOpen;
     }
 
     public boolean isConsoleOpen() {
@@ -265,7 +265,7 @@ public class MainController implements InteractiveElementController {
     @FXML
     protected void handleResetSessionButton() {
         openIsoformPlot();
-        openTSNEPlot();
+        openClusterView();
         openConsole();
         setIsoformPlotSettingsToDefault();
         SessionIO.clearCurrentSessionData();
@@ -291,7 +291,7 @@ public class MainController implements InteractiveElementController {
 
     /**
      * When hide dot plot toggle is selected/deselected changes whether dot plot
-     * shows up when cells in t-SNE plot are selected
+     * shows up when cells in cell plot are selected
      */
     @FXML
     protected void handleHideDotPlotToggle() {
@@ -339,14 +339,14 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * When t-SNE toggle is pressed, toggles visibility of the t-SNE plot
+     * When cluster view toggle is pressed, toggles visibility of the cluster view
      */
     @FXML
-    protected void handleTSNEViewToggle() {
-        if (tSNEPlotIsOpen) {
-            closeTSNEPlot();
+    protected void handleClusterViewToggle() {
+        if (clusterViewIsOpen) {
+            closeClusterView();
         } else {
-            openTSNEPlot();
+            openClusterView();
         }
     }
 
@@ -409,15 +409,15 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * If the t-SNE plot was closed in the previous session, closes the t-SNE plot,
+     * If the cluster view was closed in the previous session, closes the cluster view,
      * otherwise opens it
      */
-    private void restoreTSNEPlotFromJSON(Map settings) {
-        boolean prevTSNEPlotOpen = (boolean) settings.get(SessionMaker.TSNE_PLOT_OPEN_KEY);
-        if (prevTSNEPlotOpen)
-            openTSNEPlot();
+    private void restoreClusterViewFromJSON(Map settings) {
+        boolean prevClusterViewOpen = (boolean) settings.get(SessionMaker.CLUSTER_VIEW_OPEN_KEY);
+        if (prevClusterViewOpen)
+            openClusterView();
         else
-            closeTSNEPlot();
+            closeClusterView();
     }
 
     /**
@@ -544,17 +544,17 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Clears t-SNE plot (include loaded matrix data), label sets, gene selector window,
+     * Clears cell plot (include loaded matrix data), label sets, gene selector window,
      * current loaded path (as will be updated), disables associated functionality
      * Loads file from path in path combo box on different thread
      * Displays error (and successful completion) messages in console
      */
     private void loadFile() {
         ControllerMediator.getInstance().clearGeneSelector();
-        ControllerMediator.getInstance().clearTSNEPlot();
+        ControllerMediator.getInstance().clearCellPlot();
         ControllerMediator.getInstance().setIsoformIndexMap(null);
         ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
-        ControllerMediator.getInstance().setTSNEMatrix(null);
+        ControllerMediator.getInstance().setEmbedding(null);
         ControllerMediator.getInstance().clearLabelSets();
         currentLoadedPath = null;
         disableAssociatedFunctionality();
@@ -571,7 +571,7 @@ public class MainController implements InteractiveElementController {
         disable();
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
-        ControllerMediator.getInstance().disableTSNEPlot();
+        ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableTPMGradientAdjuster();
         ControllerMediator.getInstance().disableLabelSetManager();
         // doesn't disable add label set view, because main should be disabled when
@@ -582,7 +582,7 @@ public class MainController implements InteractiveElementController {
         enable();
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
-        ControllerMediator.getInstance().enableTSNEPlot();
+        ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
         ControllerMediator.getInstance().enableLabelSetManager();
     }
@@ -624,7 +624,7 @@ public class MainController implements InteractiveElementController {
             Parser.removeParsedGenes();
             ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
             ControllerMediator.getInstance().setIsoformIndexMap(null);
-            ControllerMediator.getInstance().setTSNEMatrix(null);
+            ControllerMediator.getInstance().setEmbedding(null);
             ControllerMediator.getInstance().clearLabelSets();
         }
     }
@@ -653,15 +653,15 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Add's the console, isoform plot and t-sne plot panels to the main
+     * Add's the console, isoform plot and cluster view panels to the main
      * window (by default all panels are open)
      */
 
-    private void addPanels(Parent console, Parent isoformPlot, Parent tSNEPlot) {
+    private void addPanels(Parent console, Parent isoformPlot, Parent clusterView) {
         horizontalSplitPane.getItems().add(isoformPlot);
-        horizontalSplitPane.getItems().add(tSNEPlot);
+        horizontalSplitPane.getItems().add(clusterView);
         verticalSplitPane.getItems().add(console);
-        tSNEPlotIsOpen = true;
+        clusterViewIsOpen = true;
         consoleIsOpen = true;
         isoformPlotIsOpen = true;
     }

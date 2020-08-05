@@ -1,6 +1,10 @@
 package ui;
 
 import controller.*;
+import controller.clusterview.ClusterViewController;
+import controller.clusterview.ClusterViewSettingsController;
+import controller.clusterview.TSNESettingsController;
+import controller.clusterview.UMAPSettingsController;
 import controller.labelsetmanager.AddLabelSetViewController;
 import controller.labelsetmanager.LabelSetManagerController;
 import javafx.application.Application;
@@ -23,25 +27,33 @@ public class Main extends Application {
         FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("/fxml/main/main.fxml"));
         FXMLLoader consoleLoader = new FXMLLoader(getClass().getResource("/fxml/main/console.fxml"));
         FXMLLoader isoformPlotLoader = new FXMLLoader(getClass().getResource("/fxml/main/isoformplot.fxml"));
-        FXMLLoader tSNEPlotLoader = new FXMLLoader(getClass().getResource("/fxml/main/tsneplot.fxml"));
+        FXMLLoader clusterViewLoader = new FXMLLoader(getClass().getResource("/fxml/main/clusterview.fxml"));
         FXMLLoader geneSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/geneselector.fxml"));
         FXMLLoader tpmGradientLoader = new FXMLLoader(getClass().getResource("/fxml/tpmgradient.fxml"));
         FXMLLoader labelSetManagerLoader = new FXMLLoader(getClass().getResource("/fxml/labelsetmanager/labelsetmanager.fxml"));
         FXMLLoader addLabelSetViewLoader = new FXMLLoader(getClass().getResource("/fxml/labelsetmanager/addlabelsetview.fxml"));
+        FXMLLoader clusterViewSettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/clusterviewsettings.fxml"));
+        FXMLLoader tSNESettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/tsnesettings.fxml"));
+        FXMLLoader umapSettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/umapsettings.fxml"));
 
         mainLoader.load();
         Parent console = consoleLoader.load();
         Parent isoformPlot = isoformPlotLoader.load();
-        Parent tSNEPlot = tSNEPlotLoader.load();
+        Parent clusterView = clusterViewLoader.load();
         geneSelectorLoader.load();
         tpmGradientLoader.load();
         Parent labelSetManager = labelSetManagerLoader.load();
         Parent addLabelSetView = addLabelSetViewLoader.load();
+        clusterViewSettingsLoader.load();
+        Parent tSNESettings = tSNESettingsLoader.load();
+        Parent umapSettings = umapSettingsLoader.load();
 
         registerControllers(mainLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
-                            tSNEPlotLoader.getController(), geneSelectorLoader.getController(), tpmGradientLoader.getController(),
-                            labelSetManagerLoader.getController(), addLabelSetViewLoader.getController());
-        ControllerMediator.getInstance().initializeMain(console, isoformPlot, tSNEPlot);
+                            clusterViewLoader.getController(), geneSelectorLoader.getController(), tpmGradientLoader.getController(),
+                            labelSetManagerLoader.getController(), addLabelSetViewLoader.getController(), clusterViewSettingsLoader.getController(),
+                            tSNESettingsLoader.getController(), umapSettingsLoader.getController());
+        ControllerMediator.getInstance().initializeMain(console, isoformPlot, clusterView);
+        ControllerMediator.getInstance().initializeClusterViewSettings(tSNESettings, umapSettings);
         setUpLabelSetManagerPopUp(labelSetManager, addLabelSetView);
         loadPreviousSession();
     }
@@ -58,17 +70,21 @@ public class Main extends Application {
      * Registers controllers with mediator
      */
     private void registerControllers(MainController mainController, ConsoleController consoleController, IsoformPlotController isoformPlotController,
-                                     TSNEPlotController tSNEPlotController, GeneSelectorController geneSelectorController,
+                                     ClusterViewController clusterViewController, GeneSelectorController geneSelectorController,
                                      TPMGradientAdjusterController tpmGradientAdjusterController, LabelSetManagerController labelSetManagerController,
-                                     AddLabelSetViewController addLabelSetViewController) {
+                                     AddLabelSetViewController addLabelSetViewController, ClusterViewSettingsController clusterViewSettingsController,
+                                     TSNESettingsController tsneSettingsController, UMAPSettingsController umapSettingsController) {
         ControllerMediator.getInstance().registerMainController(mainController);
         ControllerMediator.getInstance().registerConsoleController(consoleController);
         ControllerMediator.getInstance().registerIsoformPlotController(isoformPlotController);
-        ControllerMediator.getInstance().registerTSNEPlotController(tSNEPlotController);
+        ControllerMediator.getInstance().registerClusterViewController(clusterViewController);
         ControllerMediator.getInstance().registerGeneSelectorController(geneSelectorController);
         ControllerMediator.getInstance().registerTPMGradientController(tpmGradientAdjusterController);
         ControllerMediator.getInstance().registerLabelSetManagerController(labelSetManagerController);
         ControllerMediator.getInstance().registerAddLabelSetViewController(addLabelSetViewController);
+        ControllerMediator.getInstance().registerClusterViewSettingsController(clusterViewSettingsController);
+        ControllerMediator.getInstance().registerTSNESettingsController(tsneSettingsController);
+        ControllerMediator.getInstance().registerUMAPSettingsController(umapSettingsController);
     }
 
     private void setUpLabelSetManagerPopUp(Parent labelSetManager, Parent addLabelSetView) {

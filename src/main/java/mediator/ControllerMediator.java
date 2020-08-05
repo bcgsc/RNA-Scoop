@@ -2,6 +2,10 @@ package mediator;
 
 import annotation.Gene;
 import controller.*;
+import controller.clusterview.ClusterViewController;
+import controller.clusterview.ClusterViewSettingsController;
+import controller.clusterview.TSNESettingsController;
+import controller.clusterview.UMAPSettingsController;
 import controller.labelsetmanager.AddLabelSetViewController;
 import controller.labelsetmanager.LabelSetManagerController;
 import javafx.scene.Node;
@@ -17,11 +21,14 @@ public class ControllerMediator implements Mediator{
     private MainController mainController;
     private ConsoleController consoleController;
     private IsoformPlotController isoformPlotController;
-    private TSNEPlotController tsnePlotController;
+    private ClusterViewController clusterViewController;
     private GeneSelectorController geneSelectorController;
     private TPMGradientAdjusterController tpmGradientAdjusterController;
     private LabelSetManagerController labelSetManagerController;
     private AddLabelSetViewController addLabelSetViewController;
+    private ClusterViewSettingsController clusterViewSettingsController;
+    private UMAPSettingsController umapSettingsController;
+    private TSNESettingsController tsneSettingsController;
 
     // Register controllers
     @Override
@@ -40,8 +47,8 @@ public class ControllerMediator implements Mediator{
     }
 
     @Override
-    public void registerTSNEPlotController(TSNEPlotController tsnePlotController) {
-        this.tsnePlotController = tsnePlotController;
+    public void registerClusterViewController(ClusterViewController clusterViewController) {
+        this.clusterViewController = clusterViewController;
     }
 
     @Override
@@ -64,9 +71,24 @@ public class ControllerMediator implements Mediator{
         this.addLabelSetViewController = addLabelSetViewController;
     }
 
+    @Override
+    public void registerClusterViewSettingsController(ClusterViewSettingsController clusterViewSettingsController) {
+        this.clusterViewSettingsController = clusterViewSettingsController;
+    }
+
+    @Override
+    public void registerUMAPSettingsController(UMAPSettingsController umapSettingsController) {
+        this.umapSettingsController = umapSettingsController;
+    }
+
+    @Override
+    public void registerTSNESettingsController(TSNESettingsController tsneSettingsController) {
+        this.tsneSettingsController = tsneSettingsController;
+    }
+
     // Change Main Display
-    public void initializeMain(Parent console, Parent isoformPlot, Parent tSNEPlot) {
-        mainController.initializeMain(console, isoformPlot, tSNEPlot);
+    public void initializeMain(Parent console, Parent isoformPlot, Parent clusterView) {
+        mainController.initializeMain(console, isoformPlot, clusterView);
     }
 
     public void clearPathComboBox() {
@@ -202,44 +224,72 @@ public class ControllerMediator implements Mediator{
     }
 
     // Display t-SNE
-    public void displayClusterManager() {
+    public void initializeClusterViewSettings(Parent tsneSettings, Parent umapSettings) {
+        clusterViewSettingsController.initializeClusterViewSettings(tsneSettings, umapSettings);
+    }
+
+    public void displayLabelSetManager() {
         labelSetManagerController.display();
     }
 
-    public void clearTSNEPlot() {
-        tsnePlotController.clearTSNEPlot();
+    public void displayClusterViewSettings() {
+        clusterViewSettingsController.display();
     }
 
-    public void TSNEPlotHandleClusterAddedFromSelectedCells() {
-        tsnePlotController.handleClusterAddedFromSelectedCells();
+    public boolean usingUMAPSettings() {
+        return clusterViewSettingsController.usingUMAPSettings();
     }
 
-    public void TSNEPlotHandleRemovedCluster(Cluster removedCluster, Cluster clusterMergedInto) {
-        tsnePlotController.handleRemovedCluster(removedCluster, clusterMergedInto);
+    public float getMinDist() {
+        return umapSettingsController.getMinDist();
     }
 
-    public void tSNEPlotHandleChangedLabelSetInUse(){
-        tsnePlotController.handleChangedLabelSetInUse();
+    public int getNearestNeighbors() {
+        return umapSettingsController.getNearestNeighbors();
     }
 
-    public void redrawTSNEPlot() {
-        tsnePlotController.redrawTSNEPlot();
+    public double getPerplexity() {
+        return tsneSettingsController.getPerplexity();
     }
 
-    public void redrawTSNEPlotLegend() {
-        tsnePlotController.redrawTSNEPlotLegend();
+    public int getMaxIterations() {
+        return tsneSettingsController.getMaxIterations();
+    }
+
+    public void clearCellPlot() {
+        clusterViewController.clearPlot();
+    }
+
+    public void ClusterViewHandleClusterAddedFromSelectedCells() {
+        clusterViewController.handleClusterAddedFromSelectedCells();
+    }
+
+    public void ClusterViewHandleRemovedCluster(Cluster removedCluster, Cluster clusterMergedInto) {
+        clusterViewController.handleRemovedCluster(removedCluster, clusterMergedInto);
+    }
+
+    public void clusterViewHandleChangedLabelSetInUse(){
+        clusterViewController.handleChangedLabelSetInUse();
+    }
+
+    public void redrawCellPlot() {
+        clusterViewController.redrawPlot();
+    }
+
+    public void redrawLegend() {
+        clusterViewController.redrawLegend();
     }
 
     public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
-        tsnePlotController.selectCellsIsoformsExpressedIn(isoformIDs);
+        clusterViewController.selectCellsIsoformsExpressedIn(isoformIDs);
     }
 
     public void selectCluster(Cluster cluster, boolean unselectRest) {
-        tsnePlotController.selectCluster(cluster, unselectRest);
+        clusterViewController.selectCluster(cluster, unselectRest);
     }
 
     public void unselectCluster(Cluster cluster) {
-        tsnePlotController.unselectCluster(cluster);
+        clusterViewController.unselectCluster(cluster);
     }
 
     //Load from JSON
@@ -253,8 +303,8 @@ public class ControllerMediator implements Mediator{
     }
 
     // Getters
-    public Node getTSNEPlot() {
-        return tsnePlotController.getTSNEPlot();
+    public Node getClusterView() {
+        return clusterViewController.getClusterView();
     }
 
     public Node getConsole() {
@@ -277,16 +327,16 @@ public class ControllerMediator implements Mediator{
         return geneSelectorController.getShownGenes();
     }
 
-    public Map<Integer, TSNEPlotController.CellDataItem> getCellNumberCellMap() {
-        return tsnePlotController.getCellNumberCellMap();
+    public Map<Integer, ClusterViewController.CellDataItem> getCellNumberCellMap() {
+        return clusterViewController.getCellNumberCellMap();
     }
 
     public boolean areCellsSelected () {
-        return tsnePlotController.areCellsSelected();
+        return clusterViewController.areCellsSelected();
     }
 
-    public Collection<TSNEPlotController.CellDataItem> getCells(boolean onlySelected) {
-        return tsnePlotController.getCells(onlySelected);
+    public Collection<ClusterViewController.CellDataItem> getCells(boolean onlySelected) {
+        return clusterViewController.getCells(onlySelected);
     }
 
     public Color getColorFromTPMGradient(double expression) {
@@ -298,19 +348,19 @@ public class ControllerMediator implements Mediator{
     }
 
     public int getNumCellsToPlot() {
-        return tsnePlotController.getNumCellsToPlot();
+        return clusterViewController.getNumCellsToPlot();
     }
 
     public List<Cluster> getClusters(boolean onlySelected) {
-        return tsnePlotController.getClusters(onlySelected);
+        return clusterViewController.getClusters(onlySelected);
     }
 
-    public Collection<TSNEPlotController.CellDataItem> getSelectedCellsInCluster(Cluster cluster) {
-        return tsnePlotController.getSelectedCellsInCluster(cluster);
+    public Collection<ClusterViewController.CellDataItem> getSelectedCellsInCluster(Cluster cluster) {
+        return clusterViewController.getSelectedCellsInCluster(cluster);
     }
 
     public int getNumExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
-        return tsnePlotController.getNumExpressingCells(isoformID, cluster, onlySelected);
+        return clusterViewController.getNumExpressingCells(isoformID, cluster, onlySelected);
     }
 
     public boolean isReverseComplementing() {
@@ -365,12 +415,12 @@ public class ControllerMediator implements Mediator{
         return mainController.isIsoformPlotOpen();
     }
 
-    public boolean isTSNEPlotOpen() {
-        return mainController.isTSNEPlotOpen();
+    public boolean isClusterViewOpen() {
+        return mainController.isClusterViewOpen();
     }
 
-    public boolean isTSNEPlotCleared() {
-        return tsnePlotController.isTSNEPlotCleared();
+    public boolean isCellPlotCleared() {
+        return clusterViewController.isPlotCleared();
     }
 
     public boolean isAddLabelSetViewDisplayed() {
@@ -379,15 +429,15 @@ public class ControllerMediator implements Mediator{
 
     //Setters
     public void setCellIsoformExpressionMatrix(double[][] cellIsoformExpressionMatrix) {
-        tsnePlotController.setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
+        clusterViewController.setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
     }
 
     public void setIsoformIndexMap(HashMap<String, Integer> isoformIndexMap) {
-        tsnePlotController.setIsoformIndexMap(isoformIndexMap);
+        clusterViewController.setIsoformIndexMap(isoformIndexMap);
     }
 
-    public void setTSNEMatrix(double[][] tSNEMatrix) {
-        tsnePlotController.setTSNEMatrix(tSNEMatrix);
+    public void setEmbedding(double[][] embedding) {
+        clusterViewController.setEmbedding(embedding);
     }
 
     public void setRecommendedMinTPM(int recommendedMinTPM) {
@@ -419,8 +469,8 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.disable();
     }
 
-    public void disableTSNEPlot() {
-        tsnePlotController.disable();
+    public void disableClusterView() {
+        clusterViewController.disable();
     }
 
     public void disableGeneSelector() {
@@ -440,8 +490,8 @@ public class ControllerMediator implements Mediator{
         mainController.enable();
     }
 
-    public void enableTSNEPlot() {
-        tsnePlotController.enable();
+    public void enableClusterView() {
+        clusterViewController.enable();
     }
 
     public void enableIsoformPlot() {

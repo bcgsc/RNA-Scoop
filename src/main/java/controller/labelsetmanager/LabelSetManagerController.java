@@ -1,6 +1,6 @@
 package controller.labelsetmanager;
 
-import controller.TSNEPlotController;
+import controller.clusterview.ClusterViewController;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -102,12 +102,12 @@ public class LabelSetManagerController {
     }
 
     /**
-     * Adds all cells in t-SNE plot to the cluster they belong to in each
+     * Adds all cells in cell plot to the cluster they belong to in each
      * label set
      */
     public void addCellsToLabelSetClusters() {
-        Map<Integer, TSNEPlotController.CellDataItem> cellNumberCellMap = ControllerMediator.getInstance().getCellNumberCellMap();
-        for (TSNEPlotController.CellDataItem cellDataItem : cellNumberCellMap.values()) {
+        Map<Integer, ClusterViewController.CellDataItem> cellNumberCellMap = ControllerMediator.getInstance().getCellNumberCellMap();
+        for (ClusterViewController.CellDataItem cellDataItem : cellNumberCellMap.values()) {
             for (LabelSet labelSet : labelSets)
                 labelSet.addCell(cellDataItem);
         }
@@ -165,7 +165,7 @@ public class LabelSetManagerController {
     private void makeLabelSetInUseBeSelected() {
         labelSetsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             labelSetInUse = (LabelSet) newValue;
-            ControllerMediator.getInstance().tSNEPlotHandleChangedLabelSetInUse();
+            ControllerMediator.getInstance().clusterViewHandleChangedLabelSetInUse();
             ControllerMediator.getInstance().updateFoldChangeAlert();
             ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
         });

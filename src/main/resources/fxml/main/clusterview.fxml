@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.embed.swing.SwingNode?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="controller.clusterview.ClusterViewController"
+      fx:id="clusterView" style="-fx-background-color: #fafafa;">
+    <HBox>
+        <VBox.margin>
+            <Insets top="10" left="10" right="10"/>
+        </VBox.margin>
+        <Button fx:id="drawPlotButton" onAction="#handleDrawPlotButton" text="Draw cell plot"/>
+        <Button fx:id="changeClusterLabelsButton" onAction="#handleChangeClusterLabelsButton" text="Change cluster labels">
+            <HBox.margin>
+                <Insets left="10" right="10"/>
+            </HBox.margin>
+        </Button>
+        <Button fx:id="clusterViewSettingsButton" onAction="#handleClusterViewSettingsButton" text="Cluster view settings"/>
+    </HBox>
+    <StackPane fx:id="plotHolder" style="-fx-border-color: #adadad" VBox.vgrow="ALWAYS">
+        <VBox.margin>
+            <Insets topRightBottomLeft="10"/>
+        </VBox.margin>
+        <SwingNode fx:id="swingNode"/>
+    </StackPane>
+</VBox>
