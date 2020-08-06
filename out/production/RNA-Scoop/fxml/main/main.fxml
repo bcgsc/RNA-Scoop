@@ -30,7 +30,7 @@
                         <SeparatorMenuItem/>
                         <RadioMenuItem fx:id="showMedianToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show median expression" selected="true"/>
                         <RadioMenuItem fx:id="showAverageToggle" toggleGroup="$expressionToggles" onAction="#handleExpressionToggle" text="Show average expression"/>
-                        <CheckMenuItem fx:id="includeZerosToggle" onAction="#handleExpressionToggle" text="Include zeros" selected="true"/>
+                        <CheckMenuItem fx:id="includeZerosToggle" onAction="#handleExpressionToggle" text="Include zeros (isoforms)" selected="true"/>
                         <SeparatorMenuItem/>
                         <RadioMenuItem fx:id="showGeneNameAndIDToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show gene name and ID"/>
                         <RadioMenuItem fx:id="showGeneNameToggle" toggleGroup="$geneLabelToggles" onAction="#handleGeneLabelToggle" text="Show gene name" selected="true"/>

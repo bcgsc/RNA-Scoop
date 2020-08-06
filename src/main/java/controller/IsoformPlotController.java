@@ -293,10 +293,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * Returns text describing the type of expression that should be displayed
      * (ex. median, average...). Used for tooltips in the isoform plot
      */
-    private static String getToolTipExpressionText(double expression) {
-        boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
-        boolean includingZeros = ControllerMediator.getInstance().isIncludingZeros();
-
+    private static String getToolTipExpressionText(double expression, boolean showMedian, boolean includingZeros) {
         if (showMedian && includingZeros)
             return "Median TPM: " + roundToOneDecimal(expression);
         else if (showMedian)
@@ -662,7 +659,9 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
              */
             private void setToolTip(boolean shouldShowToolTip, double expression) {
                 if (shouldShowToolTip) {
-                    toolTip.setText(getToolTipExpressionText(expression));
+                    boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
+                    boolean includeZeros = ControllerMediator.getInstance().isIncludingZeros();
+                    toolTip.setText(getToolTipExpressionText(expression, showMedian, includeZeros));
                     if (!toolTipShowing) {
                         Tooltip.install(this, toolTip);
                         toolTipShowing = true;
@@ -861,11 +860,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         private static double getIsoformExpressionInCluster(Cluster cluster, Isoform isoform, boolean onlySelected) {
             boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
-            boolean includeZeros = ControllerMediator.getInstance().isIncludingZeros();
             if (showMedian)
-                return isoform.getMedianExpressionInCluster(cluster, onlySelected, includeZeros);
+                return isoform.getMedianExpressionInCluster(cluster, onlySelected, false);
             else
-                return  isoform.getAverageExpressionInCluster(cluster, onlySelected, includeZeros);
+                return  isoform.getAverageExpressionInCluster(cluster, onlySelected, false);
         }
 
         private static double getDotSize(double fractionExpressingCells) {
@@ -892,8 +890,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         private static void addExpressionLevelToolTip(double expression, int numExpressingCells, int numCells, Node node) {
             double percentExpressed = roundToOneDecimal(((double) numExpressingCells / numCells) * 100);
-
-            Tooltip tooltip = new Tooltip(getToolTipExpressionText(expression) + "\n" +
+            boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
+            Tooltip tooltip = new Tooltip(getToolTipExpressionText(expression, showMedian, false) + "\n" +
                                                 "Cells: " + numExpressingCells + "/" + numCells + " (" + percentExpressed + "%)");
             Tooltip.install(node, tooltip);
         }
