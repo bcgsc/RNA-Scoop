@@ -1,5 +1,7 @@
 package controller.clusterview;
 
+import controller.ConsoleController;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -7,11 +9,12 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import mediator.ControllerMediator;
 import ui.Main;
 
 public class ClusterViewSettingsController {
-    private static final float CLUSTER_VIEW_SETTINGS_HEIGHT = 150;
-    private static final float CLUSTER_VIEW_SETTINGS_WIDTH = 450;
+    private static final float CLUSTER_VIEW_SETTINGS_HEIGHT = 160;
+    private static final float CLUSTER_VIEW_SETTINGS_WIDTH = 440;
 
     @FXML private ScrollPane clusterViewSettings;
     @FXML private ComboBox<String> algorithmComboBox;
@@ -71,7 +74,8 @@ public class ClusterViewSettingsController {
 
     /**
      * Sets up cluster view settings window
-     * Makes it so window is hidden when X button is pressed
+     * Makes it so window is hidden when X button is pressed, UMAP
+     * and t-sne settings are restored to saved values
      */
     private void setUpWindow() {
         window = new Stage();
@@ -80,11 +84,21 @@ public class ClusterViewSettingsController {
         setWindowSizeAndDisplay();
         window.setOnCloseRequest(event -> {
             event.consume();
+            ControllerMediator.getInstance().restoreUMAPSettingsToSaved();
+            ControllerMediator.getInstance().restoreTSNESettingsToSaved();
             window.hide();
         });
     }
 
     private void setWindowSizeAndDisplay() {
         window.setScene(new Scene(clusterViewSettings, CLUSTER_VIEW_SETTINGS_WIDTH, CLUSTER_VIEW_SETTINGS_HEIGHT));
+    }
+
+    @FXML
+    protected void handleOKButton() {
+        ControllerMediator.getInstance().saveUMAPSettings();
+        ControllerMediator.getInstance().saveTSNESettings();
+        ControllerMediator.getInstance().drawCellPlot();
+        window.hide();
     }
 }

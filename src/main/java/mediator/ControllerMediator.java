@@ -240,6 +240,22 @@ public class ControllerMediator implements Mediator{
         return clusterViewSettingsController.usingUMAPSettings();
     }
 
+    public void saveUMAPSettings() {
+        umapSettingsController.saveSettings();
+    }
+
+    public void saveTSNESettings() {
+        tsneSettingsController.saveSettings();
+    }
+
+    public void restoreUMAPSettingsToSaved() {
+        umapSettingsController.restoreSettingsToSaved();
+    }
+
+    public void restoreTSNESettingsToSaved() {
+        tsneSettingsController.restoreSettingsToSaved();
+    }
+
     public float getMinDist() {
         return umapSettingsController.getMinDist();
     }
@@ -274,6 +290,10 @@ public class ControllerMediator implements Mediator{
 
     public void redrawCellPlot() {
         clusterViewController.redrawPlot();
+    }
+
+    public void drawCellPlot() {
+        clusterViewController.drawPlot();
     }
 
     public void redrawLegend() {

@@ -182,6 +182,21 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         redrawLegend();
     }
 
+    public void drawPlot() {
+        clearPlot();
+        ControllerMediator.getInstance().deselectAllIsoforms();
+        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+        disableAssociatedFunctionality();
+        try {
+            Thread plotMaker = new Thread(new PlotMaker());
+            plotMaker.start();
+        } catch (Exception e) {
+            enableAssociatedFunctionality();
+            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the cell plot");
+            e.printStackTrace();
+        }
+    }
+
     public void redrawLegend() {
         if (!isPlotCleared()) {
             legend = new Legend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
@@ -267,18 +282,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
      */
     @FXML
     protected void handleDrawPlotButton() {
-        clearPlot();
-        ControllerMediator.getInstance().deselectAllIsoforms();
-        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
-        disableAssociatedFunctionality();
-        try {
-            Thread plotMaker = new Thread(new PlotMaker());
-            plotMaker.start();
-        } catch (Exception e) {
-            enableAssociatedFunctionality();
-            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the cell plot");
-            e.printStackTrace();
-        }
+        drawPlot();
     }
 
     /**

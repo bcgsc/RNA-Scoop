@@ -17,21 +17,38 @@ public class TSNESettingsController implements Initializable {
     @FXML private TextField perplexityField;
     @FXML private TextField maxIterationsField;
 
-    private double perplexity;
-    private int maxIterations;
+    // settings that have been saved
+    private double savedPerplexity;
+    private int savedMaxIterations;
+    // settings in the fields
+    private double tempPerplexity;
+    private int tempMaxIterations;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpPerplexityField();
         setUpMaxIterationsField();
+        saveSettings();
     }
 
     public double getPerplexity() {
-        return perplexity;
+        return savedPerplexity;
     }
 
     public int getMaxIterations() {
-        return maxIterations;
+        return savedMaxIterations;
+    }
+
+    public void saveSettings() {
+        savedPerplexity = tempPerplexity;
+        savedMaxIterations = tempMaxIterations;
+    }
+
+    public void restoreSettingsToSaved() {
+        tempPerplexity = savedPerplexity;
+        tempMaxIterations = savedMaxIterations;
+        perplexityField.setText(Double.toString(tempPerplexity));
+        maxIterationsField.setText(Integer.toString(tempMaxIterations));
     }
 
     @FXML
@@ -39,7 +56,7 @@ public class TSNESettingsController implements Initializable {
         try {
             updatePerplexity();
         } catch (RNAScoopException e) {
-            perplexityField.setText(String.valueOf(perplexity));
+            perplexityField.setText(String.valueOf(tempPerplexity));
             e.addToMessage(". Changed perplexity back to previous value");
             ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
         }
@@ -50,7 +67,7 @@ public class TSNESettingsController implements Initializable {
         try {
             updateMaxIterations();
         } catch (RNAScoopException e) {
-            maxIterationsField.setText(String.valueOf(maxIterations));
+            maxIterationsField.setText(String.valueOf(tempMaxIterations));
             e.addToMessage(". Changed max iterations back to previous value");
             ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
         }
@@ -68,7 +85,7 @@ public class TSNESettingsController implements Initializable {
         if (newPerplexity < 0)
             throw new InvalidPerplexityException();
 
-        perplexity = newPerplexity;
+        tempPerplexity = newPerplexity;
     }
 
     private void updateMaxIterations() throws InvalidMaxIterationsException {
@@ -83,11 +100,11 @@ public class TSNESettingsController implements Initializable {
         if (newMaxIterations < 0)
             throw new InvalidMaxIterationsException();
 
-        maxIterations = newMaxIterations;
+        tempMaxIterations = newMaxIterations;
     }
 
     private void setUpPerplexityField() {
-        perplexity = DEFAULT_PERPLEXITY;
+        tempPerplexity = DEFAULT_PERPLEXITY;
         perplexityField.setText(String.valueOf(DEFAULT_PERPLEXITY));
         perplexityField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
             if (!newValue) { //when focus lost
@@ -97,7 +114,7 @@ public class TSNESettingsController implements Initializable {
     }
 
     private void setUpMaxIterationsField() {
-        maxIterations = DEFAULT_MAX_ITERATIONS;
+        tempMaxIterations = DEFAULT_MAX_ITERATIONS;
         maxIterationsField.setText(String.valueOf(DEFAULT_MAX_ITERATIONS));
         maxIterationsField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
             if (!newValue) { //when focus lost

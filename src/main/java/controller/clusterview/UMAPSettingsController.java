@@ -16,21 +16,38 @@ public class UMAPSettingsController implements Initializable {
     @FXML private TextField minDistField;
     @FXML private TextField nearestNeighborsField;
 
-    private float minDist;
-    private int nearestNeighbors;
+    // settings that have been saved
+    private float savedMinDist;
+    private int savedNearestNeighbors;
+    // settings in the fields
+    private float tempMinDist;
+    private int tempNearestNeighbors;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpMinDistField();
         setUpNearestNeighborsField();
+        saveSettings();
     }
 
     public float getMinDist() {
-        return minDist;
+        return savedMinDist;
     }
 
     public int getNearestNeighbors() {
-        return nearestNeighbors;
+        return savedNearestNeighbors;
+    }
+
+    public void saveSettings() {
+        savedMinDist = tempMinDist;
+        savedNearestNeighbors = tempNearestNeighbors;
+    }
+
+    public void restoreSettingsToSaved() {
+        tempMinDist = savedMinDist;
+        tempNearestNeighbors = savedNearestNeighbors;
+        minDistField.setText(Float.toString(tempMinDist));
+        nearestNeighborsField.setText(Integer.toString(tempNearestNeighbors));
     }
 
     @FXML
@@ -38,7 +55,7 @@ public class UMAPSettingsController implements Initializable {
         try {
             updateMinDist();
         } catch (RNAScoopException e) {
-            minDistField.setText(String.valueOf(minDist));
+            minDistField.setText(String.valueOf(tempMinDist));
             e.addToMessage(". Changed min distance back to previous value");
             ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
         }
@@ -49,7 +66,7 @@ public class UMAPSettingsController implements Initializable {
         try {
             updateNearestNeighbors();
         } catch (RNAScoopException e) {
-            nearestNeighborsField.setText(String.valueOf(nearestNeighbors));
+            nearestNeighborsField.setText(String.valueOf(tempNearestNeighbors));
             e.addToMessage(". Changed number of nearest neighbors back to previous value");
             ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
         }
@@ -67,7 +84,7 @@ public class UMAPSettingsController implements Initializable {
         if (newMinDist < 0 || newMinDist > 1)
             throw new InvalidMinDistException();
 
-        minDist = newMinDist;
+        tempMinDist = newMinDist;
     }
 
     private void updateNearestNeighbors() throws InvalidNearestNeighborsException{
@@ -82,11 +99,11 @@ public class UMAPSettingsController implements Initializable {
         if (newNearestNeighbors < 2)
             throw new InvalidNearestNeighborsException();
 
-        nearestNeighbors = newNearestNeighbors;
+        tempNearestNeighbors = newNearestNeighbors;
     }
 
     private void setUpMinDistField() {
-        minDist = DEFAULT_MIN_DIST;
+        tempMinDist = DEFAULT_MIN_DIST;
         minDistField.setText(String.valueOf(DEFAULT_MIN_DIST));
         minDistField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
             if (!newValue) { //when focus lost
@@ -96,7 +113,7 @@ public class UMAPSettingsController implements Initializable {
     }
 
     private void setUpNearestNeighborsField() {
-        nearestNeighbors = DEFAULT_NEAREST_NEIGHBORS;
+        tempNearestNeighbors = DEFAULT_NEAREST_NEIGHBORS;
         nearestNeighborsField.setText(String.valueOf(DEFAULT_NEAREST_NEIGHBORS));
         nearestNeighborsField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
             if (!newValue) { //when focus lost
