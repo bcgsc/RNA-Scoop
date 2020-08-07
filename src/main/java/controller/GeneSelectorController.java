@@ -23,6 +23,7 @@ import ui.Main;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import static javafx.application.Platform.runLater;
@@ -131,9 +132,10 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     /**
      * Retrieves parsed genes and sets as genes in genes table
      */
-    public void updateGenesTable() {
+    public void updateGenesTable(List<Gene> genesList) {
+        System.out.println(genesList.size());
         genes.clear();
-        genes.addAll(Parser.getParsedGenesMap().values());
+        genes.addAll(genesList);
         genes.sort(Gene::compareTo);
     }
 

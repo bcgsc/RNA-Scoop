@@ -550,12 +550,6 @@ public class MainController implements InteractiveElementController {
      * Displays error (and successful completion) messages in console
      */
     private void loadFile() {
-        ControllerMediator.getInstance().clearGeneSelector();
-        ControllerMediator.getInstance().clearCellPlot();
-        ControllerMediator.getInstance().setIsoformIndexMap(null);
-        ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
-        ControllerMediator.getInstance().setEmbedding(null);
-        ControllerMediator.getInstance().clearLabelSets();
         currentLoadedPath = null;
         disableAssociatedFunctionality();
         try {
@@ -600,32 +594,13 @@ public class MainController implements InteractiveElementController {
          */
         @Override
         public void run() {
-            try {
-                String filePath = (String) pathComboBox.getValue();
-                runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + filePath));
-                Parser.loadFiles(filePath);
-                runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + filePath));
-                runLater(() -> ControllerMediator.getInstance().updateGenesTable());
+            String filePath = (String) pathComboBox.getValue();
+            boolean success = Parser.loadFiles(filePath);
+            if (success) {
                 currentLoadedPath = filePath;
                 runLater(MainController.this::addLoadedPath);
-            } catch (RNAScoopException e){
-                clearLoadedData();
-                runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
-            } catch (Exception e) {
-                clearLoadedData();
-                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading file from path: " + pathComboBox.getValue()));
-                e.printStackTrace();
-            } finally {
-                runLater(MainController.this::enableAssociatedFunctionality);
             }
-        }
-
-        private void clearLoadedData() {
-            Parser.removeParsedGenes();
-            ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
-            ControllerMediator.getInstance().setIsoformIndexMap(null);
-            ControllerMediator.getInstance().setEmbedding(null);
-            ControllerMediator.getInstance().clearLabelSets();
+            enableAssociatedFunctionality();
         }
     }
 

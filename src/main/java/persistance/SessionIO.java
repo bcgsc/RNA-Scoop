@@ -71,7 +71,6 @@ public class SessionIO {
      * JSON file...)
      */
     public static void clearCurrentSessionData() {
-        Parser.removeParsedGenes();
         ControllerMediator.getInstance().clearGeneSelector();
         ControllerMediator.getInstance().clearCellPlot();
         ControllerMediator.getInstance().clearConsole();

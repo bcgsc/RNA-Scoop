@@ -157,8 +157,8 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.updateIsoformLabels();
     }
 
-    public void updateGenesTable() {
-        geneSelectorController.updateGenesTable();
+    public void updateGenesTable(List<Gene> geneList) {
+        geneSelectorController.updateGenesTable(geneList);
     }
 
     public void updateGenesMaxFoldChange() {

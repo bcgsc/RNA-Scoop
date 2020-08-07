@@ -4,7 +4,9 @@ import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
 import com.jujutsu.utils.MatrixUtils;
+import controller.MainController;
 import exceptions.*;
+import javafx.application.Platform;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
@@ -18,48 +20,75 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static javafx.application.Platform.runLater;
+
 public class Parser {
     private static final String GTF_PATH_KEY = "gtf";
     private static final String MATRIX_PATH_KEY = "matrix";
     private static final String ISOFORM_LABELS_PATH_KEY = "isoform_ids";
     private static final String CELL_LABELS_PATH_KEY = "cell_labels";
     private static final String EMBEDDING_PATH_KEY = "embedding";
-    /**
-     * Map of all genes parser has parsed so far
-     * Key is the gene's ID, value is the gene
-     */
-    private static HashMap<String, Gene> parsedGenes = new HashMap<>();
 
     /**
      * Reads in JSON file at given path. File specifies paths to the
      * GTF and cell plot info. Loads both from it
      */
-    public static void loadFiles(String pathToPaths) throws IOException, RNAScoopException {
-        byte[] encoded = Files.readAllBytes(Paths.get(pathToPaths));
-        String pathsString = new String(encoded, Charset.defaultCharset());
-        JSONObject paths = new JSONObject(pathsString);
-        GTFLoader.loadGTF((String) paths.get(GTF_PATH_KEY));
-        CellPlotInfoLoader.loadCellPlotInfo((String) paths.get(MATRIX_PATH_KEY),
-                                            (String) paths.get(ISOFORM_LABELS_PATH_KEY),
-                                            (String) paths.get(CELL_LABELS_PATH_KEY),
-                                            paths.has(EMBEDDING_PATH_KEY)? (String) paths.get(EMBEDDING_PATH_KEY) : null);
+    public static boolean loadFiles(String pathToPaths)  {
+        runLater(Parser::clearProgram);
+        try {
+            runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + pathToPaths));
+            byte[] encoded = Files.readAllBytes(Paths.get(pathToPaths));
+            String pathsString = new String(encoded, Charset.defaultCharset());
+            JSONObject paths = new JSONObject(pathsString);
+            GTFLoader.loadGTF((String) paths.get(GTF_PATH_KEY));
+            CellPlotInfoLoader.loadCellPlotInfo((String) paths.get(MATRIX_PATH_KEY),
+                    (String) paths.get(ISOFORM_LABELS_PATH_KEY),
+                    (String) paths.get(CELL_LABELS_PATH_KEY),
+                    paths.has(EMBEDDING_PATH_KEY) ? (String) paths.get(EMBEDDING_PATH_KEY) : null);
+            runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + pathToPaths));
+            return true;
+        } catch (RNAScoopException e){
+            runLater(Parser::clearLoadedData);
+            runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
+            return false;
+        } catch (Exception e) {
+            runLater(Parser::clearLoadedData);
+            runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading file from path: " + pathToPaths));
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
-     * Removes data from previously parsed GTF file
+     * Clears gene selector, cell plot, clears t-SNE plot data, and label sets
+     * (basically clears everything that should be cleared when loading a new dataset)
      */
-    public static void removeParsedGenes() {
-        parsedGenes.clear();
+    private static void clearProgram() {
+        ControllerMediator.getInstance().clearGeneSelector();
+        ControllerMediator.getInstance().clearCellPlot();
+        ControllerMediator.getInstance().setIsoformIndexMap(null);
+        ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
+        ControllerMediator.getInstance().setEmbedding(null);
+        ControllerMediator.getInstance().clearLabelSets();
     }
 
-    public static HashMap<String, Gene> getParsedGenesMap() {
-        return parsedGenes;
+    private static void clearLoadedData() {
+        GTFLoader.removeParsedGenes();
+        ControllerMediator.getInstance().updateGenesTable(new ArrayList<>());
+        ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
+        ControllerMediator.getInstance().setIsoformIndexMap(null);
+        ControllerMediator.getInstance().setEmbedding(null);
+        ControllerMediator.getInstance().clearLabelSets();
     }
 
     private static class GTFLoader {
+        /**
+         * Map of all genes parser has parsed so far
+         * Key is the gene's ID, value is the gene
+         */
+        private static HashMap<String, Gene> parsedGenes = new HashMap<>();
 
         public static void loadGTF(String pathToGTF) throws IOException, RNAScoopException {
-            removeParsedGenes();
             BufferedReader reader = new BufferedReader(new FileReader(pathToGTF));
             String currentLine;
             int lineNumber = 0;
@@ -71,7 +100,18 @@ public class Parser {
                     ExonDataParser.parse(data, lineNumber);
                 }
             }
+            ArrayList<Gene> geneList = new ArrayList<>(parsedGenes.values());
+            System.out.println("meep: " + geneList.size());
+            runLater(() -> ControllerMediator.getInstance().updateGenesTable(geneList));
+            removeParsedGenes();
             reader.close();
+        }
+
+        /**
+         * Removes data from previously parsed GTF file
+         */
+        public static void removeParsedGenes() {
+            parsedGenes.clear();
         }
 
         /**
@@ -316,7 +356,7 @@ public class Parser {
         private static double[][] getEmbedding(String pathToEmbedding) throws IOException, EmbeddingColumnsException, EmbeddingNotNumberException {
             String currentLabel;
             int lineNumber = 1;
-            ArrayList<double[]> embeddingArrayList = new ArrayList();
+            ArrayList<double[]> embeddingArrayList = new ArrayList<>();
 
             File embeddingFile = new File(pathToEmbedding);
             BufferedReader reader= new BufferedReader(new FileReader(embeddingFile));
