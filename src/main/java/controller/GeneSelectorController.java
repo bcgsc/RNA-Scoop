@@ -6,6 +6,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
@@ -13,6 +14,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import labelset.LabelSet;
@@ -20,11 +22,9 @@ import mediator.ControllerMediator;
 import parser.Parser;
 import ui.Main;
 
+import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import static javafx.application.Platform.runLater;
 
@@ -46,6 +46,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     @FXML private HBox updatingFoldChangeMessage;
 
     private Stage window;
+    private FileChooser fileChooser;
     private ObservableList<Gene> genes;
     private ObservableList<Gene> shownGenes;
     private LabelSet genesFoldChangeLabelSet;
@@ -55,6 +56,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        fileChooser = new FileChooser();
         setUpGridPane();
         setUpGenesTable();
         setUpShownGenesTable();
@@ -133,7 +135,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      * Retrieves parsed genes and sets as genes in genes table
      */
     public void updateGenesTable(List<Gene> genesList) {
-        System.out.println(genesList.size());
         genes.clear();
         genes.addAll(genesList);
         genes.sort(Gene::compareTo);
@@ -157,15 +158,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     protected void handleAddSelectedButtonAction() {
         try {
             ObservableList<Gene> selectedGenes = genesTable.getSelectionModel().getSelectedItems();
-            Collection<Gene> genesToAdd = new ArrayList<>();
-            for (Gene gene : selectedGenes) {
-                if (!shownGenes.contains(gene)) {
-                    shownGenes.add(gene);
-                    genesToAdd.add(gene);
-                }
-            }
-            if (genesToAdd.size() > 0)
-                ControllerMediator.getInstance().addGenesToIsoformPlot(genesToAdd);
+            addGenesToShownGenes(selectedGenes);
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding selected genes");
             e.printStackTrace();
@@ -211,6 +204,33 @@ public class GeneSelectorController implements Initializable, InteractiveElement
             removeUpdatingFoldChangeMessage();
             ControllerMediator.getInstance().addConsoleErrorMessage("updating gene maximum fold change values");
         }
+    }
+
+    @FXML
+    protected void handleSelectGenesFromFileButton() {
+        File file = fileChooser.showOpenDialog(window);
+        clearShownGenes();
+        if (file != null) {
+            Set<String> genesToSelect = Parser.loadGeneSelectionFile(file);
+            List<Gene> genesToAdd = new ArrayList<>();
+            for (Gene gene : genes) {
+                if (genesToSelect.contains(gene.getId()) || genesToSelect.contains(gene.getName()))
+                    genesToAdd.add(gene);
+            }
+            addGenesToShownGenes(genesToAdd);
+        }
+    }
+
+    private void addGenesToShownGenes(List<Gene> genesToAdd) {
+        Collection<Gene> genesAdded = new ArrayList<>();
+        for (Gene gene : genesToAdd) {
+            if (!shownGenes.contains(gene)) {
+                shownGenes.add(gene);
+                genesAdded.add(gene);
+            }
+        }
+        if (genesAdded.size() > 0)
+            ControllerMediator.getInstance().addGenesToIsoformPlot(genesAdded);
     }
 
 

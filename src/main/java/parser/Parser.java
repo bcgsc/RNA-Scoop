@@ -33,7 +33,7 @@ public class Parser {
      * Reads in JSON file at given path. File specifies paths to the
      * GTF and cell plot info. Loads both from it
      */
-    public static boolean loadFiles(String pathToPaths)  {
+    public static boolean loadJSONFile(String pathToPaths)  {
         runLater(Parser::clearProgram);
         try {
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + pathToPaths));
@@ -57,6 +57,23 @@ public class Parser {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static Set<String> loadGeneSelectionFile(File geneSelectionFile) {
+        Set<String> genesToSelect = new HashSet<>();
+        String currentLabel;
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(geneSelectionFile));
+            while ((currentLabel = reader.readLine()) != null) {
+                genesToSelect.add(currentLabel);
+            }
+        } catch (Exception e) {
+            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading gene selection file");
+            e.printStackTrace();
+        }
+
+        return genesToSelect;
     }
 
     /**
@@ -101,7 +118,6 @@ public class Parser {
                 }
             }
             ArrayList<Gene> geneList = new ArrayList<>(parsedGenes.values());
-            System.out.println("meep: " + geneList.size());
             runLater(() -> ControllerMediator.getInstance().updateGenesTable(geneList));
             removeParsedGenes();
             reader.close();

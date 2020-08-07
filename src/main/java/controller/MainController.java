@@ -1,6 +1,5 @@
 package controller;
 
-import exceptions.RNAScoopException;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -595,7 +594,7 @@ public class MainController implements InteractiveElementController {
         @Override
         public void run() {
             String filePath = (String) pathComboBox.getValue();
-            boolean success = Parser.loadFiles(filePath);
+            boolean success = Parser.loadJSONFile(filePath);
             if (success) {
                 currentLoadedPath = filePath;
                 runLater(MainController.this::addLoadedPath);

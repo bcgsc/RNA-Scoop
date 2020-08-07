@@ -13,12 +13,17 @@
             <VBox.margin>
                 <Insets topRightBottomLeft="10"/>
             </VBox.margin>
-            <TextField fx:id="filterField" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="3"
-                       promptText="Search genes by gene ID / name">
+            <HBox GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="3">
                 <GridPane.margin>
                     <Insets top="10" right="10" left="10" bottom="2"/>
                 </GridPane.margin>
-            </TextField>
+                <TextField fx:id="filterField" promptText="Search genes by gene ID / name" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets right="10"/>
+                    </HBox.margin>
+                </TextField>
+                <Button onAction="#handleSelectGenesFromFileButton" text="Select from file"/>
+            </HBox>
             <VBox fx:id="genesColumn" alignment="CENTER" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
                 <GridPane.margin>
                     <Insets topRightBottomLeft="10"/>
