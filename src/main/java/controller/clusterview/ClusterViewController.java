@@ -149,6 +149,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             legend = null;
             cellSelectionManager = null;
             cellsInPlot.removeAllSeries();
+            cellNumberCellMap.clear();
             ControllerMediator.getInstance().clearLabelSetClusterCells();
         }
     }
