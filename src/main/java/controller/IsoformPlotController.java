@@ -841,8 +841,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         private static HBox createDotPlotRow(IsoformGroup isoformGroup) {
             HBox dotPlotRow = new HBox();
-            double dotX = DOT_PLOT_COLUMN_WIDTH / 2;
-            double dotY = DOT_PLOT_ROW_HEIGHT / 2;
             boolean onlySelected = ControllerMediator.getInstance().areCellsSelected();
             Collection<Cluster> clusters = ControllerMediator.getInstance().getClusters(onlySelected);
             Iterator<Cluster> iterator = clusters.iterator();
@@ -852,8 +850,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 double expression = getIsoformExpressionInCluster(cluster, isoformGroup.getIsoform(), onlySelected);
                 int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoformGroup.getIsoform().getId(), cluster, onlySelected);
                 int numCells = onlySelected? ControllerMediator.getInstance().getSelectedCellsInCluster(cluster).size() : cluster.getCells().size();
-                double dotSize = getDotSize((double) numExpressingCells/numCells);
-                Canvas dotPlotRowCircle = getDotPlotRowCircle(dotX, dotY, expression, dotSize);
+
+                Canvas dotPlotRowCircle = getDotPlotRowCircle(expression, numExpressingCells, numCells);
                 addExpressionLevelToolTip(expression, numExpressingCells, numCells, dotPlotRowCircle);
                 if (iterator.hasNext())
                     HBox.setMargin(dotPlotRowCircle, new Insets(0, DOT_PLOT_COLUMN_SPACING, 0, 0));
@@ -881,14 +879,21 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 return ALL_EXPRESS_DOT_SIZE;
         }
 
-        private static Canvas getDotPlotRowCircle(double dotX, double dotY, double expression, double dotSize) {
+        private static Canvas getDotPlotRowCircle(double expression, int numExpressingCells, int numCells) {
             Canvas dotPlotRowItem = new Canvas(DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT);
-            GraphicsContext graphicsContext = dotPlotRowItem.getGraphicsContext2D();
-            Color dotColor = ControllerMediator.getInstance().getColorFromTPMGradient(expression);
-            graphicsContext.setFill(dotColor);
-            graphicsContext.fillOval(dotX - dotSize / 2, dotY -dotSize / 2, dotSize, dotSize);
-            graphicsContext.setFill(Color.BLACK);
-            graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+
+            if (expression >= ControllerMediator.getInstance().getGradientMinTPM()) {
+                double dotX = DOT_PLOT_COLUMN_WIDTH / 2;
+                double dotY = DOT_PLOT_ROW_HEIGHT / 2;
+                double dotSize = getDotSize((double) numExpressingCells/numCells);
+                Color dotColor = ControllerMediator.getInstance().getColorFromTPMGradient(expression);
+
+                GraphicsContext graphicsContext = dotPlotRowItem.getGraphicsContext2D();
+                graphicsContext.setFill(dotColor);
+                graphicsContext.fillOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+                graphicsContext.setFill(Color.BLACK);
+                graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+            }
             return dotPlotRowItem;
         }
 

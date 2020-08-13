@@ -375,6 +375,10 @@ public class ControllerMediator implements Mediator{
         return clusterViewController.getCells(onlySelected);
     }
 
+    public double getGradientMinTPM() {
+        return tpmGradientAdjusterController.getGradientMinTPM();
+    }
+
     public Color getColorFromTPMGradient(double expression) {
         return tpmGradientAdjusterController.getColorFromTPMGradient(expression);
     }

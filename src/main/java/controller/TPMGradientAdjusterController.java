@@ -133,6 +133,10 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         gradientMaxTPM = recommendedMaxTPM;
     }
 
+    public double getGradientMinTPM() {
+        return gradientMinTPM;
+    }
+
     /**
      * Returns the color on the TPM gradient associated with the given expression
      * */

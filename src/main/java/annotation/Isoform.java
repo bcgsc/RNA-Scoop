@@ -107,7 +107,8 @@ public class Isoform {
                 numCells++;
             }
         }
-
+        if (numCells == 0)
+            return 0;
         return expressionSum / numCells;
     }
 
