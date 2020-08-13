@@ -42,6 +42,8 @@
                         <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close isoform plot"/>
                     </Menu>
                     <Menu text="Cluster View">
+                        <CheckMenuItem fx:id="colorCellPlotByIsoformToggle" onAction="#handleColorCellPlotByIsoformToggle"  text="Color plot by isoform expression"/>
+                        <SeparatorMenuItem/>
                         <MenuItem fx:id="clusterViewToggle" onAction="#handleClusterViewToggle" text="Close cluster view"/>
                     </Menu>
                     <Menu text="Console">

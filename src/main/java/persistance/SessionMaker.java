@@ -23,6 +23,7 @@ public class SessionMaker {
     public static final String SHOW_GENE_ID_KEY = "show_gene_id";
     public static final String SHOW_ISOFORM_NAME_KEY = "show_isoform_name";
     public static final String SHOW_ISOFORM_ID_KEY = "show_isoform_id";
+    public static final String COLOR_CELL_PLOT_BY_ISOFORM_KEY = "color_cell_plot_by_isoform";
     public static final String CONSOLE_MESSAGES_KEY = "console_messages";
     public static final String MESSAGE_TEXT_KEY = "message_text";
     public static final String MESSAGE_IS_ERROR_KEY = "message_is_error";
@@ -51,6 +52,7 @@ public class SessionMaker {
         session.put(SHOW_GENE_ID_KEY, ControllerMediator.getInstance().isShowingGeneID());
         session.put(SHOW_ISOFORM_NAME_KEY, ControllerMediator.getInstance().isShowingIsoformName());
         session.put(SHOW_ISOFORM_ID_KEY, ControllerMediator.getInstance().isShowingIsoformID());
+        session.put(COLOR_CELL_PLOT_BY_ISOFORM_KEY, ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform());
         addConsoleMessagesToSession(session);
         return session;
     }

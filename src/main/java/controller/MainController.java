@@ -23,6 +23,7 @@ import ui.Main;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 
 import static javafx.application.Platform.runLater;
@@ -54,6 +55,7 @@ public class MainController implements InteractiveElementController {
     // isoform label toggles
     @FXML private CheckMenuItem showIsoformNameToggle;
     @FXML private CheckMenuItem showIsoformIDToggle;
+    @FXML private CheckMenuItem colorCellPlotByIsoformToggle;
 
     private Stage window;
     private FileChooser fileChooser;
@@ -66,7 +68,7 @@ public class MainController implements InteractiveElementController {
         fileChooser = new FileChooser();
         setUpWindow();
         addPanels(console, isoformPlot, clusterView);
-        setIsoformPlotSettingsToDefault();
+        setViewTogglesToDefault();
         setUpPathComboBox();
     }
 
@@ -154,7 +156,7 @@ public class MainController implements InteractiveElementController {
         restoreClusterViewFromJSON(settings);
         restoreConsoleFromJSON(settings);
         restorePathComboBoxFromJSON(settings);
-        restoreIsoformPlotSettingsTogglesFromJSON(settings);
+        restoreViewTogglesFromJSON(settings);
     }
 
     public boolean isClusterViewOpen() {
@@ -220,6 +222,10 @@ public class MainController implements InteractiveElementController {
         return showIsoformIDToggle.isSelected();
     }
 
+    public boolean isColoringCellPlotBySelectedIsoform() {
+        return colorCellPlotByIsoformToggle.isSelected();
+    }
+
     /**
      * Saves current session to file chosen by user through file chooser and adds
      * error/success messages to console
@@ -266,7 +272,7 @@ public class MainController implements InteractiveElementController {
         openIsoformPlot();
         openClusterView();
         openConsole();
-        setIsoformPlotSettingsToDefault();
+        setViewTogglesToDefault();
         SessionIO.clearCurrentSessionData();
     }
 
@@ -294,7 +300,7 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleHideDotPlotToggle() {
-        ControllerMediator.getInstance().handleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
     }
 
     /**
@@ -303,7 +309,7 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleExpressionToggle() {
-        ControllerMediator.getInstance().handleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
     }
 
 
@@ -334,6 +340,20 @@ public class MainController implements InteractiveElementController {
             closeIsoformPlot();
         } else {
             openIsoformPlot();
+        }
+    }
+
+    @FXML
+    protected void handleColorCellPlotByIsoformToggle() {
+        Collection<String> selectedIsoformIDs = ControllerMediator.getInstance().getSelectedIsoformIDs();
+
+        if (selectedIsoformIDs.size() > 0) {
+            ControllerMediator.getInstance().deselectAllIsoforms();
+
+            if (ControllerMediator.getInstance().areCellsSelected())
+                ControllerMediator.getInstance().clearSelectedCellsAndRedrawPlot();
+            else
+                ControllerMediator.getInstance().redrawCellPlotSansLegend();
         }
     }
 
@@ -432,9 +452,9 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Restores isoform plot setting toggles to what they were in the previous session
+     * Restores view menu toggles to what they were in the previous session
      */
-    private void restoreIsoformPlotSettingsTogglesFromJSON(Map settings) {
+    private void restoreViewTogglesFromJSON(Map settings) {
         restoreReverseComplementToggle(settings);
         restoreHideSingleExonIsoformsToggle(settings);
         restoreHideDotPlotToggle(settings);
@@ -442,6 +462,7 @@ public class MainController implements InteractiveElementController {
         restoreShowGeneNameIDToggles(settings);
         restoreShowIsoformNameToggle(settings);
         restoreShowIsoformIDToggle(settings);
+        restoreColorCellPlotByIsoformToggle(settings);
     }
 
     /**
@@ -531,7 +552,16 @@ public class MainController implements InteractiveElementController {
         showIsoformIDToggle.setSelected(wasShowingIsoformID);
     }
 
-    private void setIsoformPlotSettingsToDefault() {
+    /**
+     * If the color cell plot by isoform toggle was selected in the previous session, selects it, else
+     * deselects it
+     */
+    private void restoreColorCellPlotByIsoformToggle(Map settings) {
+        boolean wasColoringCellPlotByIsoform = (boolean) settings.get(SessionMaker.COLOR_CELL_PLOT_BY_ISOFORM_KEY);
+        colorCellPlotByIsoformToggle.setSelected(wasColoringCellPlotByIsoform);
+    }
+
+    private void setViewTogglesToDefault() {
         revComplementToggle.setSelected(false);
         hideSingleExonIsoformsToggle.setSelected(false);
         hideDotPlotToggle.setSelected(false);
@@ -540,6 +570,7 @@ public class MainController implements InteractiveElementController {
         showGeneNameToggle.setSelected(true);
         showIsoformNameToggle.setSelected(false);
         showIsoformIDToggle.setSelected(false);
+        colorCellPlotByIsoformToggle.setSelected(false);
     }
 
     /**

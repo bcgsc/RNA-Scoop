@@ -207,6 +207,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         return geneGeneGroupMap.values();
     }
 
+    public Collection<String> getSelectedIsoformIDs() {
+        return selectionModel.getSelectedIsoformIDs();
+    }
+
     /**
      * Opens up gene selector window when handle select genes button is pressed
      */
@@ -920,29 +924,33 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     }
     public class SelectionModel {
-        private Set<Canvas> selection = new HashSet<>();
+        private Map<Canvas, String> selection = new HashMap<>();
 
-        public void addSelectedIsoformGraphic(Canvas isoformGraphic) {
-            if (!selection.contains(isoformGraphic)) {
+        public void addSelectedIsoformGraphic(Canvas isoformGraphic, String id) {
+            if (!selection.containsKey(isoformGraphic)) {
                 isoformGraphic.setStyle("-fx-effect: dropshadow(one-pass-box, #ffafff, 7, 7, 0, 0);");
-                selection.add(isoformGraphic);
+                selection.put(isoformGraphic, id);
             }
         }
 
         public void removeSelectedIsoformGraphic(Canvas isoformGraphic) {
-            if (selection.contains(isoformGraphic)) {
+            if (selection.containsKey(isoformGraphic)) {
                 isoformGraphic.setStyle("-fx-effect: null");
                 selection.remove(isoformGraphic);
             }
         }
 
+        public Collection<String> getSelectedIsoformIDs() {
+            return selection.values();
+        }
+
         public void clearSelectedIsoformGraphics() {
             while (!selection.isEmpty())
-                removeSelectedIsoformGraphic(selection.iterator().next());
+                removeSelectedIsoformGraphic(selection.keySet().iterator().next());
         }
 
         public Collection<Canvas> getSelectedIsoformGraphics() {
-            return selection;
+            return selection.keySet();
         }
     }
 
@@ -998,30 +1006,33 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         EventHandler<MouseEvent> onMouseDraggedEventHandler = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                double offsetX = event.getX() - dragContext.mouseAnchorX;
-                double offsetY = event.getY() - dragContext.mouseAnchorY;
+                if (!ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform()) {
+                    double offsetX = event.getX() - dragContext.mouseAnchorX;
+                    double offsetY = event.getY() - dragContext.mouseAnchorY;
 
-                if(offsetX > 0)
-                    selectionBox.setWidth(offsetX);
-                else {
-                    selectionBox.setX(event.getX());
-                    selectionBox.setWidth(dragContext.mouseAnchorX - selectionBox.getX());
-                }
+                    if (offsetX > 0)
+                        selectionBox.setWidth(offsetX);
+                    else {
+                        selectionBox.setX(event.getX());
+                        selectionBox.setWidth(dragContext.mouseAnchorX - selectionBox.getX());
+                    }
 
-                if(offsetY > 0) {
-                    selectionBox.setHeight(offsetY);
-                } else {
-                    selectionBox.setY(event.getY());
-                    selectionBox.setHeight(dragContext.mouseAnchorY - selectionBox.getY());
+                    if (offsetY > 0) {
+                        selectionBox.setHeight(offsetY);
+                    } else {
+                        selectionBox.setY(event.getY());
+                        selectionBox.setHeight(dragContext.mouseAnchorY - selectionBox.getY());
+                    }
+                    event.consume();
                 }
-                event.consume();
             }
         };
 
         EventHandler<MouseEvent> onMouseReleasedEventHandler = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(!event.isShiftDown() && !event.isControlDown())
+                boolean coloringCellPlotByIsoform = ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform();
+                if(coloringCellPlotByIsoform || (!event.isShiftDown() && !event.isControlDown()))
                     selectionModel.clearSelectedIsoformGraphics();
 
                 for(Canvas isoformGraphic: selectableIsoformGraphics.keySet()) {
@@ -1029,11 +1040,18 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                         if(event.isControlDown())
                             selectionModel.removeSelectedIsoformGraphic(isoformGraphic);
                         else
-                            selectionModel.addSelectedIsoformGraphic(isoformGraphic);
+                            selectionModel.addSelectedIsoformGraphic(isoformGraphic, selectableIsoformGraphics.get(isoformGraphic));
                     }
                 }
                 clearRectangularSelection();
-                if (!ControllerMediator.getInstance().isCellPlotCleared()) {
+                if (coloringCellPlotByIsoform) {
+
+                    if (ControllerMediator.getInstance().areCellsSelected())
+                        ControllerMediator.getInstance().clearSelectedCellsAndRedrawPlot();
+                    else
+                        ControllerMediator.getInstance().redrawCellPlotSansLegend();
+
+                } else if (!ControllerMediator.getInstance().isCellPlotCleared()) {
                     List<String> isoformIDs = selectionModel.getSelectedIsoformGraphics().stream().map(isoformGraphic -> selectableIsoformGraphics.get(isoformGraphic)).collect(Collectors.toList());
                     ControllerMediator.getInstance().selectCellsIsoformsExpressedIn(isoformIDs);
                 }

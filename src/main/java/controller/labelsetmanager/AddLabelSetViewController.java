@@ -68,7 +68,7 @@ public class AddLabelSetViewController {
     @FXML
     protected void handleMakeClusterButton() {
         labelSet.addClusterFromSelectedCells();
-        ControllerMediator.getInstance().ClusterViewHandleClusterAddedFromSelectedCells();
+        ControllerMediator.getInstance().clusterViewHandleClusterAddedFromSelectedCells();
         ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
     }
 
@@ -84,7 +84,7 @@ public class AddLabelSetViewController {
             Cluster clusterToRemove = (Cluster) clustersTable.getSelectionModel().getSelectedItem();
             Cluster clusterCombiningWith = labelSet.getClusterToCombineWith(clusterToRemove);
             labelSet.removeCluster(clusterToRemove);
-            ControllerMediator.getInstance().ClusterViewHandleRemovedCluster(clusterToRemove, clusterCombiningWith);
+            ControllerMediator.getInstance().clusterViewHandleRemovedCluster(clusterToRemove, clusterCombiningWith);
             ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
         } else {
             ControllerMediator.getInstance().addConsoleErrorMessage("Label set must have at least one cluster");

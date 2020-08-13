@@ -71,6 +71,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     private double[][] cellIsoformExpressionMatrix;
     private double[][] embedding; // optional embedding user can load
     private ChartPanel plot;
+    private PlotRenderer plotRenderer;
     private ScrollPane legendHolder;
     private Legend legend;
     private CellSelectionManager cellSelectionManager;
@@ -143,6 +144,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             swingNode.setContent(whiteBackground);
             plotHolder.getChildren().remove(legendHolder);
             plot = null;
+            plotRenderer = null;
             legendHolder = null;
             legend = null;
             cellSelectionManager = null;
@@ -217,6 +219,16 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         cellSelectionManager.unselectCluster(cluster);
     }
 
+    public void clearSelectedCellsAndRedrawPlot() {
+        cellSelectionManager.clearSelection();
+        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+    }
+
+    public void redrawPlotSansLegend() {
+        if (!isPlotCleared())
+            plotRenderer.updateOutlineAndRedraw();
+    }
+
     public boolean isPlotCleared() {
         return plot == null;
     }
@@ -276,6 +288,11 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         return cellSelectionManager.getSelectedCellsInCluster(cluster);
     }
 
+    public void handleColoringChange() {
+        if (!isPlotCleared() && plotRenderer.isColoringByIsoform())
+            redrawPlotSansLegend();
+    }
+
     /**
      * When "Draw cell plot" button is pressed, draws plot and deselects any
      * selected isoforms
@@ -320,11 +337,6 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
         ControllerMediator.getInstance().enableLabelSetManager();
-    }
-
-    private void redrawPlotSansLegend() {
-        if (!isPlotCleared())
-            plot.getChart().setTitle(plot.getChart().getTitle());
     }
 
     /**
@@ -382,30 +394,59 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     }
 
     private class PlotRenderer extends XYLineAndShapeRenderer {
+        private final BasicStroke DEFAULT_BASIC_STROKE = new BasicStroke(2f);
+        private final BasicStroke COLORING_BY_ISOFORM_BASIC_STROKE = new BasicStroke(0.5f);
+        private final Shape CELL_SHAPE = new Ellipse2D.Double(0, 0, 6.5, 6.5);
 
         public PlotRenderer() {
             super(false, true);
             setUseOutlinePaint(true);
-            setSeriesOutlineStroke(0, new BasicStroke(1.5f));
+            setSeriesOutlineStroke(0, DEFAULT_BASIC_STROKE);
         }
 
         @Override
         public Paint getItemPaint(int series, int cellNumber) {
             CellDataItem cell = cellNumberCellMap.get(cellNumber);
-            if (cellSelectionManager.isCellSelected(cell))
+
+            if (isColoringByIsoform()) {
+                Collection<String> selectedIsoformIDs = ControllerMediator.getInstance().getSelectedIsoformIDs();
+                String id = selectedIsoformIDs.iterator().next();
+                javafx.scene.paint.Color javaFXColor = ControllerMediator.getInstance().getColorFromTPMGradient(cell.getIsoformExpressionLevel(id));
+                return new Color((int) Math.round(javaFXColor.getRed() * 255),
+                                 (int) Math.round(javaFXColor.getGreen() * 255),
+                                 (int) Math.round(javaFXColor.getBlue() * 255));
+            } else if (cellSelectionManager.isCellSelected(cell)) {
                 return Color.WHITE;
+            } else {
+                return ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(cellNumber).getColor();
+            }
+        }
+
+        @Override
+        public Paint getItemOutlinePaint(int series, int cellNumber) {
+            if (isColoringByIsoform())
+                return Color.black;
             else
                 return ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(cellNumber).getColor();
         }
 
         @Override
-        public Paint getItemOutlinePaint(int series, int cellNumber) {
-            return ControllerMediator.getInstance().getLabelSetInUse().getCellCluster(cellNumber).getColor();
+        public Shape getItemShape(int row, int column) {
+            return CELL_SHAPE;
         }
 
-        @Override
-        public Shape getItemShape(int row, int column) {
-            return new Ellipse2D.Double(0,0,5,5);
+        public void updateOutlineAndRedraw() {
+            if (isColoringByIsoform())
+                setSeriesOutlineStroke(0, COLORING_BY_ISOFORM_BASIC_STROKE); // triggers redraw
+            else
+                setSeriesOutlineStroke(0, DEFAULT_BASIC_STROKE); // triggers redraw
+        }
+
+        public boolean isColoringByIsoform() {
+            Collection<String> selectedIsoformIDs = ControllerMediator.getInstance().getSelectedIsoformIDs();
+            boolean coloringBySelectedIsoform = ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform();
+
+            return coloringBySelectedIsoform && selectedIsoformIDs.size() > 0;
         }
     }
 
@@ -594,7 +635,8 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         public void select(Rectangle2D rectangle2D) {}
 
         /**
-         * Clears all selected cells in cell plot and selected legend elements
+         * Clears all selected cells in cell plot and selected legend elements,
+         * redraws the cell plot
          */
         @Override
         public void clearSelection() {
@@ -660,8 +702,8 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 cellsInNewPlot = new XYSeriesCollection();
                 double[][] matrix = (embedding == null ? generatePlotMatrix() : embedding);
                 drawPlot(matrix);
-                setTPMGradientValues();
                 ControllerMediator.getInstance().addCellsToLabelSetClusters();
+                setTPMGradientValues();
                 runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
                 ControllerMediator.getInstance().updateGenesMaxFoldChange();
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing cell plot"));
@@ -755,7 +797,8 @@ public class ClusterViewController implements Initializable, InteractiveElementC
 
             XYPlot plot = (XYPlot) chart.getPlot();
             setPlotViewProperties(plot);
-            plot.setRenderer(new PlotRenderer());
+            plotRenderer = new PlotRenderer();
+            plot.setRenderer(plotRenderer);
 
             //register plot as selection change listener
             ext.addChangeListener(plot);

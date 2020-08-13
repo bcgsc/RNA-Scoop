@@ -164,7 +164,8 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     protected void handleChangedGradientMaxMinTPM() {
         try {
             updateTPMGradientMaxMin();
-            ControllerMediator.getInstance().handleColoringOrDotPlotChange();
+            ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+            ControllerMediator.getInstance().clusterViewHandleColoringChange();
         } catch (RNAScoopException e) {
             gradientMinTPMField.setText(String.valueOf(gradientMinTPM));
             gradientMaxTPMField.setText(String.valueOf(gradientMaxTPM));
@@ -180,7 +181,8 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     @FXML
     protected void handleTPMColorPicker() {
         drawTPMGradient();
-        ControllerMediator.getInstance().handleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().clusterViewHandleColoringChange();
     }
 
     /**
@@ -189,7 +191,8 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
      */
     @FXML
     protected void handleChangedTPMGradientScale() {
-        ControllerMediator.getInstance().handleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().clusterViewHandleColoringChange();
     }
 
     /**
@@ -199,7 +202,8 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     @FXML
     protected void handleAutoMinMaxButton() {
         setGradientMinMaxToRecommended();
-        ControllerMediator.getInstance().handleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().clusterViewHandleColoringChange();
     }
 
     /**

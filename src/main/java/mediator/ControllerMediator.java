@@ -145,8 +145,12 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.updateHideSingleExonIsoformsStatus();
     }
 
-    public void handleColoringOrDotPlotChange() {
+    public void isoformPlotHandleColoringOrDotPlotChange() {
         isoformPlotController.handleColoringOrDotPlotChange();
+    }
+
+    public void clusterViewHandleColoringChange() {
+        clusterViewController.handleColoringChange();
     }
 
     public void updateGeneLabels() {
@@ -276,11 +280,19 @@ public class ControllerMediator implements Mediator{
         clusterViewController.clearPlot();
     }
 
-    public void ClusterViewHandleClusterAddedFromSelectedCells() {
+    public void clearSelectedCellsAndRedrawPlot() {
+        clusterViewController.clearSelectedCellsAndRedrawPlot();
+    }
+
+    public void redrawCellPlotSansLegend() {
+        clusterViewController.redrawPlotSansLegend();
+    }
+
+    public void clusterViewHandleClusterAddedFromSelectedCells() {
         clusterViewController.handleClusterAddedFromSelectedCells();
     }
 
-    public void ClusterViewHandleRemovedCluster(Cluster removedCluster, Cluster clusterMergedInto) {
+    public void clusterViewHandleRemovedCluster(Cluster removedCluster, Cluster clusterMergedInto) {
         clusterViewController.handleRemovedCluster(removedCluster, clusterMergedInto);
     }
 
@@ -349,6 +361,10 @@ public class ControllerMediator implements Mediator{
 
     public Map<Integer, ClusterViewController.CellDataItem> getCellNumberCellMap() {
         return clusterViewController.getCellNumberCellMap();
+    }
+
+    public Collection<String> getSelectedIsoformIDs() {
+        return isoformPlotController.getSelectedIsoformIDs();
     }
 
     public boolean areCellsSelected () {
@@ -425,6 +441,10 @@ public class ControllerMediator implements Mediator{
 
     public boolean isShowingIsoformID() {
         return  mainController.isShowingIsoformID();
+    }
+
+    public boolean isColoringCellPlotBySelectedIsoform() {
+        return mainController.isColoringCellPlotBySelectedIsoform();
     }
 
     public boolean isConsoleOpen() {
