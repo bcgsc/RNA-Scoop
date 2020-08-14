@@ -38,6 +38,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     @FXML private TextField filterField;
     @FXML private TableView genesTable;
     @FXML private TableView shownGenesTable;
+    @FXML private Button selectFromFileButton;
     @FXML private Button addSelectedButton;
     @FXML private Button removeSelectedButton;
     @FXML private Button clearAllButton;
@@ -72,6 +73,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         genesTable.setDisable(true);
         filterField.setDisable(true);
         shownGenesTable.setDisable(true);
+        selectFromFileButton.setDisable(true);
         addSelectedButton.setDisable(true);
         removeSelectedButton.setDisable(true);
         clearAllButton.setDisable(true);
@@ -85,6 +87,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         genesTable.setDisable(false);
         filterField.setDisable(false);
         shownGenesTable.setDisable(false);
+        selectFromFileButton.setDisable(false);
         addSelectedButton.setDisable(false);
         removeSelectedButton.setDisable(false);
         clearAllButton.setDisable(false);
