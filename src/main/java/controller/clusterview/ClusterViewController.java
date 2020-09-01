@@ -438,7 +438,6 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 setSeriesOutlineStroke(0, COLORING_BY_ISOFORM_BASIC_STROKE); // triggers redraw
             else
                 setSeriesOutlineStroke(0, DEFAULT_BASIC_STROKE); // triggers redraw
-            System.out.println("meep");
         }
 
         public boolean isColoringByIsoform() {

@@ -129,7 +129,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     public void updateIsoformGraphicsAndDotPlot() {
-        System.out.println("ran");
         redrawIsoforms();
         DotPlot.updateDotPlot();
     }
@@ -989,7 +988,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             selectableIsoformGraphics.put(isoformGraphic, isoformID);
         }
 
-        public void removeSelectableIsoformGraphic(Canvas isoformGraphic) {
+        public void removeSelectableIsoformGraphic(IsoformGroup.IsoformGraphic isoformGraphic) {
             selectableIsoformGraphics.remove(isoformGraphic);
         }
 
