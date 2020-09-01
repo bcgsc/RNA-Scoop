@@ -1045,44 +1045,67 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         EventHandler<MouseEvent> onMouseReleasedEventHandler = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                boolean changedSelection = updateSelection(event);
+
+                clearRectangularSelection();
+
+                if (changedSelection)
+                    updateClusterView();
+
+                event.consume();
+            }
+
+            private boolean updateSelection(MouseEvent event) {
+                boolean changedSelectionOnClear = clearSelectionIfShould(event);
+                boolean changedSelectionOnAddingRemoving = addOrRemoveFromSelection(event);
+
+                return changedSelectionOnClear || changedSelectionOnAddingRemoving;
+            }
+
+            private void updateClusterView() {
+                boolean coloringCellPlotByIsoform = ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform();
+                if (coloringCellPlotByIsoform) {
+
+                    if (ControllerMediator.getInstance().areCellsSelected())
+                        ControllerMediator.getInstance().clearSelectedCellsAndRedrawPlot();
+                    else
+                        ControllerMediator.getInstance().redrawCellPlotSansLegend();
+
+                } else if (!ControllerMediator.getInstance().isCellPlotCleared()) {
+                    List<String> isoformIDs = selectionModel.getSelectedIsoformGraphics().stream().map(isoformGraphic -> selectableIsoformGraphics.get(isoformGraphic)).collect(Collectors.toList());
+                    ControllerMediator.getInstance().selectCellsIsoformsExpressedIn(isoformIDs);
+                }
+            }
+
+            private boolean clearSelectionIfShould(MouseEvent event) {
                 boolean coloringCellPlotByIsoform = ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform();
                 boolean isoformGraphicsAreSelected = selectionModel.areIsoformGraphicsSelected();
-                boolean changedSelection = false;
 
                 if(!event.isControlDown() && (coloringCellPlotByIsoform || !event.isShiftDown()) && isoformGraphicsAreSelected) {
                     selectionModel.clearSelectedIsoformGraphics();
-                    changedSelection = true;
+                    return true;
                 }
+                return false;
+            }
 
+            private boolean addOrRemoveFromSelection(MouseEvent event) {
+                boolean changedSelection = false;
                 for(IsoformGroup.IsoformGraphic isoformGraphic: selectableIsoformGraphics.keySet()) {
                     boolean graphicInSelectionBox = isoformGraphic.localToScene(isoformGraphic.getBoundsInLocal()).intersects(selectionBox.localToScene(selectionBox.getBoundsInLocal()));
                     if(graphicInSelectionBox) {
                         boolean graphicSelected = selectionModel.isIsoformGraphicSelected(isoformGraphic);
                         if(graphicSelected && event.isControlDown()) {
                             selectionModel.removeSelectedIsoformGraphic(isoformGraphic);
-                            changedSelection = true;
+                            if (!changedSelection)
+                                changedSelection = true;
                         } else if (!graphicSelected && !event.isControlDown()) {
                             selectionModel.addSelectedIsoformGraphic(isoformGraphic, selectableIsoformGraphics.get(isoformGraphic));
-                            changedSelection = true;
+                            if (!changedSelection)
+                                changedSelection = true;
                         }
                     }
                 }
-
-                clearRectangularSelection();
-                if (changedSelection) {
-                    if (coloringCellPlotByIsoform) {
-
-                        if (ControllerMediator.getInstance().areCellsSelected())
-                            ControllerMediator.getInstance().clearSelectedCellsAndRedrawPlot();
-                        else
-                            ControllerMediator.getInstance().redrawCellPlotSansLegend();
-
-                    } else if (!ControllerMediator.getInstance().isCellPlotCleared()) {
-                        List<String> isoformIDs = selectionModel.getSelectedIsoformGraphics().stream().map(isoformGraphic -> selectableIsoformGraphics.get(isoformGraphic)).collect(Collectors.toList());
-                        ControllerMediator.getInstance().selectCellsIsoformsExpressedIn(isoformIDs);
-                    }
-                }
-                event.consume();
+                return changedSelection;
             }
         };
 
