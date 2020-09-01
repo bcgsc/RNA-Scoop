@@ -4,6 +4,7 @@ import com.jujutsu.tsne.TSneConfiguration;
 import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.utils.TSneUtils;
 import controller.InteractiveElementController;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -222,7 +223,6 @@ public class ClusterViewController implements Initializable, InteractiveElementC
 
     public void clearSelectedCellsAndRedrawPlot() {
         cellSelectionManager.clearSelection();
-        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
     }
 
     public void redrawPlotSansLegend() {
@@ -387,10 +387,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         @Override
         public void mousePressed(MouseEvent e) {
             super.mousePressed(e);
-            runLater(() -> {
-                ControllerMediator.getInstance().deselectAllIsoforms();
-                ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
-            });
+            runLater(() -> ControllerMediator.getInstance().deselectAllIsoforms());
         }
     }
 
@@ -441,6 +438,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 setSeriesOutlineStroke(0, COLORING_BY_ISOFORM_BASIC_STROKE); // triggers redraw
             else
                 setSeriesOutlineStroke(0, DEFAULT_BASIC_STROKE); // triggers redraw
+            System.out.println("meep");
         }
 
         public boolean isColoringByIsoform() {
@@ -636,15 +634,25 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         public void select(Rectangle2D rectangle2D) {}
 
         /**
-         * Clears all selected cells in cell plot and selected legend elements,
-         * redraws the cell plot
+         * Clears all selected cells in cell plot and selected legend elements
+         * If should redraw the cell plot, redraws it and updates the isoform graphics
+         * and dot plot
          */
         @Override
         public void clearSelection() {
-            selectedCells.clear();
+            boolean clearedSelectedCells = false;
+
+            if (areCellsSelected()) {
+                selectedCells.clear();
+                clearedSelectedCells = true;
+            }
+
             legend.clearSelectedLegendElements();
-            if (redrawOnClear)
+
+            if (redrawOnClear && clearedSelectedCells) {
                 redrawPlotSansLegend();
+                Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+            }
 
         }
 
