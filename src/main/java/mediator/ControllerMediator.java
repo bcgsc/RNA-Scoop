@@ -517,6 +517,10 @@ public class ControllerMediator implements Mediator{
         clusterViewController.disable();
     }
 
+    public void disableClusterViewSettings() {
+        clusterViewSettingsController.disable();
+    }
+
     public void disableGeneSelector() {
         geneSelectorController.disable();
     }
@@ -538,6 +542,10 @@ public class ControllerMediator implements Mediator{
         clusterViewController.enable();
     }
 
+    public void enableClusterViewSettings() {
+        clusterViewSettingsController.enable();
+    }
+    
     public void enableIsoformPlot() {
         isoformPlotController.enable();
     }

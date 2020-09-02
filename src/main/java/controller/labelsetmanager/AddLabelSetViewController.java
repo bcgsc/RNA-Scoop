@@ -109,14 +109,16 @@ public class AddLabelSetViewController {
         handleClose();
     }
 
-    private void enableAssociatedFunctionality() {
-        ControllerMediator.getInstance().enableMain();
-        ControllerMediator.getInstance().enableClusterView();
-    }
-
     private void disableAssociatedFunctionality() {
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableClusterView();
+        ControllerMediator.getInstance().disableClusterViewSettings();
+    }
+
+    private void enableAssociatedFunctionality() {
+        ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableClusterView();
+        ControllerMediator.getInstance().enableClusterViewSettings();
     }
 
     /**

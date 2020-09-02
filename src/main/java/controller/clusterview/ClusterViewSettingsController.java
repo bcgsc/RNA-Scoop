@@ -5,6 +5,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
@@ -18,6 +19,7 @@ public class ClusterViewSettingsController {
 
     @FXML private ScrollPane clusterViewSettings;
     @FXML private ComboBox<String> algorithmComboBox;
+    @FXML private Button okButton;
     @FXML private VBox holder;
 
     private boolean usingUMAPSettings;
@@ -40,6 +42,18 @@ public class ClusterViewSettingsController {
     public void display() {
         window.hide();
         window.show();
+    }
+
+    public void disable() {
+        algorithmComboBox.setDisable(true);
+        holder.setDisable(true);
+        okButton.setDisable(true);
+    }
+
+    public void enable() {
+        algorithmComboBox.setDisable(false);
+        holder.setDisable(false);
+        okButton.setDisable(false);
     }
 
     public boolean usingUMAPSettings() {

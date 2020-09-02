@@ -596,6 +596,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableClusterView();
+        ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableTPMGradientAdjuster();
         ControllerMediator.getInstance().disableLabelSetManager();
         // doesn't disable add label set view, because main should be disabled when
@@ -607,6 +608,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableClusterView();
+        ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
         ControllerMediator.getInstance().enableLabelSetManager();
     }

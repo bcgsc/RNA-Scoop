@@ -326,6 +326,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableTPMGradientAdjuster();
+        ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableLabelSetManager();
         // doesn't disable add label set view because plot should be
         // disabled when that view is active
@@ -337,6 +338,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
+        ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableLabelSetManager();
     }
 

@@ -27,7 +27,7 @@
             </HBox>
             <Separator/>
             <VBox fx:id="holder"/>
-            <Button text="OK" onAction="#handleOKButton">
+            <Button fx:id="okButton" text="OK" onAction="#handleOKButton">
                 <VBox.margin>
                     <Insets right="10" bottom="10" left="10"/>
                 </VBox.margin>

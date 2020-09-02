@@ -376,6 +376,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         disable();
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableClusterView();
+        ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableLabelSetManager();
     }
 
@@ -383,6 +384,7 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         enable();
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableClusterView();
+        ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableLabelSetManager();
     }
 
