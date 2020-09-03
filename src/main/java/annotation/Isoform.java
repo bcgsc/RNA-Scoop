@@ -6,6 +6,7 @@ import mediator.ControllerMediator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -125,7 +126,7 @@ public class Isoform {
         if (numCells == 0) {
             return 0;
         } else {
-            cellList.sort((cell, otherCell) -> (int) Math.round(cell.getIsoformExpressionLevel(id) - otherCell.getIsoformExpressionLevel(id)));
+            cellList.sort(Comparator.comparingDouble(cell -> cell.getIsoformExpressionLevel(id)));
             ClusterViewController.CellDataItem medianCell = cellList.get(numCells / 2);
 
             if (numCells % 2 != 0) {
