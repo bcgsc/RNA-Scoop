@@ -31,4 +31,5 @@ RNA-Scoop can be run as `java -jar /path/to/RNA-Scoop.jar ...`
 
 ## Implementation :pencil:
 
-RNA-Scoop is written in Java with IntelliJ IDEA. It uses [T-SNE-Java](https://github.com/lejon/T-SNE-Java) and [JFreeChart - Future State Edition (FSE)](https://github.com/jfree/jfreechart-fse).
+RNA-Scoop is written in Java with IntelliJ IDEA. It uses [T-SNE-Java](https://github.com/lejon/T-SNE-Java), [Java UMAP
+](https://github.com/tag-bio/umap-java) and [JFreeChart - Future State Edition (FSE)](https://github.com/jfree/jfreechart-fse).
