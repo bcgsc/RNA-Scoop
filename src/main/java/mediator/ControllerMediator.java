@@ -165,12 +165,12 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.updateGenesTable(geneList);
     }
 
-    public void updateGenesMaxFoldChange() {
-        geneSelectorController.updateGenesMaxFoldChange();
+    public void geneSelectorHandleRemovedLabelSet(LabelSet labelSet) {
+        geneSelectorController.handleRemovedLabelSet(labelSet);
     }
 
-    public void updateFoldChangeAlert() {
-        geneSelectorController.updateFoldChangeAlert();
+    public void updateGenesMaxFoldChange() {
+        geneSelectorController.updateGenesMaxFoldChange();
     }
 
     public void clearGeneSelector() {
@@ -195,12 +195,8 @@ public class ControllerMediator implements Mediator{
         addLabelSetViewController.prepareForDisplay();
     }
 
-    public void prepareAddLabelSetViewForClose(boolean saveLabelSet) {
-        addLabelSetViewController.prepareForClose(saveLabelSet);
-    }
-
-    public void handleCloseAddLabelSetView() {
-        addLabelSetViewController.handleClose();
+    public void closeAddLabelSetViewWithoutSaving() {
+        addLabelSetViewController.closeWithoutSaving();
     }
 
     public void addLabelSet(LabelSet labelSet) {
@@ -282,6 +278,10 @@ public class ControllerMediator implements Mediator{
 
     public void clearSelectedCellsAndRedrawPlot() {
         clusterViewController.clearSelectedCellsAndRedrawPlot();
+    }
+
+    public void labelSetManagerHandleClearedCellPlot() {
+        labelSetManagerController.handleClearedCellPlot();
     }
 
     public void redrawCellPlotSansLegend() {
@@ -545,7 +545,7 @@ public class ControllerMediator implements Mediator{
     public void enableClusterViewSettings() {
         clusterViewSettingsController.enable();
     }
-    
+
     public void enableIsoformPlot() {
         isoformPlotController.enable();
     }

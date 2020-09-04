@@ -7,7 +7,7 @@
 <ScrollPane fitToHeight="true" fitToWidth="true" style="-fx-background-color: #fcfcfc;"
             xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controller.labelsetmanager.AddLabelSetViewController">
-    <VBox>
+    <VBox fx:id="addLabelSetView">
         <VBox style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
             <VBox.margin>
                 <Insets topRightBottomLeft="10" />
@@ -25,7 +25,7 @@
                     <TextField fx:id="labelSetNameTextField" focusTraversable="false" prefWidth="150" promptText="Label set name" />
                 </HBox>
                 <HBox>
-                    <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+                    <VBox fx:id="clustersTableColumn" alignment="CENTER" HBox.hgrow="ALWAYS">
                         <Text style="-fx-font-size: 13; -fx-alignment: center" text="Cluster Labels">
                             <VBox.margin>
                                 <Insets bottom="10" top="20" />
@@ -44,6 +44,11 @@
                             </Button>
                             <Button onAction="#handleCancelButton" text="Cancel"/>
                         </HBox>
+                        <Text fx:id="savingAlert" text="Saving label set...">
+                            <VBox.margin>
+                                <Insets top="5"/>
+                            </VBox.margin>
+                        </Text>
                     </VBox>
                     <VBox alignment="CENTER">
                         <HBox.margin>

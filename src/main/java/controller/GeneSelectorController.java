@@ -42,15 +42,11 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     @FXML private Button addSelectedButton;
     @FXML private Button removeSelectedButton;
     @FXML private Button clearAllButton;
-    @FXML private HBox foldChangeAlert;
-    @FXML private Button updateButton;
-    @FXML private HBox updatingFoldChangeMessage;
 
     private Stage window;
     private FileChooser fileChooser;
     private ObservableList<Gene> genes;
     private ObservableList<Gene> shownGenes;
-    private LabelSet genesFoldChangeLabelSet;
 
     /**
      * Sets up grid pane, window, genes and shown genes tables
@@ -61,8 +57,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         setUpGridPane();
         setUpGenesTable();
         setUpShownGenesTable();
-        removeFoldChangeAlert();
-        removeUpdatingFoldChangeMessage();
         setUpWindow();
     }
 
@@ -77,7 +71,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         addSelectedButton.setDisable(true);
         removeSelectedButton.setDisable(true);
         clearAllButton.setDisable(true);
-        updateButton.setDisable(true);
     }
 
     /**
@@ -91,7 +84,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         addSelectedButton.setDisable(false);
         removeSelectedButton.setDisable(false);
         clearAllButton.setDisable(false);
-        updateButton.setDisable(false);
     }
 
 
@@ -108,11 +100,9 @@ public class GeneSelectorController implements Initializable, InteractiveElement
      * Clears all genes in genes table, clears genes being shown and filter field
      */
     public void clearGeneSelector() {
-        genesFoldChangeLabelSet = null;
         clearShownGenes();
         genes.clear();
         filterField.setText(null);
-        removeFoldChangeAlert();
     }
 
     /**
@@ -127,13 +117,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         return shownGenes;
     }
 
-    public void updateGenesMaxFoldChange() {
-        for (Gene gene : genes)
-            gene.updateMaxFoldChange();
-        genesFoldChangeLabelSet = ControllerMediator.getInstance().getLabelSetInUse();
-        Platform.runLater(this::removeFoldChangeAlert);
-    }
-
     /**
      * Retrieves parsed genes and sets as genes in genes table
      */
@@ -143,15 +126,18 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         genes.sort(Gene::compareTo);
     }
 
-    public void updateFoldChangeAlert() {
-        LabelSet labelSetInUse = ControllerMediator.getInstance().getLabelSetInUse();
-        boolean stillCustomizingLabelSet = ControllerMediator.getInstance().isAddLabelSetViewDisplayed();
+    public void updateGenesMaxFoldChange() {
         boolean cellPlotCleared = ControllerMediator.getInstance().isCellPlotCleared();
 
-        if (genesFoldChangeLabelSet != labelSetInUse && !stillCustomizingLabelSet && !cellPlotCleared)
-            addFoldChangeAlert();
-        else
-            removeFoldChangeAlert();
+        if (!cellPlotCleared) {
+            for (Gene gene : genes)
+                gene.updateMaxFoldChange();
+        }
+    }
+
+    public void handleRemovedLabelSet(LabelSet labelSet) {
+        for (Gene gene : genes)
+            gene.removeLabelSet(labelSet);
     }
 
     /**
@@ -195,21 +181,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     }
 
     @FXML
-    protected void handleUpdateFoldChangeButton() {
-        removeFoldChangeAlert();
-        addUpdatingFoldChangeMessage();
-        disableUpdateFoldChangeAssociatedFunctionality();
-        try {
-            Thread maxFoldChangeUpdaterThread = new Thread(new MaxFoldChangeUpdaterThread());
-            maxFoldChangeUpdaterThread.start();
-        } catch (Exception e) {
-            enableUpdateFoldChangeAssociatedFunctionality();
-            removeUpdatingFoldChangeMessage();
-            ControllerMediator.getInstance().addConsoleErrorMessage("updating gene maximum fold change values");
-        }
-    }
-
-    @FXML
     protected void handleSelectGenesFromFileButton() {
         File file = fileChooser.showOpenDialog(window);
         clearShownGenes();
@@ -234,37 +205,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         }
         if (genesAdded.size() > 0)
             ControllerMediator.getInstance().addGenesToIsoformPlot(genesAdded);
-    }
-
-
-    private class MaxFoldChangeUpdaterThread implements Runnable {
-
-        @Override
-        public void run() {
-            updateGenesMaxFoldChange();
-            Platform.runLater(() -> {
-                removeUpdatingFoldChangeMessage();
-                enableUpdateFoldChangeAssociatedFunctionality();
-            });
-        }
-    }
-
-    private void addFoldChangeAlert() {
-        if (!genesColumn.getChildren().contains(foldChangeAlert))
-            genesColumn.getChildren().add(foldChangeAlert);
-    }
-
-    private void addUpdatingFoldChangeMessage() {
-        if (!genesColumn.getChildren().contains(updatingFoldChangeMessage))
-            genesColumn.getChildren().add(updatingFoldChangeMessage);
-    }
-
-    private void removeFoldChangeAlert() {
-        genesColumn.getChildren().remove(foldChangeAlert);
-    }
-
-    private void removeUpdatingFoldChangeMessage() {
-        genesColumn.getChildren().remove(updatingFoldChangeMessage);
     }
 
     /**

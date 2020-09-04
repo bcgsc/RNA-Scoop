@@ -30,6 +30,7 @@ public class LabelSetManagerController {
     public void initializeLabelSetManager(LabelSetManagerWindow window) {
         this.window = window;
         setUpLabelSetsListView();
+        addLabelSetButton.setDisable(true);
     }
 
     /**
@@ -37,8 +38,8 @@ public class LabelSetManagerController {
      */
     public void disable() {
         labelSetsListView.setDisable(true);
-        addLabelSetButton.setDisable(true);
         removeLabelSetButton.setDisable(true);
+        addLabelSetButton.setDisable(true);
     }
 
     /**
@@ -46,8 +47,9 @@ public class LabelSetManagerController {
      */
     public void enable() {
         labelSetsListView.setDisable(false);
-        addLabelSetButton.setDisable(false);
         removeLabelSetButton.setDisable(false);
+        if (!ControllerMediator.getInstance().isCellPlotCleared())
+            addLabelSetButton.setDisable(false);
     }
 
     /**
@@ -57,6 +59,10 @@ public class LabelSetManagerController {
         window.hide();
         window.show();
         runLater(() -> labelSetManager.requestFocus());
+    }
+
+    public void handleClearedCellPlot() {
+        addLabelSetButton.setDisable(true);
     }
 
     /**
@@ -85,6 +91,7 @@ public class LabelSetManagerController {
         if (labelSets.size() > 1) {
             int labelSetToRemoveIndex = labelSets.lastIndexOf(labelSet);
             labelSets.remove(labelSetToRemoveIndex);
+            ControllerMediator.getInstance().geneSelectorHandleRemovedLabelSet(labelSet);
             labelSetsListView.getSelectionModel().select((labelSetToRemoveIndex == 0) ? labelSets.get(0) : labelSets.get(labelSetToRemoveIndex - 1));
         } else {
             ControllerMediator.getInstance().addConsoleErrorMessage("There must be at least one label set");
@@ -140,7 +147,7 @@ public class LabelSetManagerController {
      */
     @FXML
     protected void handleRemoveLabelSetButton() {
-        removeLabelSet((LabelSet) labelSetsListView.getSelectionModel().getSelectedItem());
+        removeLabelSet(labelSetInUse);
     }
 
     /**
@@ -166,8 +173,10 @@ public class LabelSetManagerController {
         labelSetsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             labelSetInUse = (LabelSet) newValue;
             ControllerMediator.getInstance().clusterViewHandleChangedLabelSetInUse();
-            ControllerMediator.getInstance().updateFoldChangeAlert();
             ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+            boolean stillEditingLabelSet = ControllerMediator.getInstance().isAddLabelSetViewDisplayed();
+            if (!stillEditingLabelSet)
+                ControllerMediator.getInstance().updateGenesMaxFoldChange();
         });
     }
 

@@ -4,6 +4,7 @@ package annotation;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import labelset.Cluster;
+import labelset.LabelSet;
 import mediator.ControllerMediator;
 import util.Util;
 
@@ -18,6 +19,11 @@ public class Gene implements Comparable<Gene> {
      */
     private HashMap<String, Isoform> isoforms;
 
+    /**
+     * Map of this gene's max fold changes for each label set
+     */
+    private HashMap<LabelSet, Double> maxFoldChangeMap;
+
     private String name;
     private String id;
     private int startNucleotide;
@@ -28,6 +34,7 @@ public class Gene implements Comparable<Gene> {
 
     public Gene(String id, String chromosome, String strand) {
         isoforms = new HashMap<>();
+        maxFoldChangeMap = new HashMap<>();
         // initializes startNucleotide to MAX_VALUE and endNucleotide to 0 in order for
         // main.java.parser to correctly set the right values
         this.id = id;
@@ -61,23 +68,21 @@ public class Gene implements Comparable<Gene> {
     }
 
     public void updateMaxFoldChange() {
-        Collection<Cluster> clusters = ControllerMediator.getInstance().getClusters(false);
-        double newMaxFoldChange = 0;
-        for (Isoform isoform : isoforms.values()) {
-            double minExpression = Integer.MAX_VALUE;
-            double maxExpression = Integer.MIN_VALUE;
-            for (Cluster cluster : clusters) {
-                double expression = isoform.getAverageExpressionInCluster(cluster, false, true);
-                if (expression < minExpression)
-                    minExpression = expression;
-                if (expression > maxExpression)
-                    maxExpression = expression;
-            }
-            double foldChange = maxExpression / minExpression;
-            if (foldChange > newMaxFoldChange)
-                newMaxFoldChange = foldChange;
+        LabelSet labelSet = ControllerMediator.getInstance().getLabelSetInUse();
+        if (maxFoldChangeMap.containsKey(labelSet)) {
+            maxFoldChange.setValue(maxFoldChangeMap.get(labelSet));
+        } else {
+            double maxFoldChange = getMaxFoldChangeForLabelSet(labelSet);
+            maxFoldChangeMap.put(labelSet, maxFoldChange);
+            this.maxFoldChange.setValue(maxFoldChange);
         }
-        maxFoldChange.setValue(Util.roundToOneDecimal(newMaxFoldChange));
+    }
+
+    /**
+     * Removes given label set from the map of max fold changes
+     */
+    public void removeLabelSet(LabelSet labelSet) {
+        maxFoldChangeMap.remove(labelSet);
     }
 
     public Boolean hasIsoform(String transcriptID) {
@@ -135,5 +140,25 @@ public class Gene implements Comparable<Gene> {
     @Override
     public int compareTo(Gene gene) {
         return id.compareTo(gene.getId());
+    }
+
+    private double getMaxFoldChangeForLabelSet(LabelSet labelSet) {
+        Collection<Cluster> clusters = labelSet.getClusters();
+        double maxFoldChange = 0;
+        for (Isoform isoform : isoforms.values()) {
+            double minExpression = Integer.MAX_VALUE;
+            double maxExpression = Integer.MIN_VALUE;
+            for (Cluster cluster : clusters) {
+                double expression = isoform.getAverageExpressionInCluster(cluster, false, true);
+                if (expression < minExpression)
+                    minExpression = expression;
+                if (expression > maxExpression)
+                    maxExpression = expression;
+            }
+            double foldChange = maxExpression / minExpression;
+            if (foldChange > maxFoldChange)
+                maxFoldChange = foldChange;
+        }
+        return Util.roundToOneDecimal(maxFoldChange);
     }
 }

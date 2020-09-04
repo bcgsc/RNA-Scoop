@@ -31,13 +31,11 @@ public class LabelSetManagerWindow extends Stage {
         setAlwaysOnTop(true);
         setUpViews(mainView, addLabelSetView);
         setOnCloseRequest(event -> {
-            if (viewDisplayed == addLabelSetViewScene) {
-                ControllerMediator.getInstance().prepareAddLabelSetViewForClose(false);
-                displayMainView();
-                ControllerMediator.getInstance().handleCloseAddLabelSetView();
-            }
+            if (viewDisplayed == addLabelSetViewScene)
+                ControllerMediator.getInstance().closeAddLabelSetViewWithoutSaving();
+            else
+                hide();
             event.consume();
-            hide();
         });
     }
 

@@ -1,10 +1,13 @@
 package controller.labelsetmanager;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
@@ -13,8 +16,11 @@ import ui.LabelSetManagerWindow;
 import java.awt.*;
 
 public class AddLabelSetViewController {
+    @FXML private VBox addLabelSetView;
+    @FXML private VBox clustersTableColumn;
     @FXML private TableView clustersTable;
     @FXML private TextField labelSetNameTextField;
+    @FXML private Text savingAlert;
 
     private LabelSetManagerWindow window;
     private LabelSet labelSet;
@@ -24,6 +30,7 @@ public class AddLabelSetViewController {
         this.window = window;
         setUpClustersTable();
         setUpLabelSetNameTextField();
+        removeSavingAlert();
     }
 
     public boolean isDisplayed() {
@@ -44,21 +51,24 @@ public class AddLabelSetViewController {
         disableAssociatedFunctionality();
     }
 
-    /**
-     * If shouldn't save label set, deletes it. Enables associated functionality
-     */
-    public void prepareForClose(boolean saveLabelSet) {
-        if (!saveLabelSet)
-            ControllerMediator.getInstance().removeLabelSet(ControllerMediator.getInstance().getLabelSetInUse());
-        enableAssociatedFunctionality();
+    public void disable() {
+        addLabelSetView.setDisable(true);
+    }
+
+    public void enable() {
+        addLabelSetView.setDisable(false);
     }
 
     /**
-     * To be called when add label set view closes, updates fold change column in gene
-     * selector
+     * Switches back to the main view, discards the label set the user was working on, and updates
+     * the genes' max fold change
      */
-    public void handleClose() {
-        ControllerMediator.getInstance().updateFoldChangeAlert();
+    public void closeWithoutSaving() {
+        ControllerMediator.getInstance().removeLabelSet(labelSet);
+        enableAssociatedFunctionality();
+        ControllerMediator.getInstance().updateGenesMaxFoldChange();
+        window.displayMainView();
+        window.hide();
     }
 
     /**
@@ -92,33 +102,75 @@ public class AddLabelSetViewController {
     }
 
     /**
-     * Changes display back to main view
+     * Saves the label set the user has been customizing. Calculates the genes' fold changes
+     * for this label set on another thread
      */
     @FXML
     protected void handleSaveLabelSetButton() {
-        prepareForClose(true);
-        window.displayMainView();
-        handleClose();
+        ControllerMediator.getInstance().addConsoleMessage("Saving label set...");
+        disableUpdatingFoldChangeAssociatedFunctionality();
+        addSavingAlert();
+        try {
+            Thread foldChangeUpdaterThread = new Thread(new UpdateFoldChangeThread());
+            foldChangeUpdaterThread.start();
+        } catch (Exception e) {
+            enableAssociatedFunctionality();
+            enableUpdatingFoldChangeAssociatedFunctionality();
+            removeSavingAlert();
+            window.displayMainView();
+            ControllerMediator.getInstance().addConsoleErrorMessage("updating gene maximum fold change values");
+        }
     }
 
     @FXML
     protected void handleCancelButton() {
-        prepareForClose(false);
-        window.displayMainView();
-        window.hide();
-        handleClose();
+        closeWithoutSaving();
     }
 
+    /**
+     * Disables all functionality that should be disabled when the user is customizing the
+     * label set
+     */
     private void disableAssociatedFunctionality() {
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
     }
 
+    /**
+     * Disables all functionality (additional to that which should be disabled when the user is customizing
+     * the label set) that should be disabled when the fold change values are being updated
+     */
+    private void disableUpdatingFoldChangeAssociatedFunctionality() {
+        disable();
+        ControllerMediator.getInstance().disableGeneSelector();
+    }
+
+    /**
+     * Enables all functionality that should be disabled when the user is customizing the
+     * label set
+     */
     private void enableAssociatedFunctionality() {
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
+    }
+
+    /**
+     * Enables all functionality (additional to that which should be disabled when the user is customizing
+     * the label set) that should be disabled when the fold change values are being updated
+     */
+    private void enableUpdatingFoldChangeAssociatedFunctionality() {
+        enable();
+        ControllerMediator.getInstance().enableGeneSelector();
+    }
+
+    private void addSavingAlert() {
+        clustersTableColumn.getChildren().add(savingAlert);
+    }
+
+    private void removeSavingAlert() {
+        clustersTableColumn.getChildren().remove(savingAlert);
     }
 
     /**
@@ -177,6 +229,25 @@ public class AddLabelSetViewController {
                     ControllerMediator.getInstance().updateDotPlotLegend();
                 });
         return colorCol;
+    }
+
+    /**
+     * Thread which updates all gene max fold change values (should be used
+     * to update fold change values when a label set is saved, as this can take a while)
+     */
+    private class UpdateFoldChangeThread implements Runnable {
+
+        @Override
+        public void run() {
+            ControllerMediator.getInstance().updateGenesMaxFoldChange();
+            Platform.runLater(() -> {
+                enableAssociatedFunctionality();
+                enableUpdatingFoldChangeAssociatedFunctionality();
+                removeSavingAlert();
+                window.displayMainView();
+                ControllerMediator.getInstance().addConsoleMessage("Successfully saved label set");
+            });
+        }
     }
 
     /**
