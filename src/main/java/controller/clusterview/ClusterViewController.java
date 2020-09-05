@@ -386,11 +386,17 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     /**
      * Is the plot lasso selection tool
      */
-    private static class PlotFreeRegionSelectionHandler extends FreeRegionSelectionHandler {
+    private class PlotFreeRegionSelectionHandler extends FreeRegionSelectionHandler {
         @Override
         public void mousePressed(MouseEvent e) {
             super.mousePressed(e);
-            runLater(() -> ControllerMediator.getInstance().deselectAllIsoforms());
+            if (ControllerMediator.getInstance().areIsoformGraphicsSelected()) {
+                runLater(() -> {
+                    ControllerMediator.getInstance().deselectAllIsoforms();
+                    if (ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform())
+                        redrawPlotSansLegend();
+                });
+            }
         }
     }
 

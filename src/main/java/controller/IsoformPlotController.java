@@ -211,6 +211,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         return selectionModel.getSelectedIsoformIDs();
     }
 
+    public boolean areIsoformGraphicsSelected() {
+        return selectionModel.areIsoformGraphicsSelected();
+    }
+
     /**
      * Opens up gene selector window when handle select genes button is pressed
      */

@@ -367,6 +367,10 @@ public class ControllerMediator implements Mediator{
         return isoformPlotController.getSelectedIsoformIDs();
     }
 
+    public boolean areIsoformGraphicsSelected() {
+        return isoformPlotController.areIsoformGraphicsSelected();
+    }
+
     public boolean areCellsSelected () {
         return clusterViewController.areCellsSelected();
     }
