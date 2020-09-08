@@ -1,5 +1,6 @@
 package controller.labelsetmanager;
 
+import controller.PopUpController;
 import controller.clusterview.ClusterViewController;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -17,7 +18,7 @@ import java.util.*;
 
 import static javafx.application.Platform.runLater;
 
-public class LabelSetManagerController {
+public class LabelSetManagerController extends PopUpController {
     @FXML private ScrollPane labelSetManager;
     @FXML private ListView labelSetsListView;
     @FXML private Button addLabelSetButton;
@@ -25,7 +26,6 @@ public class LabelSetManagerController {
 
     private ObservableList<LabelSet> labelSets;
     private LabelSet labelSetInUse;
-    private LabelSetManagerWindow window;
 
     public void initializeLabelSetManager(LabelSetManagerWindow window) {
         this.window = window;
@@ -55,9 +55,9 @@ public class LabelSetManagerController {
     /**
      * Displays the label set manager window
      */
+    @Override
     public void display() {
-        window.hide();
-        window.show();
+        super.display();
         runLater(() -> labelSetManager.requestFocus());
     }
 
@@ -137,7 +137,8 @@ public class LabelSetManagerController {
     protected void handleAddLabelSetButton() {
         LabelSet labelSet = new LabelSet();
         labelSetInUse = labelSet;
-        window.displayAddLabelSetView();
+        LabelSetManagerWindow labelSetManagerWindow = (LabelSetManagerWindow) window;
+        labelSetManagerWindow.displayAddLabelSetView();
         addLabelSetHelper(labelSet);
     }
 

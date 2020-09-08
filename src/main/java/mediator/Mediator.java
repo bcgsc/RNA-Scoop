@@ -10,6 +10,7 @@ import controller.labelsetmanager.LabelSetManagerController;
 
 public interface Mediator {
     void registerMainController(MainController mainController);
+    void registerAboutController(AboutController aboutController);
     void registerConsoleController(ConsoleController consoleController);
     void registerIsoformPlotController(IsoformPlotController isoformPlotController);
     void registerClusterViewController(ClusterViewController clusterViewController);

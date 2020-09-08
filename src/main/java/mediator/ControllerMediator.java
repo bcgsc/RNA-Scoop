@@ -19,6 +19,7 @@ import java.util.*;
 
 public class ControllerMediator implements Mediator{
     private MainController mainController;
+    private AboutController aboutController;
     private ConsoleController consoleController;
     private IsoformPlotController isoformPlotController;
     private ClusterViewController clusterViewController;
@@ -34,6 +35,11 @@ public class ControllerMediator implements Mediator{
     @Override
     public void registerMainController(MainController mainController) {
         this.mainController = mainController;
+    }
+
+    @Override
+    public void registerAboutController(AboutController aboutController) {
+        this.aboutController = aboutController;
     }
 
     @Override
@@ -89,6 +95,12 @@ public class ControllerMediator implements Mediator{
     // Change Main Display
     public void initializeMain(Parent console, Parent isoformPlot, Parent clusterView) {
         mainController.initializeMain(console, isoformPlot, clusterView);
+    }
+
+    // About window
+
+    public void displayAboutWindow() {
+        aboutController.display();
     }
 
     public void clearPathComboBox() {

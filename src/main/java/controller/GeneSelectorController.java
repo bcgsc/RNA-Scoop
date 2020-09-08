@@ -28,7 +28,7 @@ import java.util.*;
 
 import static javafx.application.Platform.runLater;
 
-public class GeneSelectorController implements Initializable, InteractiveElementController {
+public class GeneSelectorController extends PopUpController implements Initializable, InteractiveElementController{
     private static final float GENE_SELECTOR_WIDTH_SCALE_FACTOR = 0.52f;
     private static final float GENE_SELECTOR_HEIGHT_SCALE_FACTOR = 0.45f;
 
@@ -43,7 +43,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     @FXML private Button removeSelectedButton;
     @FXML private Button clearAllButton;
 
-    private Stage window;
     private FileChooser fileChooser;
     private ObservableList<Gene> genes;
     private ObservableList<Gene> shownGenes;
@@ -90,9 +89,9 @@ public class GeneSelectorController implements Initializable, InteractiveElement
     /**
      * Displays the gene selector window
      */
+    @Override
     public void display() {
-        window.hide();
-        window.show();
+        super.display();
         runLater(() -> geneSelector.requestFocus());
     }
 
@@ -310,22 +309,6 @@ public class GeneSelectorController implements Initializable, InteractiveElement
         geneName.setCellValueFactory(new PropertyValueFactory("name"));
         shownGenesTable.getColumns().setAll(geneIDCol , geneName);
         shownGenesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-    }
-
-    private void disableUpdateFoldChangeAssociatedFunctionality() {
-        disable();
-        ControllerMediator.getInstance().disableMain();
-        ControllerMediator.getInstance().disableClusterView();
-        ControllerMediator.getInstance().disableClusterViewSettings();
-        ControllerMediator.getInstance().disableLabelSetManager();
-    }
-
-    private void enableUpdateFoldChangeAssociatedFunctionality() {
-        enable();
-        ControllerMediator.getInstance().enableMain();
-        ControllerMediator.getInstance().enableClusterView();
-        ControllerMediator.getInstance().enableClusterViewSettings();
-        ControllerMediator.getInstance().enableLabelSetManager();
     }
 
     private void setWindowSizeAndDisplay() {

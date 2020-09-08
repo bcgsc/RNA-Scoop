@@ -390,16 +390,11 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Loads About window when About button is pressed
+     * Displays About window when About button is pressed
      */
     @FXML
     protected void handleAboutButtonAction() {
-        try {
-           FXMLLoader.load(getClass().getResource("/fxml/about.fxml"));
-        }
-        catch (IOException e) {
-            ControllerMediator.getInstance().addConsoleErrorMessage("Could not load about window");
-        }
+        ControllerMediator.getInstance().displayAboutWindow();
     }
 
     /**

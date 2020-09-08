@@ -25,6 +25,7 @@ public class Main extends Application {
     @Override
     public void start(Stage window) throws Exception{
         FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("/fxml/main/main.fxml"));
+        FXMLLoader aboutLoader = new FXMLLoader(getClass().getResource("/fxml/about.fxml"));
         FXMLLoader consoleLoader = new FXMLLoader(getClass().getResource("/fxml/main/console.fxml"));
         FXMLLoader isoformPlotLoader = new FXMLLoader(getClass().getResource("/fxml/main/isoformplot.fxml"));
         FXMLLoader clusterViewLoader = new FXMLLoader(getClass().getResource("/fxml/main/clusterview.fxml"));
@@ -37,6 +38,7 @@ public class Main extends Application {
         FXMLLoader umapSettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/umapsettings.fxml"));
 
         mainLoader.load();
+        aboutLoader.load();
         Parent console = consoleLoader.load();
         Parent isoformPlot = isoformPlotLoader.load();
         Parent clusterView = clusterViewLoader.load();
@@ -48,7 +50,7 @@ public class Main extends Application {
         Parent tSNESettings = tSNESettingsLoader.load();
         Parent umapSettings = umapSettingsLoader.load();
 
-        registerControllers(mainLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
+        registerControllers(mainLoader.getController(), aboutLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
                             clusterViewLoader.getController(), geneSelectorLoader.getController(), tpmGradientLoader.getController(),
                             labelSetManagerLoader.getController(), addLabelSetViewLoader.getController(), clusterViewSettingsLoader.getController(),
                             tSNESettingsLoader.getController(), umapSettingsLoader.getController());
@@ -69,12 +71,14 @@ public class Main extends Application {
     /**
      * Registers controllers with mediator
      */
-    private void registerControllers(MainController mainController, ConsoleController consoleController, IsoformPlotController isoformPlotController,
-                                     ClusterViewController clusterViewController, GeneSelectorController geneSelectorController,
-                                     TPMGradientAdjusterController tpmGradientAdjusterController, LabelSetManagerController labelSetManagerController,
-                                     AddLabelSetViewController addLabelSetViewController, ClusterViewSettingsController clusterViewSettingsController,
-                                     TSNESettingsController tsneSettingsController, UMAPSettingsController umapSettingsController) {
+    private void registerControllers(MainController mainController, AboutController aboutController, ConsoleController consoleController,
+                                     IsoformPlotController isoformPlotController, ClusterViewController clusterViewController,
+                                     GeneSelectorController geneSelectorController, TPMGradientAdjusterController tpmGradientAdjusterController,
+                                     LabelSetManagerController labelSetManagerController, AddLabelSetViewController addLabelSetViewController,
+                                     ClusterViewSettingsController clusterViewSettingsController, TSNESettingsController tsneSettingsController,
+                                     UMAPSettingsController umapSettingsController) {
         ControllerMediator.getInstance().registerMainController(mainController);
+        ControllerMediator.getInstance().registerAboutController(aboutController);
         ControllerMediator.getInstance().registerConsoleController(consoleController);
         ControllerMediator.getInstance().registerIsoformPlotController(isoformPlotController);
         ControllerMediator.getInstance().registerClusterViewController(clusterViewController);

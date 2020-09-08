@@ -1,6 +1,7 @@
 package controller.clusterview;
 
 import controller.ConsoleController;
+import controller.PopUpController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -13,7 +14,7 @@ import javafx.stage.Stage;
 import mediator.ControllerMediator;
 import ui.Main;
 
-public class ClusterViewSettingsController {
+public class ClusterViewSettingsController extends PopUpController {
     private static final float CLUSTER_VIEW_SETTINGS_HEIGHT = 160;
     private static final float CLUSTER_VIEW_SETTINGS_WIDTH = 440;
 
@@ -26,7 +27,6 @@ public class ClusterViewSettingsController {
 
     private Parent tsneSettings;
     private Parent umapSettings;
-    private Stage window;
 
     public void initializeClusterViewSettings(Parent tsneSettings, Parent umapSettings) {
         this.tsneSettings = tsneSettings;
@@ -34,14 +34,6 @@ public class ClusterViewSettingsController {
         useUMAPSettings();
         setUpAlgorithmComboBox();
         setUpWindow();
-    }
-
-    /**
-     * Displays the cluster view settings window
-     */
-    public void display() {
-        window.hide();
-        window.show();
     }
 
     public void disable() {

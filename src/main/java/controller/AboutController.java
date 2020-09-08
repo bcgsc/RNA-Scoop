@@ -14,7 +14,7 @@ import ui.Main;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class AboutController implements Initializable {
+public class AboutController extends PopUpController implements Initializable {
     private static final float ABOUT_SCALE_FACTOR = 0.33f;
 
     @FXML VBox vbox;
@@ -51,11 +51,14 @@ public class AboutController implements Initializable {
     }
 
     private void setUpWindow() {
-        Stage stage = new Stage();
-        stage.setTitle("About");
+        window = new Stage();
+        window.setTitle("About");
         Rectangle2D screen = Screen.getPrimary().getBounds();
-        stage.setScene(new Scene(scrollPane, screen.getWidth() * ABOUT_SCALE_FACTOR, screen.getHeight() * ABOUT_SCALE_FACTOR));
-        stage.getIcons().add(Main.RNA_SCOOP_LOGO);
-        stage.show();
+        window.setScene(new Scene(scrollPane, screen.getWidth() * ABOUT_SCALE_FACTOR, screen.getHeight() * ABOUT_SCALE_FACTOR));
+        window.getIcons().add(Main.RNA_SCOOP_LOGO);
+        window.setOnCloseRequest(event -> {
+            event.consume();
+            window.hide();
+        });
     }
 }

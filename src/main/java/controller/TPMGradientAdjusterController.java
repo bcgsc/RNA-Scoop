@@ -29,7 +29,7 @@ import java.util.ResourceBundle;
 
 import static util.Util.roundToOneDecimal;
 
-public class TPMGradientAdjusterController implements Initializable, InteractiveElementController {
+public class TPMGradientAdjusterController extends PopUpController implements Initializable, InteractiveElementController {
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR = 0.25f;
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR = 0.4f;
     private static final Color DEFAULT_MIN_TPM_COLOR = Color.color(1.000, 1.000,1.000);
@@ -57,7 +57,6 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
     @FXML private ColorPicker maxTPMColorPicker;
     @FXML private ComboBox<String> scaleChooser;
 
-    private Stage window;
     private int recommendedMinTPM;
     private int recommendedMaxTPM;
     private double gradientMinTPM;
@@ -100,14 +99,6 @@ public class TPMGradientAdjusterController implements Initializable, Interactive
         minTPMColorPicker.setDisable(false);
         midTPMColorPicker.setDisable(false);
         maxTPMColorPicker.setDisable(false);
-    }
-
-    /**
-     * Displays the TPM gradient adjuster window
-     */
-    public void display() {
-        window.hide();
-        window.show();
     }
 
     public void addMinTPMToGradientMinTPMLabel(double minTPM) {
