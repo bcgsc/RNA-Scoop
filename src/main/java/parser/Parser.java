@@ -42,7 +42,9 @@ public class Parser {
             byte[] encoded = Files.readAllBytes(Paths.get(pathToPaths));
             String pathsString = new String(encoded, Charset.defaultCharset());
             JSONObject paths = new JSONObject(pathsString);
+            runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing GTF file..."));
             GTFLoader.loadGTF((String) paths.get(GTF_PATH_KEY));
+            runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing matrix files..."));
             CellPlotInfoLoader.loadCellPlotInfo((String) paths.get(MATRIX_PATH_KEY),
                     (String) paths.get(ISOFORM_LABELS_PATH_KEY),
                     (String) paths.get(CELL_LABELS_PATH_KEY),
@@ -346,17 +348,20 @@ public class Parser {
                 }
 
                 String line;
+                double val;
                 while ((line = reader.readLine()) != null && !line.matches("\\s*")) {
                     String[] cols = line.trim().split(columnDelimiter);
                     double [] row = new double[cols.length];
                     for (int j = 0; j < cols.length; j++) {
                         if(!(cols[j].length()==0)) {
-                            row[j] = Double.parseDouble(cols[j].trim());
+                            val = Double.parseDouble(cols[j].trim());
                             // @TODO: handle non-numerical entries
 
-                            if (row[j] < 0) {
+                            if (val < 0) {
                                 throw new NegativeExpressionInMatrixException();
                             }
+
+                            row[j] = val;
                         }
                     }
                     rows.add(row);
