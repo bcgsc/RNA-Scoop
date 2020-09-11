@@ -47,7 +47,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static javafx.application.Platform.runLater;
-import static jdk.nashorn.internal.objects.Global.Infinity;
 
 public class ClusterViewController implements Initializable, InteractiveElementController {
     private static final double LEGEND_DOT_SIZE = 18;
@@ -832,8 +831,8 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 legendHolder.setContent(legend.getLegendGraphic());
                 StackPane.setAlignment(legendHolder, Pos.TOP_RIGHT);
                 legendHolder.setPickOnBounds(false);
-                legendHolder.setMaxWidth(-Infinity);
-                legendHolder.setMaxHeight(-Infinity);
+                legendHolder.setMaxWidth(Double.NEGATIVE_INFINITY);
+                legendHolder.setMaxHeight(Double.NEGATIVE_INFINITY);
                 plotHolder.getChildren().add(legendHolder);
                 legendHolder.setStyle("-fx-background-color: transparent;");
             });
