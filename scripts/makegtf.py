@@ -66,7 +66,7 @@ class Transcript:
         other_offset = self.get_other_first_match_index(other_transcript, dangling_edge_threshold)
         if other_offset is not None:
             last_exon_index = len(self.exons) - 1
-            
+
             # check if middle exons (all exons except first and last) match
             for i in range(1, last_exon_index):
                 transcript_longer_than_other = (other_offset + i >= len(other_transcript.exons))
@@ -76,14 +76,14 @@ class Transcript:
                     exon_doesnt_match = (not self.exons[i] == other_transcript.exons[i + other_offset])
                     if exon_doesnt_match:
                         return Containment.NOT_CONTAINED
-            
+
             # check if last exon matches
             other_transcript_longer = (last_exon_index + other_offset < len(other_transcript.exons))
-            
+
             if other_transcript_longer:
-                if self.exons[last_exon_index].start_coord == other_transcript.exons[last_exon_index + other_offset].start_coord: 
+                if self.exons[last_exon_index].start_coord == other_transcript.exons[last_exon_index + other_offset].start_coord:
                     if self.exons[last_exon_index].end_coord <= (other_transcript.exons[last_exon_index + other_offset].end_coord +
-                       dangling_edge_threshold):
+                                                                 dangling_edge_threshold):
                         return Containment.CONTAINED
                     return Containment.LAST_EXON_LONGER
                 else:
@@ -95,7 +95,7 @@ class Transcript:
     def is_contained_in_one_exon(self, other_transcript, dangling_edge_threshold):
         exons = self.exons
         other_exons = other_transcript.exons
-        
+
         if len(exons) == 1:
             if exons[0].start_coord >= (other_exons[0].start_coord - dangling_edge_threshold):
                 if exons[0].end_coord <= (other_exons[0].end_coord + dangling_edge_threshold):
@@ -143,6 +143,9 @@ def main():
                         help='max allowed dangling edge size when collasping transcripts  [%(default)s]')
     parser.add_argument('--prefixes', metavar='STR', type=str, nargs='*',
                         help='prefix for transcript IDs')
+    parser.add_argument('--identity',  metavar='FLOAT', type=float,
+                        default=0.99,
+                        help='min sequence identity of alignment  [%(default)s]')
     args = parser.parse_args()
 
     paf_paths = args.paf
@@ -151,16 +154,17 @@ def main():
     indel_threshold = args.indel
     dangling_edge_threshold = args.de
     prefixes = args.prefixes
+    min_identity = args.identity
 
     if prefixes is not None:
         assert (len(prefixes) == len(paf_paths))
-    paf_to_gtf(paf_paths, gtf_path, strand_specific, indel_threshold, dangling_edge_threshold, prefixes)
+    paf_to_gtf(paf_paths, gtf_path, strand_specific, indel_threshold, dangling_edge_threshold, prefixes, min_identity)
 
 
-def paf_to_gtf(paf_paths, gtf_path, strand_specific=False, indel_threshold=10, dangling_edge_threshold=5, prefixes=None):
+def paf_to_gtf(paf_paths, gtf_path, strand_specific=False, indel_threshold=10, dangling_edge_threshold=5, prefixes=None, min_identity=0.99):
     gtf_file = open(gtf_path, "w")
     num_pafs = len(paf_paths)
-    transcripts = get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes)
+    transcripts = get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min_identity)
     if not strand_specific:
         transcripts.sort(
             key=lambda transcript: [transcript.chromosome, transcript.start_coord, -transcript.end_coord])
@@ -170,7 +174,7 @@ def paf_to_gtf(paf_paths, gtf_path, strand_specific=False, indel_threshold=10, d
     write_transcripts_to_gtf(transcripts, gtf_file, dangling_edge_threshold, strand_specific)
 
 
-def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes):
+def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min_identity):
     transcripts = []
     for i in range(num_pafs):
         prefix = create_prefix(i, num_pafs, prefixes)
@@ -179,34 +183,38 @@ def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes):
         with gzip.open(paf_paths[i], "rt") as paf_file:
             for line in paf_file:
                 line_elems = line.rstrip().split("\t")
-                tags = line_elems[12:]
-                if tp_is_p(tags):
-                    cigar = get_cigar(tags)
-                    if cigar is not None and meets_req(cigar, indel_threshold):
-                        transcript = store_exons_in_transcript(line_elems[0], line_elems[4], line_elems[5],
-                                                               int(line_elems[7]), int(line_elems[9]), cigar, prefix)
-                        if transcript is not None:
-                            if last_parsed_transcript is None or transcript.transcript_id != last_parsed_transcript.transcript_id:
-                                include_last_parsed_transcript_id = True
-                                last_parsed_transcript = transcript
-                                add_transcript_if_pass_threshold(transcript, transcripts)
-                            elif include_last_parsed_transcript_id:
-                                if last_parsed_transcript.num_matching < 200:
-                                    if is_invalid_mapping(last_parsed_transcript, transcript):
-                                        include_last_parsed_transcript_id = False
-                                    else:
-                                        last_parsed_transcript = transcript
-                                        add_transcript_if_pass_threshold(transcript, transcripts)
-                                else:
-                                    success = remove_invalid_mappings(last_parsed_transcript, transcript, transcripts)
-                                    if success:
-                                        include_last_parsed_transcript_id = False
-                                    else:
-                                        curr_is_larger = (transcript.num_matching > last_parsed_transcript.num_matching)
-                                        if curr_is_larger:
-                                            transcripts.remove(last_parsed_transcript)
-                                            transcripts.append(transcript)
+                q_start = int(line_elems[2])
+                q_end = int(line_elems[3])
+                num_matches = int(line_elems[9])
+                if float(num_matches)/float(q_end - q_start) >= min_identity:
+                    tags = line_elems[12:]
+                    if tp_is_p(tags):
+                        cigar = get_cigar(tags)
+                        if cigar is not None and meets_req(cigar, indel_threshold):
+                            transcript = store_exons_in_transcript(line_elems[0], line_elems[4], line_elems[5],
+                                                                   int(line_elems[7]), int(line_elems[9]), cigar, prefix)
+                            if transcript is not None:
+                                if last_parsed_transcript is None or transcript.transcript_id != last_parsed_transcript.transcript_id:
+                                    include_last_parsed_transcript_id = True
+                                    last_parsed_transcript = transcript
+                                    add_transcript_if_pass_threshold(transcript, transcripts)
+                                elif include_last_parsed_transcript_id:
+                                    if last_parsed_transcript.num_matching < 200:
+                                        if is_invalid_mapping(last_parsed_transcript, transcript):
+                                            include_last_parsed_transcript_id = False
+                                        else:
                                             last_parsed_transcript = transcript
+                                            add_transcript_if_pass_threshold(transcript, transcripts)
+                                    else:
+                                        success = remove_invalid_mappings(last_parsed_transcript, transcript, transcripts)
+                                        if success:
+                                            include_last_parsed_transcript_id = False
+                                        else:
+                                            curr_is_larger = (transcript.num_matching > last_parsed_transcript.num_matching)
+                                            if curr_is_larger:
+                                                transcripts.remove(last_parsed_transcript)
+                                                transcripts.append(transcript)
+                                                last_parsed_transcript = transcript
     return transcripts
 
 
@@ -299,7 +307,7 @@ def write_transcripts_to_gtf(transcripts, gtf_file, dangling_edge_threshold=5, s
     gene_id = first_transcript.prefix + "GENE" + str(gene_id_number)
     first_transcript.set_gene_id(gene_id)
     transcript_intervals_of_same_gene[first_transcript.start_coord:first_transcript.end_coord + 1] = first_transcript
-    
+
     for i in range(1, len(transcripts)):
         curr_transcript = transcripts[i]
         prev_transcript = transcripts[i - 1]
@@ -313,14 +321,14 @@ def write_transcripts_to_gtf(transcripts, gtf_file, dangling_edge_threshold=5, s
             is_contained = False
             for overlapping_transcript_interval in overlapping_intervals:
                 overlapping_transcript = overlapping_transcript_interval.data
-                containment = curr_transcript.is_contained_in(overlapping_transcript, dangling_edge_threshold) 
+                containment = curr_transcript.is_contained_in(overlapping_transcript, dangling_edge_threshold)
                 #print(overlapping_transcript.transcript_id)
                 if containment == Containment.CONTAINED:
                     is_contained = True
                     break
                 elif containment == Containment.LAST_EXON_LONGER:
                     replace_overlapping_transcript = (len(overlapping_transcript.exons) == len(curr_transcript.exons) and \
-                                                    curr_transcript.start_coord - overlapping_transcript.start_coord <= dangling_edge_threshold)
+                                                      curr_transcript.start_coord - overlapping_transcript.start_coord <= dangling_edge_threshold)
                     #print("",  curr_transcript.start_coord - overlapping_transcript.start_coord)
                     if replace_overlapping_transcript:
                         #print("replaced ", overlapping_transcript_interval.data.transcript_id)
