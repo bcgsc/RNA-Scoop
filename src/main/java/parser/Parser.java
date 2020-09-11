@@ -19,6 +19,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import static javafx.application.Platform.runLater;
 
@@ -28,6 +29,7 @@ public class Parser {
     private static final String ISOFORM_LABELS_PATH_KEY = "isoform_ids";
     private static final String CELL_LABELS_PATH_KEY = "cell_labels";
     private static final String EMBEDDING_PATH_KEY = "embedding";
+    private static final String GZIP_EXTENSION = ".gz";
 
     /**
      * Reads in JSON file at given path. File specifies paths to the
@@ -106,7 +108,15 @@ public class Parser {
         private static HashMap<String, Gene> parsedGenes = new HashMap<>();
 
         public static void loadGTF(String pathToGTF) throws IOException, RNAScoopException {
-            BufferedReader reader = new BufferedReader(new FileReader(pathToGTF));
+            BufferedReader reader;
+
+            if (pathToGTF.toLowerCase().endsWith(GZIP_EXTENSION)) {
+                reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(pathToGTF))));
+            }
+            else {
+                reader = new BufferedReader(new InputStreamReader(new FileInputStream(pathToGTF)));
+            }
+
             String currentLine;
             int lineNumber = 0;
             while ((currentLine = reader.readLine()) != null) {
@@ -308,16 +318,61 @@ public class Parser {
          * expression values
          */
         private static double[][] getCellIsoformExpressionMatrix(String pathToMatrix) throws MatrixSizeZeroException, NegativeExpressionInMatrixException {
-            File matrixFile = new File(pathToMatrix);
-            double[][] cellIsoformExpressionMatrix = MatrixUtils.simpleRead2DMatrix(matrixFile, "\t");
+            double[][] cellIsoformExpressionMatrix = parse2DMatrix(pathToMatrix, "\t");
             if (cellIsoformExpressionMatrix.length == 0)
                 throw new MatrixSizeZeroException();
 
-            double[] negativeExpressions = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).filter(expression -> expression < 0).toArray();
-            if (negativeExpressions.length > 0)
-                throw new NegativeExpressionInMatrixException();
-
             return cellIsoformExpressionMatrix;
+        }
+
+        /**
+         * Parse a 2D matrix text file. Code was partially derived from TSNE-Java.
+         * @param pathToMatrix input matrix path
+         * @param columnDelimiter column delimiter string
+         * @return 2D double array
+         * @throws NegativeExpressionInMatrixException a negative expression value is found
+         */
+        public static double[][] parse2DMatrix(String pathToMatrix, String columnDelimiter) throws NegativeExpressionInMatrixException {
+            List<double[]> rows = new ArrayList<>();
+
+            try {
+                BufferedReader reader;
+
+                if (pathToMatrix.toLowerCase().endsWith(GZIP_EXTENSION)) {
+                    reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(pathToMatrix))));
+                }
+                else {
+                    reader = new BufferedReader(new InputStreamReader(new FileInputStream(pathToMatrix)));
+                }
+
+                String line;
+                while ((line = reader.readLine()) != null && !line.matches("\\s*")) {
+                    String[] cols = line.trim().split(columnDelimiter);
+                    double [] row = new double[cols.length];
+                    for (int j = 0; j < cols.length; j++) {
+                        if(!(cols[j].length()==0)) {
+                            row[j] = Double.parseDouble(cols[j].trim());
+                            // @TODO: handle non-numerical entries
+
+                            if (row[j] < 0) {
+                                throw new NegativeExpressionInMatrixException();
+                            }
+                        }
+                    }
+                    rows.add(row);
+                }
+                reader.close();
+            } catch (IOException e) {
+                throw new IllegalArgumentException(e);
+            }
+
+            double[][] array = new double[rows.size()][];
+            int currentRow = 0;
+            for (double[] ds : rows) {
+                array[currentRow++] = ds;
+            }
+
+            return array;
         }
 
         /**
