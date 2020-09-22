@@ -60,10 +60,12 @@ public class SessionIO {
      * at given path and restores the saved settings
      */
     public static void loadSessionAtPath(String path) throws IOException {
-        byte[] encoded = Files.readAllBytes(Paths.get(path));
-        String prevSessionString = new String(encoded, Charset.defaultCharset());
-        JSONObject prevSession = new JSONObject(prevSessionString);
-        setSavedSettings(prevSession);
+        if (new File(path).exists()) {
+            byte[] encoded = Files.readAllBytes(Paths.get(path));
+            String prevSessionString = new String(encoded, Charset.defaultCharset());
+            JSONObject prevSession = new JSONObject(prevSessionString);
+            setSavedSettings(prevSession);
+        }
     }
 
     /**
