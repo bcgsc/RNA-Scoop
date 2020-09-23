@@ -104,8 +104,6 @@ public class Main extends Application {
     private void loadPreviousSession() {
         try {
             SessionIO.loadSession();
-        } catch (NoSuchFileException e) {
-            System.out.println("No saved sessions found. Opening up default view");
         } catch (IOException e) {
             System.err.println("An error occurred while loading a saved session");
             e.printStackTrace();

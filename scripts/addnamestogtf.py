@@ -42,6 +42,7 @@ class Transcript:
 
     def add_exon(self, exon):
         self.exons.append(exon)
+        self.exons.sort(key=lambda exon: exon.start_coord)
 
     def set_start_coord(self, start_coord):
         self.start_coord = start_coord
@@ -134,12 +135,16 @@ def add_gene_information(threshold):
             overlapping_genes_intervals = chromosome_gene_tree[transcript.start_coord+threshold]
             overlapping_genes_intervals.update(chromosome_gene_tree[transcript.end_coord-threshold])
             num_overlapping_gene_intervals = len(overlapping_genes_intervals)
+
             if num_overlapping_gene_intervals == 1:
                 overlapping_gene = overlapping_genes_intervals.pop().data
                 assign_transcript_to_gene(overlapping_gene, transcript)
+            
             elif num_overlapping_gene_intervals > 1:
                 overlapping_genes = list(map(lambda gene_interval: gene_interval.data, overlapping_genes_intervals))
                 potential_genes = find_potential_genes_by_junctions(transcript, overlapping_genes)
+               
+               
                 if len(potential_genes) == 1:
                     assign_transcript_to_gene(potential_genes[0], transcript)
                 else:
@@ -293,9 +298,9 @@ def find_potential_genes_by_junctions(transcript, genes):
                 start_exon = transcript_exons[i]
                 end_exon = transcript_exons[i + 1]
                 match, new_num_first_exons_exclude = find_matching_junction(gene_transcript, start_exon, end_exon,
-                                                                            num_first_exons_exclude)
+                                                                            num_first_exons_exclude)  
                 if new_num_first_exons_exclude is not None:
-                    num_first_exons_exclude = new_num_first_exons_exclude
+                   num_first_exons_exclude = new_num_first_exons_exclude
                 if match:
                     transcript_junctions_matching += 1
                 if num_first_exons_exclude == len(gene_transcript.exons) - 1:
@@ -319,14 +324,14 @@ def find_potential_genes_by_junctions(transcript, genes):
 # second return value is the number of exons on the given transcript that should be disregarded
 # when looking for matching junctions between exons further down
 def find_matching_junction(transcript, start_exon, end_exon, num_first_exons_exclude):
+          
     transcript_exons = transcript.exons
+    
     for i in range(num_first_exons_exclude, len(transcript_exons) - 1):
-        junction_start_match = transcript_exons[i].end_coord == start_exon.end_coord
-        junction_end_match = transcript_exons[i + 1].start_coord == end_exon.start_coord
+        junction_start_match = (transcript_exons[i].end_coord == start_exon.end_coord)
+        junction_end_match = (transcript_exons[i + 1].start_coord == end_exon.start_coord)
         if junction_start_match and junction_end_match:
             return True, i + 1
-        elif not junction_start_match or not junction_end_match:
-            return False, i + 1
     return False, None
 
 

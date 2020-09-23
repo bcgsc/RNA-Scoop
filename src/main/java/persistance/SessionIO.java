@@ -2,7 +2,6 @@ package persistance;
 
 import mediator.ControllerMediator;
 import org.json.JSONObject;
-import parser.Parser;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -56,8 +55,8 @@ public class SessionIO {
     }
 
     /**
-     * Loads information about the user's previous session from a JSON file
-     * at given path and restores the saved settings
+     * If file exists, loads information about the user's previous session from a
+     * JSON file at given path and restores the saved settings
      */
     public static void loadSessionAtPath(String path) throws IOException {
         if (new File(path).exists()) {
