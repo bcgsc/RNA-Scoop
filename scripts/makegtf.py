@@ -146,6 +146,7 @@ def main():
     parser.add_argument('--identity',  metavar='FLOAT', type=float,
                         default=0.99,
                         help='min sequence identity of alignment  [%(default)s]')
+
     args = parser.parse_args()
 
     paf_paths = args.paf
@@ -191,7 +192,7 @@ def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min
                     if tp_is_p(tags):
                         cigar = get_cigar(tags)
                         if cigar is not None and meets_req(cigar, indel_threshold):
-                            transcript = store_exons_in_transcript(line_elems[0], line_elems[4], line_elems[5],
+                            transcript = store_exons_in_transcript(line_elems[0], get_strand(tags, line_elems), line_elems[5],
                                                                    int(line_elems[7]), int(line_elems[9]), cigar, prefix)
                             if transcript is not None:
                                 if last_parsed_transcript is None or transcript.transcript_id != last_parsed_transcript.transcript_id:
@@ -199,24 +200,27 @@ def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min
                                     last_parsed_transcript = transcript
                                     add_transcript_if_pass_threshold(transcript, transcripts)
                                 elif include_last_parsed_transcript_id:
-                                    if last_parsed_transcript.num_matching < 200:
-                                        if is_invalid_mapping(last_parsed_transcript, transcript):
-                                            include_last_parsed_transcript_id = False
-                                        else:
-                                            last_parsed_transcript = transcript
-                                            add_transcript_if_pass_threshold(transcript, transcripts)
+                                    success = remove_invalid_mappings(last_parsed_transcript, transcript, transcripts)
+                                    if success:
+                                        include_last_parsed_transcript_id = False
                                     else:
-                                        success = remove_invalid_mappings(last_parsed_transcript, transcript, transcripts)
-                                        if success:
-                                            include_last_parsed_transcript_id = False
-                                        else:
-                                            curr_is_larger = (transcript.num_matching > last_parsed_transcript.num_matching)
-                                            if curr_is_larger:
-                                                transcripts.remove(last_parsed_transcript)
-                                                transcripts.append(transcript)
-                                                last_parsed_transcript = transcript
+                                        curr_is_larger = (transcript.num_matching > last_parsed_transcript.num_matching)
+                                        if curr_is_larger:
+                                            transcripts.remove(last_parsed_transcript)
+                                            transcripts.append(transcript)
+                                            last_parsed_transcript = transcript
     return transcripts
 
+def get_strand(tags, line_elems):
+    for tag in tags:
+        tag_elems = tag.split(":")
+        if len(tag_elems) == 3 and tag_elems[0] == "ts" and tag_elems[1] == "A":
+            strand = tag_elems[2]
+            if strand == "+" or strand == "-":
+                return tag_elems[2]
+            else:
+                return line_elems[4]
+    return line_elems[4]
 
 def add_transcript_if_pass_threshold(transcript, transcripts):
     if transcript.num_matching >= 200:
