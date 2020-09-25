@@ -41,6 +41,9 @@ class Transcript:
         self.update_end_coord(end_coord)
         self.exons.append(Exon(start_coord, end_coord))
         self.exons.sort(key=lambda exon: exon.start_coord)
+    
+    def set_transcript_id(self, transcript_id):
+        self.transcript_id = transcript_id
 
     def set_gene_id(self, gene_id):
         self.gene_id = gene_id
@@ -146,6 +149,9 @@ def main():
     parser.add_argument('--identity',  metavar='FLOAT', type=float,
                         default=0.99,
                         help='min sequence identity of alignment  [%(default)s]')
+    parser.add_argument('--include_chimeras',  metavar='BOOL', type=bool,
+                        default=False,
+                        help='whether or not chimeras should be included  [%(default)s]')
 
     args = parser.parse_args()
 
@@ -156,32 +162,35 @@ def main():
     dangling_edge_threshold = args.de
     prefixes = args.prefixes
     min_identity = args.identity
+    include_chimeras = args.include_chimeras
 
     if prefixes is not None:
         assert (len(prefixes) == len(paf_paths))
-    paf_to_gtf(paf_paths, gtf_path, strand_specific, indel_threshold, dangling_edge_threshold, prefixes, min_identity)
+    paf_to_gtf(paf_paths, gtf_path, strand_specific, indel_threshold, dangling_edge_threshold, prefixes, min_identity, include_chimeras)
 
 
-def paf_to_gtf(paf_paths, gtf_path, strand_specific=False, indel_threshold=10, dangling_edge_threshold=5, prefixes=None, min_identity=0.99):
+def paf_to_gtf(paf_paths, gtf_path, strand_specific=False, indel_threshold=10, dangling_edge_threshold=5, prefixes=None, min_identity=0.99, include_chimeras=False):
     gtf_file = open(gtf_path, "w")
     num_pafs = len(paf_paths)
-    transcripts = get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min_identity)
-    if not strand_specific:
-        transcripts.sort(
-            key=lambda transcript: [transcript.chromosome, transcript.start_coord, -transcript.end_coord])
-    else:
-        transcripts.sort(key=lambda transcript: [transcript.chromosome, transcript.strand, transcript.start_coord,
+    transcripts = get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min_identity, include_chimeras)
+    if len(transcripts) > 0:
+       if not strand_specific:
+          transcripts.sort(key=lambda transcript: [transcript.chromosome, transcript.start_coord, -transcript.end_coord])
+       else:
+          transcripts.sort(key=lambda transcript: [transcript.chromosome, transcript.strand, transcript.start_coord,
                                                  -transcript.end_coord])
-    write_transcripts_to_gtf(transcripts, gtf_file, dangling_edge_threshold, strand_specific)
+       write_transcripts_to_gtf(transcripts, gtf_file, dangling_edge_threshold, strand_specific)
 
 
-def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min_identity):
-    transcripts = []
+def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min_identity, include_chimeras):
+    transcripts = set()
     for i in range(num_pafs):
         prefix = create_prefix(i, num_pafs, prefixes)
         last_parsed_transcript = None
-        include_last_parsed_transcript_id = False
-        with gzip.open(paf_paths[i], "rt") as paf_file:
+        last_parsed_transcript_id = None
+        last_parsed_transcript_id_not_chimera = False
+        chimera_part_num = 1
+        with open(paf_paths[i], "rt") as paf_file:
             for line in paf_file:
                 line_elems = line.rstrip().split("\t")
                 q_start = int(line_elems[2])
@@ -195,21 +204,24 @@ def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min
                             transcript = store_exons_in_transcript(line_elems[0], get_strand(tags, line_elems), line_elems[5],
                                                                    int(line_elems[7]), int(line_elems[9]), cigar, prefix)
                             if transcript is not None:
-                                if last_parsed_transcript is None or transcript.transcript_id != last_parsed_transcript.transcript_id:
-                                    include_last_parsed_transcript_id = True
+                               if last_parsed_transcript_id is None or transcript.transcript_id != last_parsed_transcript_id:
+                                    if not last_parsed_transcript_id_not_chimera:
+                                       last_parsed_transcript_id_not_chimera = True
+                                       chimera_part_num = 1
                                     last_parsed_transcript = transcript
+                                    last_parsed_transcript_id = transcript.transcript_id
                                     add_transcript_if_pass_threshold(transcript, transcripts)
-                                elif include_last_parsed_transcript_id:
-                                    success = remove_invalid_mappings(last_parsed_transcript, transcript, transcripts)
-                                    if success:
-                                        include_last_parsed_transcript_id = False
-                                    else:
-                                        curr_is_larger = (transcript.num_matching > last_parsed_transcript.num_matching)
-                                        if curr_is_larger:
-                                            transcripts.remove(last_parsed_transcript)
-                                            transcripts.append(transcript)
-                                            last_parsed_transcript = transcript
-    return transcripts
+                               elif include_chimeras:
+                                     if last_parsed_transcript_id_not_chimera:
+                                        last_parsed_transcript.set_transcript_id(last_parsed_transcript.transcript_id + "_p" + str(chimera_part_num))
+                                        last_parsed_transcript_id_not_chimera = False
+                                     chimera_part_num += 1
+                                     transcript.set_transcript_id(transcript.transcript_id + "_p" + str(chimera_part_num))
+                                     add_transcript_if_pass_threshold(transcript, transcripts)
+                               elif last_parsed_transcript_id_not_chimera:
+                                    transcripts.remove(last_parsed_transcript)
+                                    last_parsed_transcript_id_not_chimera = False
+    return list(transcripts)
 
 def get_strand(tags, line_elems):
     for tag in tags:
@@ -222,21 +234,11 @@ def get_strand(tags, line_elems):
                 return line_elems[4]
     return line_elems[4]
 
+
 def add_transcript_if_pass_threshold(transcript, transcripts):
     if transcript.num_matching >= 200:
-        transcripts.append(transcript)
+        transcripts.add(transcript)
     return transcript
-
-
-def is_invalid_mapping(transcript, transcript_same_id):
-    return transcript.chromosome != transcript_same_id.chromosome
-
-
-def remove_invalid_mappings(transcript, transcript_same_id, transcripts):
-    if is_invalid_mapping(transcript, transcript_same_id):
-        transcripts.pop()
-        return True
-    return False
 
 
 def create_prefix(i, num_pafs, prefixes):
@@ -269,7 +271,7 @@ def get_cigar(tags):
 def meets_req(cigar, min_threshold=10):
     items = re.findall("(\d+)[ID]", cigar)
     for item in items:
-        if int(item) >= min_threshold:
+        if int(item) >= min_threshold: 
             return False
     return True
 
