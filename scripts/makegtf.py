@@ -181,6 +181,8 @@ def paf_to_gtf(paf_paths, gtf_path, strand_specific=False, indel_threshold=10, d
                                                  -transcript.end_coord])
        write_transcripts_to_gtf(transcripts, gtf_file, dangling_edge_threshold, strand_specific)
 
+def has_gzip_ext(p):
+    return p.lower().endswith('.gz')
 
 def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min_identity, include_chimeras):
     transcripts = set()
@@ -190,7 +192,10 @@ def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min
         last_parsed_transcript_id = None
         last_parsed_transcript_id_not_chimera = False
         chimera_part_num = 1
-        with open(paf_paths[i], "rt") as paf_file:
+        paf_path = paf_paths[i]
+        paf_fh = gzip.open(paf_path, "rt") if has_gzip_ext(paf_path) else open(paf_path, "rt")
+        
+        with paf_fh as paf_file:
             for line in paf_file:
                 line_elems = line.rstrip().split("\t")
                 q_start = int(line_elems[2])
@@ -219,7 +224,7 @@ def get_transcripts_from_paf(indel_threshold, num_pafs, paf_paths, prefixes, min
                                      transcript.set_transcript_id(transcript.transcript_id + "_p" + str(chimera_part_num))
                                      add_transcript_if_pass_threshold(transcript, transcripts)
                                elif last_parsed_transcript_id_not_chimera:
-                                    transcripts.remove(last_parsed_transcript)
+                                    transcripts.discard(last_parsed_transcript)
                                     last_parsed_transcript_id_not_chimera = False
     return list(transcripts)
 
