@@ -137,7 +137,7 @@ def main():
     parser.add_argument('gtf', metavar='GTF', type=str,
                         help='path of GTF file')
     parser.add_argument('--strand_specific', action='store_true',
-                        help='indicator that sequencing is stand specific or not')
+                        help='aligned sequences are stand-specific')
     parser.add_argument('--indel', metavar='INT', type=int,
                         default=10,
                         help='max indel size allowed [%(default)s]')
@@ -149,9 +149,8 @@ def main():
     parser.add_argument('--identity',  metavar='FLOAT', type=float,
                         default=0.99,
                         help='min sequence identity of alignment  [%(default)s]')
-    parser.add_argument('--include_chimeras',  metavar='BOOL', type=bool,
-                        default=False,
-                        help='whether or not chimeras should be included  [%(default)s]')
+    parser.add_argument('--include_chimeras', action='store_true',
+                        help='include segments from chimeric alignments')
 
     args = parser.parse_args()
 
