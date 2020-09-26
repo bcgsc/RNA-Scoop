@@ -367,7 +367,7 @@ def write_transcripts_of_gene_to_gtf(gtf_file, transcript_intervals_of_same_gene
 
 def write_transcript_to_gtf(transcript, gtf_file, prefix=None):
     seq_name = transcript.chromosome
-    source = "ask_kmn"
+    source = "rnascoop"
     feature = "exon"
     strand = transcript.strand
     if prefix is not None:

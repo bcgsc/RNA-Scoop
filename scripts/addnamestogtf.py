@@ -157,7 +157,7 @@ def add_gene_information(threshold):
 
 def write_to_output_file(output_file_path):
     output_file = open(output_file_path, "w")
-    source = "ask_kmn"
+    source = "rnascoop"
     feature = "exon"
     novel_count = 0
     for transcript in transcripts.values():
