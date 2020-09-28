@@ -28,7 +28,7 @@ class Gene:
 
 
 class Transcript:
-    def __init__(self, transcript_id, chromosome, strand, start_coord=0, end_coord=0, transcript_name=None,
+    def __init__(self, transcript_id, chromosome, strand, start_coord, end_coord, transcript_name=None,
                  orig_gene_id=None):
         self.transcript_name = transcript_name
         self.transcript_id = transcript_id
@@ -254,16 +254,16 @@ def parse_input_gtf_line(line_elems):
     strand = line_elems[6]
     tags = line_elems[8].split(";") 
     if feature == "transcript":
-       parse_input_transcript(chromosome, strand, tags)
+       parse_input_transcript(chromosome, strand, start_coord, end_coord, tags)
     elif feature == "exon":
        parse_input_exon(chromosome, end_coord, start_coord, strand, tags)
 
-def parse_input_transcript(chromosome, strand, tags):
+def parse_input_transcript(chromosome, strand, start_coord, end_coord, tags):
     transcript_ids = get_attribute_from_tags(transcript_id_pattern, tags)
     transcript_id = transcript_ids[0]
     if transcripts.get(transcript_id) is None:
        gene_ids = get_attribute_from_tags(gene_id_pattern, tags)
-       transcript = Transcript(transcript_id, chromosome, strand, 0, 0, None, gene_ids[0])
+       transcript = Transcript(transcript_id, chromosome, strand, start_coord, end_coord, None, gene_ids[0])
        transcripts[transcript_id] = transcript 
 
 
