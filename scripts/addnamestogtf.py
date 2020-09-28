@@ -28,7 +28,8 @@ class Gene:
 
 
 class Transcript:
-    def __init__(self, transcript_id, chromosome, start_coord, end_coord, strand, transcript_name=None, orig_gene_id=None):
+    def __init__(self, transcript_id, chromosome, strand, start_coord=0, end_coord=0, transcript_name=None,
+                 orig_gene_id=None):
         self.transcript_name = transcript_name
         self.transcript_id = transcript_id
         self.chromosome = chromosome
@@ -117,7 +118,8 @@ def parse_annotation_gtf(annotation_gtf_path):
     for line in annotation_gtf:
         line_elems = get_line_elems(line)
         if len(line_elems) == 9:
-            last_parsed_gene, last_parsed_transcript = parse_annotation_gtf_line(last_parsed_gene, last_parsed_transcript, line_elems)
+            last_parsed_gene, last_parsed_transcript = parse_annotation_gtf_line(last_parsed_gene,
+                                                                                 last_parsed_transcript, line_elems)
 
 
 def parse_input_gtf(input_gtf_path):
@@ -132,19 +134,18 @@ def add_gene_information(threshold):
     for transcript in transcripts.values():
         chromosome_gene_tree = gene_tree.get(transcript.chromosome)
         if chromosome_gene_tree is not None:
-            overlapping_genes_intervals = chromosome_gene_tree[transcript.start_coord+threshold]
-            overlapping_genes_intervals.update(chromosome_gene_tree[transcript.end_coord-threshold])
+            overlapping_genes_intervals = chromosome_gene_tree[transcript.start_coord + threshold]
+            overlapping_genes_intervals.update(chromosome_gene_tree[transcript.end_coord - threshold])
             num_overlapping_gene_intervals = len(overlapping_genes_intervals)
 
             if num_overlapping_gene_intervals == 1:
                 overlapping_gene = overlapping_genes_intervals.pop().data
                 assign_transcript_to_gene(overlapping_gene, transcript)
-            
+
             elif num_overlapping_gene_intervals > 1:
                 overlapping_genes = list(map(lambda gene_interval: gene_interval.data, overlapping_genes_intervals))
                 potential_genes = find_potential_genes_by_junctions(transcript, overlapping_genes)
-               
-               
+
                 if len(potential_genes) == 1:
                     assign_transcript_to_gene(potential_genes[0], transcript)
                 else:
@@ -206,7 +207,7 @@ def parse_annotation_gtf_line(last_parsed_gene, last_parsed_transcript, line_ele
         last_parsed_gene = parse_annotation_gene(chromosome, end_coord, start_coord, strand, tags)
     elif feature == "transcript":
         last_parsed_transcript = parse_annotation_transcript(last_parsed_gene, chromosome, end_coord, start_coord,
-                                    strand, tags)
+                                                             strand, tags)
     elif feature == "exon":
         parse_annotation_exon(last_parsed_transcript, end_coord, start_coord, tags)
     return last_parsed_gene, last_parsed_transcript
@@ -232,9 +233,9 @@ def parse_annotation_transcript(gene, chromosome, end_coord, start_coord, strand
     transcript_names = get_attribute_from_tags(transcript_name_pattern, tags)
     transcript_ids = get_attribute_from_tags(transcript_id_pattern, tags)
     if len(transcript_names) == 1:
-        transcript = Transcript(transcript_ids[0], chromosome, start_coord, end_coord, strand, transcript_names[0])
+        transcript = Transcript(transcript_ids[0], chromosome, strand, start_coord, end_coord, transcript_names[0])
     else:
-        transcript = Transcript(transcript_ids[0], chromosome, start_coord, end_coord, strand)
+        transcript = Transcript(transcript_ids[0], chromosome, strand, start_coord, end_coord)
     gene.add_transcript(transcript)
     return transcript
 
@@ -245,14 +246,25 @@ def parse_annotation_exon(transcript, end_coord, start_coord, tags):
     return transcript
 
 
-# assumes each line only has exon information
 def parse_input_gtf_line(line_elems):
     chromosome = line_elems[0]
+    feature = line_elems[2]
     start_coord = int(line_elems[3])
     end_coord = int(line_elems[4])
     strand = line_elems[6]
-    tags = line_elems[8].split(";")
-    parse_input_exon(chromosome, end_coord, start_coord, strand, tags)
+    tags = line_elems[8].split(";") 
+    if feature == "transcript":
+       parse_input_transcript(chromosome, strand, tags)
+    elif feature == "exon":
+       parse_input_exon(chromosome, end_coord, start_coord, strand, tags)
+
+def parse_input_transcript(chromosome, strand, tags):
+    transcript_ids = get_attribute_from_tags(transcript_id_pattern, tags)
+    transcript_id = transcript_ids[0]
+    if transcripts.get(transcript_id) is None:
+       gene_ids = get_attribute_from_tags(gene_id_pattern, tags)
+       transcript = Transcript(transcript_id, chromosome, strand, 0, 0, None, gene_ids[0])
+       transcripts[transcript_id] = transcript 
 
 
 def parse_input_exon(chromosome, end_coord, start_coord, strand, tags):
@@ -265,7 +277,8 @@ def parse_input_exon(chromosome, end_coord, start_coord, strand, tags):
         update_transcript_start_coord(transcript, exon.start_coord)
         update_transcript_end_coord(transcript, exon.end_coord)
     else:
-        transcript = Transcript(transcript_ids[0], chromosome, exon.start_coord, exon.end_coord, strand, None, gene_ids[0])
+        transcript = Transcript(transcript_ids[0], chromosome, strand, exon.start_coord, exon.end_coord, None,
+                                gene_ids[0])
         transcript.add_exon(exon)
         transcripts[transcript.transcript_id] = transcript
 
@@ -298,9 +311,9 @@ def find_potential_genes_by_junctions(transcript, genes):
                 start_exon = transcript_exons[i]
                 end_exon = transcript_exons[i + 1]
                 match, new_num_first_exons_exclude = find_matching_junction(gene_transcript, start_exon, end_exon,
-                                                                            num_first_exons_exclude)  
+                                                                            num_first_exons_exclude)
                 if new_num_first_exons_exclude is not None:
-                   num_first_exons_exclude = new_num_first_exons_exclude
+                    num_first_exons_exclude = new_num_first_exons_exclude
                 if match:
                     transcript_junctions_matching += 1
                 if num_first_exons_exclude == len(gene_transcript.exons) - 1:
@@ -324,9 +337,8 @@ def find_potential_genes_by_junctions(transcript, genes):
 # second return value is the number of exons on the given transcript that should be disregarded
 # when looking for matching junctions between exons further down
 def find_matching_junction(transcript, start_exon, end_exon, num_first_exons_exclude):
-          
     transcript_exons = transcript.exons
-    
+
     for i in range(num_first_exons_exclude, len(transcript_exons) - 1):
         junction_start_match = (transcript_exons[i].end_coord == start_exon.end_coord)
         junction_end_match = (transcript_exons[i + 1].start_coord == end_exon.start_coord)
@@ -400,5 +412,6 @@ def get_attribute_from_tag(attribute_pattern, tag):
         return matchObject.group(1)
     else:
         return None
+
 
 main()
