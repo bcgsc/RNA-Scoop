@@ -1,6 +1,7 @@
 package controller;
 
 import annotation.Gene;
+import annotation.GeneMaxFoldChange;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -32,7 +33,6 @@ public class GeneSelectorController extends PopUpController implements Initializ
 
     @FXML private ScrollPane geneSelector;
     @FXML private GridPane gridPane;
-    @FXML private VBox genesColumn;
     @FXML private TextField filterField;
     @FXML private TableView genesTable;
     @FXML private TableView shownGenesTable;
@@ -264,9 +264,9 @@ public class GeneSelectorController extends PopUpController implements Initializ
         geneIDCol .setCellValueFactory(new PropertyValueFactory("id"));
         TableColumn<Gene,String> geneName = new TableColumn("Name");
         geneName.setCellValueFactory(new PropertyValueFactory("name"));
-        TableColumn<Gene,String> numIsoforms = new TableColumn("# Isoforms");
+        TableColumn<Gene,Double> numIsoforms = new TableColumn("# Isoforms");
         numIsoforms.setCellValueFactory(new PropertyValueFactory("numIsoforms"));
-        TableColumn<Gene,String> maxFoldChange = new TableColumn("Change");
+        TableColumn<Gene,GeneMaxFoldChange> maxFoldChange =  new TableColumn("Change");
         maxFoldChange.setCellValueFactory(new PropertyValueFactory("maxFoldChange"));
         genesTable.getColumns().setAll(geneIDCol , geneName, numIsoforms, maxFoldChange);
         genesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

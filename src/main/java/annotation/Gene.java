@@ -2,7 +2,9 @@ package annotation;
 
 
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
@@ -22,7 +24,7 @@ public class Gene implements Comparable<Gene> {
     /**
      * Map of this gene's max fold changes for each label set
      */
-    private HashMap<LabelSet, Double> maxFoldChangeMap;
+    private HashMap<LabelSet, GeneMaxFoldChange> maxFoldChangeMap;
 
     private String name;
     private String id;
@@ -30,7 +32,7 @@ public class Gene implements Comparable<Gene> {
     private int endNucleotide;
     private String chromosome;
     private boolean onPositiveStrand;
-    private DoubleProperty maxFoldChange;
+    private SimpleObjectProperty<GeneMaxFoldChange> maxFoldChange;
 
     public Gene(String id, String chromosome, String strand) {
         isoforms = new HashMap<>();
@@ -43,8 +45,7 @@ public class Gene implements Comparable<Gene> {
         endNucleotide = 0;
         this.chromosome = chromosome;
         onPositiveStrand = strand.equals("+");
-        maxFoldChange = new SimpleDoubleProperty();
-        maxFoldChange.setValue(0);
+        maxFoldChange = new SimpleObjectProperty(new GeneMaxFoldChange(0, 0));
     }
 
     public void addIsoform(String transcriptID, Isoform isoform) {
@@ -63,7 +64,7 @@ public class Gene implements Comparable<Gene> {
         this.endNucleotide = endNucleotide;
     }
 
-    public DoubleProperty maxFoldChangeProperty() {
+    public ObjectProperty<GeneMaxFoldChange> maxFoldChangeProperty() {
         return maxFoldChange;
     }
 
@@ -72,7 +73,7 @@ public class Gene implements Comparable<Gene> {
         if (maxFoldChangeMap.containsKey(labelSet)) {
             maxFoldChange.setValue(maxFoldChangeMap.get(labelSet));
         } else {
-            double maxFoldChange = getMaxFoldChangeForLabelSet(labelSet);
+            GeneMaxFoldChange maxFoldChange = getMaxFoldChangeForLabelSet(labelSet);
             maxFoldChangeMap.put(labelSet, maxFoldChange);
             this.maxFoldChange.setValue(maxFoldChange);
         }
@@ -142,9 +143,10 @@ public class Gene implements Comparable<Gene> {
         return id.compareTo(gene.getId());
     }
 
-    private double getMaxFoldChangeForLabelSet(LabelSet labelSet) {
+    private GeneMaxFoldChange getMaxFoldChangeForLabelSet(LabelSet labelSet) {
         Collection<Cluster> clusters = labelSet.getClusters();
         double maxFoldChange = 0;
+        double maxPercentExpressed= 0;
         for (Isoform isoform : isoforms.values()) {
             double minExpression = Integer.MAX_VALUE;
             double maxExpression = Integer.MIN_VALUE;
@@ -154,11 +156,17 @@ public class Gene implements Comparable<Gene> {
                     minExpression = expression;
                 if (expression > maxExpression)
                     maxExpression = expression;
+
+                int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
+                int numCells = cluster.getCells().size();
+                double percentExpressed = (double) numExpressingCells / numCells;
+                if (percentExpressed > maxPercentExpressed)
+                    maxPercentExpressed = percentExpressed;
             }
             double foldChange = maxExpression / minExpression;
             if (foldChange > maxFoldChange)
                 maxFoldChange = foldChange;
         }
-        return Util.roundToOneDecimal(maxFoldChange);
+        return new GeneMaxFoldChange(Util.roundToOneDecimal(maxFoldChange), maxPercentExpressed);
     }
 }
