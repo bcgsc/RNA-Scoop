@@ -532,12 +532,14 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             List<XYSeries> cellGroups = cellsInPlot.getSeries();
             redrawOnClear = false;
             clearSelection();
-            for (XYSeries cellGroup : cellGroups) {
-                for (XYDataItem dataItem : cellGroup.getItems()) {
-                    CellDataItem cell = (CellDataItem) dataItem;
-                    if (shouldSelectCell(cell, isoformIDs))
-                        select(cell);
+            if (isoformIDs.size() > 0) {
+                for (XYSeries cellGroup : cellGroups) {
+                    for (XYDataItem dataItem : cellGroup.getItems()) {
+                        CellDataItem cell = (CellDataItem) dataItem;
+                        if (shouldSelectCell(cell, isoformIDs))
+                            select(cell);
 
+                    }
                 }
             }
             redrawPlotSansLegend();
@@ -697,10 +699,10 @@ public class ClusterViewController implements Initializable, InteractiveElementC
          */
         private boolean shouldSelectCell(CellDataItem cell, Collection<String> isoformIDs) {
             for (String isoformID : isoformIDs) {
-                if (cell.getIsoformExpressionLevel(isoformID) > 0)
-                    return true;
+                if (cell.getIsoformExpressionLevel(isoformID) == 0)
+                    return false;
             }
-            return false;
+            return true;
         }
     }
 
