@@ -39,6 +39,8 @@
                         <CheckMenuItem fx:id="showIsoformNameToggle" onAction="#handleIsoformLabelToggle" text="Show isoform name"/>
                         <CheckMenuItem fx:id="showIsoformIDToggle" onAction="#handleIsoformLabelToggle" text="Show isoform ID"/>
                         <SeparatorMenuItem/>
+                        <CheckMenuItem fx:id="showIsoformPlotLegendToggle" onAction="#handleIsoformPlotLegendToggle" text="Show legend"/>
+                        <SeparatorMenuItem/>
                         <MenuItem fx:id="isoformPlotToggle" onAction="#handleIsoformViewToggle" text="Close isoform plot"/>
                     </Menu>
                     <Menu text="Cluster View">

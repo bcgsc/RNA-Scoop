@@ -15,6 +15,7 @@ public class SessionMaker {
     public static final String REVERSE_COMPLEMENT_KEY = "rev_complement";
     public static final String HIDE_SINGLE_EXON_ISOFORMS_KEY = "hide_single_exon_isoforms";
     public static final String HIDE_DOT_PLOT_KEY = "hide_dot_plot";
+    public static final String SHOW_ISOFORM_PLOT_LEGEND_KEY = "show_isoform_plot_legend_key";
     public static final String SHOW_MEDIAN_KEY = "show_median";
     public static final String SHOW_AVERAGE_KEY = "show_average";
     public static final String INCLUDE_ZEROS_KEY = "include_zeros";
@@ -44,6 +45,7 @@ public class SessionMaker {
         session.put(REVERSE_COMPLEMENT_KEY, ControllerMediator.getInstance().isReverseComplementing());
         session.put(HIDE_SINGLE_EXON_ISOFORMS_KEY, ControllerMediator.getInstance().isHidingSingleExonIsoforms());
         session.put(HIDE_DOT_PLOT_KEY, ControllerMediator.getInstance().isHidingDotPlot());
+        session.put(SHOW_ISOFORM_PLOT_LEGEND_KEY, ControllerMediator.getInstance().isShowingIsoformPlotLegend());
         session.put(SHOW_MEDIAN_KEY, ControllerMediator.getInstance().isShowingMedian());
         session.put(SHOW_AVERAGE_KEY, ControllerMediator.getInstance().isShowingAverage());
         session.put(INCLUDE_ZEROS_KEY, ControllerMediator.getInstance().isIncludingZeros());

@@ -128,6 +128,24 @@ public class TPMGradientAdjusterController extends PopUpController implements In
         return gradientMinTPM;
     }
 
+    public double getGradientMaxTPM() {
+        return gradientMaxTPM;
+    }
+
+    public double getGradientMidTPM() {
+        if (getScaleOptionInUse().equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION)) {
+           return gradientMinTPM + 0.5 * (gradientMaxTPM - gradientMinTPM);
+        } else {
+            double logMinTPM = Math.log10(gradientMinTPM + Double.MIN_VALUE);
+            double logMaxTPM = Math.log10(gradientMaxTPM + Double.MIN_VALUE);
+            return Math.pow(10, logMinTPM + 0.5 * (logMaxTPM - logMinTPM));
+        }
+    }
+
+    public String getScaleOptionInUse() {
+        return scaleChooser.getValue();
+    }
+
     /**
      * Returns the color on the TPM gradient associated with the given expression
      * */
@@ -148,6 +166,14 @@ public class TPMGradientAdjusterController extends PopUpController implements In
         }
     }
 
+    public LinearGradient getTPMGradientFill() {
+        Color minTPMColor = minTPMColorPicker.getValue();
+        Color midTPMColor = midTPMColorPicker.getValue();
+        Color maxTPMColor = maxTPMColorPicker.getValue();
+        Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(0.5, midTPMColor), new Stop(1, maxTPMColor)};
+        return new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
+    }
+
     /**
      * When TPM gradient max/min changes updates the stored max/min values
      * (if new values are valid). Redraws the genes
@@ -159,7 +185,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     protected void handleChangedGradientMaxMinTPM() {
         try {
             updateTPMGradientMaxMin();
-            ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+            ControllerMediator.getInstance().isoformPlotHandleGradientChange();
             ControllerMediator.getInstance().clusterViewHandleColoringChange();
         } catch (RNAScoopException e) {
             gradientMinTPMField.setText(String.valueOf(gradientMinTPM));
@@ -176,7 +202,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     @FXML
     protected void handleTPMColorPicker() {
         drawTPMGradient();
-        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleGradientChange();
         ControllerMediator.getInstance().clusterViewHandleColoringChange();
     }
 
@@ -186,7 +212,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
      */
     @FXML
     protected void handleChangedTPMGradientScale() {
-        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleGradientChange();
         ControllerMediator.getInstance().clusterViewHandleColoringChange();
     }
 
@@ -197,7 +223,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     @FXML
     protected void handleAutoMinMaxButton() {
         setGradientMinMaxToRecommended();
-        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleGradientChange();
         ControllerMediator.getInstance().clusterViewHandleColoringChange();
     }
 
@@ -209,8 +235,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
      */
     private double getTForExpressionBetweenMaxMin(double expression) {
         double t;
-        String scale = scaleChooser.getValue();
-        if (scale.equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION)) {
+        if (getScaleOptionInUse().equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION)) {
             t = (expression - gradientMinTPM) / (gradientMaxTPM - gradientMinTPM);
         } else {
             double logIsoformExpression = Math.log10(expression + Double.MIN_VALUE);
@@ -250,11 +275,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     }
 
     private void drawTPMGradient() {
-        Color minTPMColor = minTPMColorPicker.getValue();
-        Color midTPMColor = midTPMColorPicker.getValue();
-        Color maxTPMColor = maxTPMColorPicker.getValue();
-        Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(0.5, midTPMColor), new Stop(1, maxTPMColor)};
-        LinearGradient gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
+        LinearGradient gradient = getTPMGradientFill();
         tpmGradient.setFill(gradient);
     }
 

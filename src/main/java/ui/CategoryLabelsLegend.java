@@ -18,15 +18,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-public class Legend {
+public class CategoryLabelsLegend {
     public static final double LIGHT_COLOR_LUMINENCE_LIMIT = 0.69;
     public static final int LEGEND_CIRCLE_LABEL_SPACING = 2;
 
     private Pane legendGraphic;
     private SelectionModel selectionModel;
 
-    public Legend(boolean includeLabels, boolean selectable, boolean onlySelected, boolean includeBackground, boolean vertical,
-                  double dotSize, double circleCanvasWidth, double circleCanvasHeight, double elementSpacing) {
+    public CategoryLabelsLegend(boolean includeLabels, boolean selectable, boolean onlySelected, boolean includeBackground, boolean vertical,
+                                double dotSize, double circleCanvasWidth, double circleCanvasHeight, double elementSpacing) {
         if (selectable)
             selectionModel = new SelectionModel();
 

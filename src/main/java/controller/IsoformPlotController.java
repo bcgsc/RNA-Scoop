@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -25,7 +26,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import labelset.Cluster;
 import mediator.ControllerMediator;
-import ui.Legend;
+import ui.CategoryLabelsLegend;
 import util.Util;
 
 import java.net.URL;
@@ -37,14 +38,15 @@ import static util.Util.roundToOneDecimal;
 public class IsoformPlotController implements Initializable, InteractiveElementController {
     private static final int SCROLLBAR_WIDTH = 16;
 
-    @FXML private VBox holder;
+    @FXML private VBox isoformPlot;
     @FXML private VBox isoformPlotPanel;
     @FXML private Button selectGenesButton;
     @FXML private Button setTPMGradientButton;
     @FXML private ScrollPane scrollPane;
-    @FXML private Pane isoformPlot;
+    @FXML private Pane isoformPlotPane;
     @FXML private VBox geneGroups;
     private static GeneGroup firstGeneGroup;
+    private static IsoformPlotLegend isoformPlotLegend;
 
     private static SelectionModel selectionModel;
     private static RectangularSelection rectangularSelection;
@@ -53,10 +55,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        holder.prefWidthProperty().bind(isoformPlot.widthProperty());
+        isoformPlot.prefWidthProperty().bind(isoformPlotPane.widthProperty());
         selectionModel = new SelectionModel();
         geneGeneGroupMap = new HashMap<>();
-        rectangularSelection = new RectangularSelection(isoformPlot);
+        rectangularSelection = new RectangularSelection(isoformPlotPane);
         setScrollPaneWidthSpacing();
         setUpRedrawIsoformsToMatchScrollPaneWidth();
         setGeneGroupsStyling();
@@ -102,8 +104,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 geneGroups.getChildren().add(geneGroup);
                 geneGeneGroupMap.put(gene, geneGroup);
                 DotPlot.addDotPlotRowsIfShould(geneGroup);
-                if (firstGeneGroup == null)
+                if (firstGeneGroup == null) {
                     updateFirstGeneGroup();
+                    updateIsoformPlotLegend(false);
+                }
             }
         }
         DotPlot.updateDotPlotLegend(false);
@@ -125,12 +129,21 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                     updateFirstGeneGroup();
             }
         }
+        updateIsoformPlotLegend(false);
         DotPlot.updateDotPlotLegend(false);
     }
 
     public void updateIsoformGraphicsAndDotPlot() {
         redrawIsoforms();
         DotPlot.updateDotPlot();
+    }
+
+    /**
+     * Updates isoform graphics, dot plot and isoform plot legend
+     */
+    public void updateIsoformPlot(boolean redrawIsoformPlotLegend) {
+        updateIsoformGraphicsAndDotPlot();
+        updateIsoformPlotLegend(redrawIsoformPlotLegend);
     }
 
     public void updateDotPlotLegend() {
@@ -172,13 +185,30 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Should be called when hide dot plot status changes, or when how isoforms/dots are coloured
-     * changes
-     * Updates isoform graphics and dot plot if necessary (i.e. if cell plot isn't cleared)
+     * Should be called when how expression is calculated (median, average...) changes
+     * Updates isoform graphics and dots if necessary (i.e. if cell plot isn't cleared)
      */
-    public void handleColoringOrDotPlotChange() {
+    public void handleExpressionTypeChange() {
         if (!ControllerMediator.getInstance().isCellPlotCleared())
             updateIsoformGraphicsAndDotPlot();
+    }
+
+    /**
+     * Called when TPM gradient changes
+     * Updates isoform plot if necessary (i.e. if cell plot isn't cleared)
+     */
+    public void handleGradientChange() {
+        if (!ControllerMediator.getInstance().isCellPlotCleared())
+            updateIsoformPlot(true);
+    }
+
+    /**
+     * Should be called when hide dot plot status changes
+     * Updates isoform plot if necessary (i.e. if cell plot isn't cleared)
+     */
+    public void handleDotPlotChange() {
+        if (!ControllerMediator.getInstance().isCellPlotCleared())
+            updateIsoformPlot(false);
     }
 
     /**
@@ -201,6 +231,26 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         for (GeneGroup geneGroup : geneGeneGroupMap.values())
             geneGroup.updateIsoformLabels(showIsoformName, showIsoformID);
 
+    }
+
+    /**
+     * If legend isn't displayed and should be, adds it
+     * If legend is displayed and should be, updates it
+     * If legend is displayed and shouldn't be, removes it
+     * @param redraw whether or not the gradient in the legend should be
+     *               redrawn
+     */
+    public void updateIsoformPlotLegend(boolean redraw) {
+        boolean shouldDisplayIsoformPlotLegend = shouldDisplayIsoformPlotLegend();
+        if (shouldDisplayIsoformPlotLegend && isoformPlotLegend == null) {
+            isoformPlotLegend = new IsoformPlotLegend();
+            isoformPlot.getChildren().add(isoformPlotLegend);
+        } else if (shouldDisplayIsoformPlotLegend) {
+            isoformPlotLegend.updateIsoformPlotLegend(redraw);
+        } else if (isoformPlotLegend != null) {
+            isoformPlot.getChildren().remove(isoformPlotLegend);
+            isoformPlotLegend = null;
+        }
     }
 
     public static Collection<GeneGroup> getGeneGroups() {
@@ -311,6 +361,12 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         else
             return "Average non-zero TPM: " + roundToOneDecimal(expression);
 
+    }
+
+    private boolean shouldDisplayIsoformPlotLegend() {
+        return !ControllerMediator.getInstance().isCellPlotCleared() &&
+                ControllerMediator.getInstance().isShowingIsoformPlotLegend() &&
+                firstGeneGroup != null;
     }
 
     /**
@@ -788,6 +844,8 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private static final double DOT_PLOT_COLUMN_WIDTH = ALL_EXPRESS_DOT_SIZE + GRAPHIC_SPACING;
         private static final double DOT_PLOT_ROW_HEIGHT = ALL_EXPRESS_DOT_SIZE + GRAPHIC_SPACING;
         private static final int DOT_PLOT_COLUMN_SPACING = 1;
+        private static final double DOT_LEGEND_COLUMN_WIDTH = 42;
+        private static final double DOT_LEGEND_TEXT_HEIGHT = 9;
 
         public static void addDotPlotRowsIfShould(GeneGroup geneGroup) {
             if (shouldDrawDotPlot()) {
@@ -803,13 +861,40 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 boolean shouldDrawDotPlot = shouldDrawDotPlot();
                 if (shouldDrawDotPlot && (dotPlotLegend == null || redraw)) {
                     boolean onlySelectedClusters = ControllerMediator.getInstance().areCellsSelected();
-                    Legend legend = new Legend(false, false, onlySelectedClusters,
+                    CategoryLabelsLegend legend = new CategoryLabelsLegend(false, false, onlySelectedClusters,
                             false, false, ALL_EXPRESS_DOT_SIZE, DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT, DOT_PLOT_COLUMN_SPACING);
                     firstIsoformGroup.setDotPlotLegend(legend.getLegendGraphic());
                 }  else if (dotPlotLegend != null && !shouldDrawDotPlot) {
                     firstIsoformGroup.setDotPlotLegend(null);
                 }
             }
+        }
+
+        public static Node getDotLegend() {
+            double width = DOT_LEGEND_COLUMN_WIDTH * 4 + DOT_PLOT_COLUMN_SPACING * 3;
+            double height = DOT_PLOT_ROW_HEIGHT + DOT_LEGEND_TEXT_HEIGHT;
+            Canvas dotLegend = new Canvas(width, height);
+            GraphicsContext graphicsContext = dotLegend.getGraphicsContext2D();
+            double[] dotSizesToDraw = new double[]{QUARTER_EXPRESS_DOT_SIZE, HALF_EXPRESS_DOT_SIZE,
+                    THREE_QUARTERS_EXPRESS_DOT_SIZE, ALL_EXPRESS_DOT_SIZE};
+
+            double dotX = DOT_LEGEND_COLUMN_WIDTH / 2;
+            double dotY = DOT_PLOT_ROW_HEIGHT / 2;
+            for (double dotSize : dotSizesToDraw) {
+                graphicsContext.setFill(Color.BLACK);
+                graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+
+                graphicsContext.setFont(new Font("Verdana", 10));
+                String text;
+                if (dotSize == QUARTER_EXPRESS_DOT_SIZE) text = "≤ 25%";
+                else if (dotSize == HALF_EXPRESS_DOT_SIZE) text = "≤ 50%";
+                else if (dotSize == THREE_QUARTERS_EXPRESS_DOT_SIZE) text = "≤ 75%";
+                else text = "≤ 100%";
+
+                graphicsContext.fillText(text, dotX - DOT_LEGEND_COLUMN_WIDTH / 2, DOT_PLOT_ROW_HEIGHT + DOT_LEGEND_TEXT_HEIGHT);
+                dotX += DOT_LEGEND_COLUMN_WIDTH + DOT_PLOT_COLUMN_SPACING;
+            }
+            return dotLegend;
         }
 
         public static void updateDotPlot() {
@@ -910,6 +995,129 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
     }
 
+    private class IsoformPlotLegend extends HBox {
+        private GradientLegend gradientLegend;
+        private Node dotLegend;
+
+        public IsoformPlotLegend() {
+            setAlignment(Pos.CENTER);
+            addGradientLegend();
+            if (DotPlot.shouldDrawDotPlot())
+                addDotLegend();
+        }
+
+        public void updateIsoformPlotLegend(boolean redraw) {
+            if (redraw)
+                gradientLegend.redraw();
+            if (DotPlot.shouldDrawDotPlot() && dotLegend == null)
+                addDotLegend();
+            else if (!DotPlot.shouldDrawDotPlot() && dotLegend != null)
+                removeDotLegend();
+        }
+
+        private void addGradientLegend() {
+            gradientLegend = new GradientLegend();
+            getChildren().add(gradientLegend);
+        }
+
+        private void addDotLegend() {
+            dotLegend = DotPlot.getDotLegend();
+            HBox.setMargin(dotLegend, new Insets(0, 0, 0, 10));
+            getChildren().add(dotLegend);
+        }
+
+        private void removeDotLegend() {
+            getChildren().remove(dotLegend);
+            dotLegend = null;
+        }
+
+        private class GradientLegend extends VBox{
+            private final Font GRADIENT_LEGEND_FONT = Font.font("Verdana",11);
+            private static final double GRADIENT_HEIGHT = DotPlot.ALL_EXPRESS_DOT_SIZE;
+            private static final double GRADIENT_WIDTH = 200;
+
+            private Rectangle gradient;
+            private Text minText;
+            private Text midText;
+            private Text maxText;
+            private Text scale;
+
+            public GradientLegend() {
+                setAlignment(Pos.CENTER);
+
+                initializeGradient();
+                initializeGradientExpressionLabels();
+                initializeGradientScale();
+
+                StackPane tpmLabels = new StackPane();
+                tpmLabels.getChildren().addAll(minText, midText, maxText);
+                StackPane.setAlignment(minText, Pos.CENTER_LEFT);
+                StackPane.setAlignment(midText, Pos.CENTER);
+                StackPane.setAlignment(maxText, Pos.CENTER_RIGHT);
+
+                getChildren().addAll(tpmLabels, gradient, scale);
+            }
+
+            private void initializeGradient() {
+                gradient = new Rectangle(GRADIENT_WIDTH, GRADIENT_HEIGHT);
+                gradient.setFill(ControllerMediator.getInstance().getTPMGradientFill());
+                VBox.setMargin(gradient, new Insets(5, 0, 5, 0));
+                gradient.setStyle("-fx-stroke: black; -fx-stroke-width: 1");
+            }
+
+            private void initializeGradientExpressionLabels() {
+                minText = new Text(getMinText());
+                minText.setFont(GRADIENT_LEGEND_FONT);
+
+                midText = new Text(getMidText());
+                midText.setFont(GRADIENT_LEGEND_FONT);
+
+                maxText = new Text(getMaxText());
+                maxText.setFont(GRADIENT_LEGEND_FONT);
+            }
+
+            private void initializeGradientScale() {
+                scale = new Text(getScaleText());
+                scale.setFont(GRADIENT_LEGEND_FONT);
+            }
+
+            public void redraw() {
+                gradient.setFill(ControllerMediator.getInstance().getTPMGradientFill());
+                minText.setText(getMinText());
+                midText.setText(getMidText());
+                maxText.setText(getMaxText());
+                scale.setText(getScaleText());
+            }
+
+            private String getMinText() {
+                return roundAndConvertToString(ControllerMediator.getInstance().getGradientMinTPM());
+            }
+
+            private String getMidText() {
+                return roundAndConvertToString(ControllerMediator.getInstance().getGradientMidTPM());
+            }
+
+            private String getMaxText() {
+                return roundAndConvertToString(ControllerMediator.getInstance().getGradientMaxTPM());
+            }
+
+            private String getScaleText() {
+                return ControllerMediator.getInstance().getScaleOptionInUse() + " scale";
+            }
+
+            /**
+             * Rounds number to closest whole number if >= 1, else rounds number to
+             * one decimal. Converts result to string
+             */
+            public String roundAndConvertToString(double num) {
+                if (num >= 1)
+                    return Integer.toString((int) Math.round(num));
+                else
+                    return Double.toString(Util.roundToOneDecimal(num));
+            }
+        }
+    }
+
     private static class SelectableText extends TextField {
 
         public SelectableText() {
@@ -932,6 +1140,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
     }
+
     public class SelectionModel {
         private Map<IsoformGroup.IsoformGraphic, String> selection = new HashMap<>();
 

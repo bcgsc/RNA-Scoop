@@ -11,6 +11,7 @@ import controller.labelsetmanager.LabelSetManagerController;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.LinearGradient;
 import labelset.Cluster;
 import labelset.LabelSet;
 import ui.LabelSetManagerWindow;
@@ -145,6 +146,14 @@ public class ControllerMediator implements Mediator{
             isoformPlotController.updateIsoformGraphicsAndDotPlot();
     }
 
+    public void updateIsoformPlot(boolean redrawIsoformPlotLegend) {
+        isoformPlotController.updateIsoformPlot(redrawIsoformPlotLegend);
+    }
+
+    public void updateIsoformPlotLegend(boolean redraw) {
+        isoformPlotController.updateIsoformPlotLegend(redraw);
+    }
+
     public void updateDotPlotLegend() {
         isoformPlotController.updateDotPlotLegend();
     }
@@ -157,8 +166,16 @@ public class ControllerMediator implements Mediator{
         isoformPlotController.updateHideSingleExonIsoformsStatus();
     }
 
-    public void isoformPlotHandleColoringOrDotPlotChange() {
-        isoformPlotController.handleColoringOrDotPlotChange();
+    public void isoformPlotHandleExpressionTypeChange() {
+        isoformPlotController.handleExpressionTypeChange();
+    }
+
+    public void isoformPlotHandleDotPlotChange() {
+        isoformPlotController.handleDotPlotChange();
+    }
+
+    public void isoformPlotHandleGradientChange() {
+        isoformPlotController.handleGradientChange();
     }
 
     public void clusterViewHandleColoringChange() {
@@ -395,8 +412,24 @@ public class ControllerMediator implements Mediator{
         return tpmGradientAdjusterController.getGradientMinTPM();
     }
 
+    public double getGradientMaxTPM() {
+        return tpmGradientAdjusterController.getGradientMaxTPM();
+    }
+
+    public double getGradientMidTPM() {
+        return tpmGradientAdjusterController.getGradientMidTPM();
+    }
+
+    public String getScaleOptionInUse() {
+        return tpmGradientAdjusterController.getScaleOptionInUse();
+    }
+
     public Color getColorFromTPMGradient(double expression) {
         return tpmGradientAdjusterController.getColorFromTPMGradient(expression);
+    }
+
+    public LinearGradient getTPMGradientFill() {
+        return tpmGradientAdjusterController.getTPMGradientFill();
     }
 
     public LabelSet getLabelSetInUse() {
@@ -429,6 +462,10 @@ public class ControllerMediator implements Mediator{
 
     public boolean isHidingDotPlot() {
         return mainController.isHidingDotPlot();
+    }
+
+    public boolean isShowingIsoformPlotLegend() {
+        return mainController.isShowingIsoformPlotLegend();
     }
 
     public boolean isShowingMedian() {

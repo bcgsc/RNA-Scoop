@@ -34,7 +34,7 @@ import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import tagbio.umap.Umap;
-import ui.Legend;
+import ui.CategoryLabelsLegend;
 import util.Util;
 
 import javax.swing.*;
@@ -73,7 +73,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     private ChartPanel plot;
     private PlotRenderer plotRenderer;
     private ScrollPane legendHolder;
-    private Legend legend;
+    private CategoryLabelsLegend legend;
     private CellSelectionManager cellSelectionManager;
     private HashMap<Integer, CellDataItem> cellNumberCellMap;
     private XYSeriesCollection cellsInPlot;
@@ -189,7 +189,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     public void drawPlot() {
         clearPlot();
         ControllerMediator.getInstance().deselectAllIsoforms();
-        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+        ControllerMediator.getInstance().updateIsoformPlot(false);
         disableAssociatedFunctionality();
         try {
             Thread plotMaker = new Thread(new PlotMaker());
@@ -203,7 +203,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
 
     public void redrawLegend() {
         if (!isPlotCleared()) {
-            legend = new Legend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
+            legend = new CategoryLabelsLegend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED, LEGEND_SHOW_BACKGROUND,
                     LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH, LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING);
             legendHolder.setContent(legend.getLegendGraphic());
         }
@@ -722,7 +722,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 drawPlot(matrix);
                 ControllerMediator.getInstance().addCellsToLabelSetClusters();
                 setTPMGradientValues();
-                runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+                runLater(() -> ControllerMediator.getInstance().updateIsoformPlot(false));
                 ControllerMediator.getInstance().updateGenesMaxFoldChange();
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing cell plot"));
            } catch (Exception e) {
@@ -827,7 +827,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         private void addLegend() {
             runLater(() -> {
                 legendHolder = new ScrollPane();
-                legend = new Legend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED,
+                legend = new CategoryLabelsLegend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED,
                         LEGEND_SHOW_BACKGROUND, LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH,
                         LEGEND_DOT_CANVAS_HEIGHT, LEGEND_ELEMENT_SPACING);
                 legendHolder.setContent(legend.getLegendGraphic());

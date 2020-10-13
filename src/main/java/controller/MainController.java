@@ -3,7 +3,6 @@ package controller;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -22,7 +21,6 @@ import persistance.SessionMaker;
 import ui.Main;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -41,8 +39,8 @@ public class MainController implements InteractiveElementController {
     @FXML private MenuItem consoleToggle;
     @FXML private SplitPane verticalSplitPane;
     @FXML private SplitPane horizontalSplitPane;
-    @FXML private CheckMenuItem hideSingleExonIsoformsToggle;
     @FXML private CheckMenuItem revComplementToggle;
+    @FXML private CheckMenuItem hideSingleExonIsoformsToggle;
     @FXML private CheckMenuItem hideDotPlotToggle;
     // expression toggles
     @FXML private RadioMenuItem showMedianToggle;
@@ -55,6 +53,7 @@ public class MainController implements InteractiveElementController {
     // isoform label toggles
     @FXML private CheckMenuItem showIsoformNameToggle;
     @FXML private CheckMenuItem showIsoformIDToggle;
+    @FXML private CheckMenuItem showIsoformPlotLegendToggle;
     @FXML private CheckMenuItem colorCellPlotByIsoformToggle;
 
     private Stage window;
@@ -179,12 +178,12 @@ public class MainController implements InteractiveElementController {
         return revComplementToggle.isSelected();
     }
 
-    public boolean isHidingDotPlot() {
-        return hideDotPlotToggle.isSelected();
-    }
-
     public boolean isHidingSingleExonIsoforms() {
         return hideSingleExonIsoformsToggle.isSelected();
+    }
+
+    public boolean isHidingDotPlot() {
+        return hideDotPlotToggle.isSelected();
     }
 
     public boolean isShowingMedian() {
@@ -220,6 +219,10 @@ public class MainController implements InteractiveElementController {
 
     public boolean isShowingIsoformID() {
         return showIsoformIDToggle.isSelected();
+    }
+
+    public boolean isShowingIsoformPlotLegend() {
+        return showIsoformPlotLegendToggle.isSelected();
     }
 
     public boolean isColoringCellPlotBySelectedIsoform() {
@@ -295,12 +298,21 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * When hide dot plot toggle is selected/deselected changes whether dot plot
-     * shows up when cells in cell plot are selected
+     * When hide dot plot toggle is selected/deselected changes tells
+     * isoform plot about change
      */
     @FXML
     protected void handleHideDotPlotToggle() {
-        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleDotPlotChange();
+    }
+
+    /**
+     * When show isoform plot legend toggle is selected/deselected changes updates the legend
+     * (either removes or adds it accordingly)
+     */
+    @FXML
+    protected void handleIsoformPlotLegendToggle() {
+        ControllerMediator.getInstance().updateIsoformPlotLegend(false);
     }
 
     /**
@@ -309,7 +321,7 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleExpressionToggle() {
-        ControllerMediator.getInstance().isoformPlotHandleColoringOrDotPlotChange();
+        ControllerMediator.getInstance().isoformPlotHandleExpressionTypeChange();
     }
 
 
@@ -457,6 +469,7 @@ public class MainController implements InteractiveElementController {
         restoreShowGeneNameIDToggles(settings);
         restoreShowIsoformNameToggle(settings);
         restoreShowIsoformIDToggle(settings);
+        restoreShowIsoformPlotLegendToggle(settings);
         restoreColorCellPlotByIsoformToggle(settings);
     }
 
@@ -548,6 +561,15 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
+     * If the show isoform plot legend toggle was selected in the previous session, selects it,
+     * else deselects it
+     */
+    private void restoreShowIsoformPlotLegendToggle(Map settings) {
+        boolean wasShowingIsoformPlotLegend = (boolean) settings.get(SessionMaker.SHOW_ISOFORM_PLOT_LEGEND_KEY);
+        showIsoformPlotLegendToggle.setSelected(wasShowingIsoformPlotLegend);
+    }
+
+    /**
      * If the color cell plot by isoform toggle was selected in the previous session, selects it, else
      * deselects it
      */
@@ -565,6 +587,7 @@ public class MainController implements InteractiveElementController {
         showGeneNameToggle.setSelected(true);
         showIsoformNameToggle.setSelected(false);
         showIsoformIDToggle.setSelected(false);
+        showIsoformPlotLegendToggle.setSelected(true);
         colorCellPlotByIsoformToggle.setSelected(false);
     }
 
