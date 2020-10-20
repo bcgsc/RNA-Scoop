@@ -224,6 +224,13 @@ public class ControllerMediator implements Mediator{
         return geneFiltererController.geneHasIsoformSwitches(gene);
     }
 
+    public boolean geneIsDifferentiallyExpressed(Gene gene) {
+        return geneFiltererController.geneIsDifferentiallyExpressed(gene);
+    }
+
+    public boolean geneHasCategorySpecificExpression(Gene gene) {
+        return geneFiltererController.geneHasCategorySpecificExpression(gene);
+    }
     public void updateGenesMaxFoldChange() {
         geneSelectorController.updateGenesMaxFoldChange();
     }

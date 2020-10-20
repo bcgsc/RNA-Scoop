@@ -59,6 +59,10 @@ public class Cluster implements Comparable<Cluster> {
         return getNumber() - otherCluster.getNumber();
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
 
     /**
      * Returns this cluster's number

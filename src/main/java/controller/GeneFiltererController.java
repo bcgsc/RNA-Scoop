@@ -26,7 +26,7 @@ import java.net.URL;
 import java.util.*;
 
 public class GeneFiltererController extends PopUpController implements Initializable {
-    private static final double GENE_FILTERER_WIDTH = 500;
+    private static final double GENE_FILTERER_WIDTH = 550;
     private static final double GENE_FILTERER_HEIGHT = 600;
     // Dominant isoform switching (DIS)
     private static final int DEFAULT_DIS_MIN_TPM = 10;
@@ -51,20 +51,20 @@ public class GeneFiltererController extends PopUpController implements Initializ
     @FXML private TextField disMinPercentExpressedField;
     // Differential Expression (DE)
     @FXML private RadioButton deFilterOption;
-    @FXML private CheckComboBox deCategories;
+    @FXML private CheckComboBox<Cluster> deCategories;
     @FXML private TextField deMinFoldChangeField;
     @FXML private TextField deMinTPMField;
     @FXML private TextField deMinPercentExpressedField;
     // Category-specific expression (CSE)
     @FXML private RadioButton cseFilterOption;
-    @FXML private CheckComboBox cseCategories;
+    @FXML private CheckComboBox<Cluster> cseCategories;
     @FXML private TextField cseMinTPMField;
     @FXML private TextField cseMinPercentExpressedField;
     @FXML private TextField cseMaxTPMField;
     @FXML private TextField cseMaxPercentExpressedField;
 
     private Toggle optionFilteringBy;
-    private LabelSet labelSetCategoriesFrom;
+    private LabelSet labelSetFilteringBy;
 
     private MutableDouble disMinTPM;
     private MutableDouble disMinPercentExpressed;
@@ -93,25 +93,9 @@ public class GeneFiltererController extends PopUpController implements Initializ
         ControllerMediator.getInstance().updateGenesTableFilteringMethod();
     }
 
-    public boolean notFilteringGenes() {
-        return noneFilterOption.isSelected();
-    }
-
-    public boolean isFilteringByDominantIsoformSwitching() {
-        return disFilterOption.isSelected();
-    }
-
-    public boolean isFilteringByDifferentialExpression() {
-        return deFilterOption.isSelected();
-    }
-
-    public boolean isFilteringByCategorySpecificExpression() {
-        return cseFilterOption.isSelected();
-    }
-
     public boolean geneHasIsoformSwitches(Gene gene) {
         Map<Cluster, Set<Isoform>> dominantIsoformsPerCluster = new HashMap<>();
-        Collection<Cluster> clusters = labelSetCategoriesFrom.getClusters();
+        Collection<Cluster> clusters = labelSetFilteringBy.getClusters();
         for (Cluster cluster : clusters) {
             for (Isoform isoform : gene.getIsoforms()) {
                 if (dominantIsoformsPerCluster.containsKey(cluster)) {
@@ -139,43 +123,26 @@ public class GeneFiltererController extends PopUpController implements Initializ
         }
        return false;
     }
-
-    private void updateClusterDominantIsoforms(Cluster cluster, Isoform isoform, Set<Isoform> dominantIsoforms) {
-        double isoformExpression = isoform.getAverageExpressionInCluster(cluster, false, false);
-        int isoformNumExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
-        double isoformPercentExpressed = (double) isoformNumExpressingCells / cluster.getCells().size();
-        if (isoformExpression >= disMinTPM.doubleValue() && isoformPercentExpressed * 100 >= disMinPercentExpressed.doubleValue()) {
-            for (Iterator<Isoform> iterator = dominantIsoforms.iterator(); iterator.hasNext();) {
-                Isoform dominantIsoform = iterator.next();
-                double dominantIsoformExpression = dominantIsoform.getAverageExpressionInCluster(cluster, false, false);
-                double expressionRatio = isoformExpression / dominantIsoformExpression;
-                if (expressionRatio < (double) 1/1.1) {
-                    return;
-                } else if (expressionRatio > 1) {
-                    if (expressionRatio > 1.1) {
-                        iterator.remove();
-                    } else {
-                        int dominantIsoformNumExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(dominantIsoform.getId(), cluster, false);
-                        double dominantIsoformPercentExpressed = (double) dominantIsoformNumExpressingCells / cluster.getCells().size();
-
-                        if (dominantIsoformPercentExpressed < isoformPercentExpressed)
-                            iterator.remove();
-                    }
-                } else {
-                    int dominantIsoformNumExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(dominantIsoform.getId(), cluster, false);
-                    double dominantIsoformPercentExpressed = (double) dominantIsoformNumExpressingCells / cluster.getCells().size();
-
-                    if (isoformPercentExpressed < dominantIsoformPercentExpressed)
-                        return;
-                }
-            }
-            dominantIsoforms.add(isoform);
+    
+    public boolean geneIsDifferentiallyExpressed(Gene gene) {
+        for (Isoform isoform : gene.getIsoforms()) {
+            if (isoformIsDifferentiallyExpressed(isoform))
+                return true;
         }
+        return false;
+    }
+
+    public boolean geneHasCategorySpecificExpression(Gene gene) {
+        for (Isoform isoform : gene.getIsoforms()) {
+            if (isoformHasCategorySpecificExpression(isoform))
+                return true;
+        }
+        return false;
     }
 
     public void updateFilterCellCategories() {
         LabelSet labelSet = ControllerMediator.getInstance().getLabelSetInUse();
-        if (labelSetCategoriesFrom != labelSet) {
+        if (labelSetFilteringBy != labelSet) {
             deCategories.getCheckModel().clearChecks();
             cseCategories.getCheckModel().clearChecks();
             ObservableList deCategoryItems = deCategories.getItems();
@@ -184,19 +151,76 @@ public class GeneFiltererController extends PopUpController implements Initializ
             cseCategoryItems.clear();
 
             if (labelSet != null) {
-                for (Cluster cluster : labelSet.getClusters()) {
-                    deCategoryItems.add(cluster.getName());
-                    cseCategoryItems.add(cluster.getName());
-                }
+                deCategoryItems.addAll(labelSet.getClusters());
+                cseCategoryItems.addAll(labelSet.getClusters());
             }
-            labelSetCategoriesFrom = labelSet;
+            labelSetFilteringBy = labelSet;
         }
+    }
+
+    public boolean notFilteringGenes() {
+        return noneFilterOption.isSelected();
+    }
+
+    public boolean isFilteringByDominantIsoformSwitching() {
+        return disFilterOption.isSelected();
+    }
+
+    public boolean isFilteringByDifferentialExpression() {
+        return deFilterOption.isSelected();
+    }
+
+    public boolean isFilteringByCategorySpecificExpression() {
+        return cseFilterOption.isSelected();
     }
     
     @FXML
     protected void handleFilterButton() {
         optionFilteringBy = filterToggles.getSelectedToggle();
         ControllerMediator.getInstance().updateGenesTableFilteringMethod();
+    }
+
+    private void updateClusterDominantIsoforms(Cluster cluster, Isoform isoform, Set<Isoform> dominantIsoforms) {
+        double isoformExpression = isoform.getAverageExpressionInCluster(cluster, false, false);
+        int isoformNumExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
+        double isoformPercentExpressed = (double) isoformNumExpressingCells / cluster.getCells().size();
+        if (isoformExpression >= disMinTPM.doubleValue() && isoformPercentExpressed * 100 >= disMinPercentExpressed.doubleValue()) {
+            dominantIsoforms.add(isoform);
+        }
+    }
+
+    private boolean isoformIsDifferentiallyExpressed(Isoform isoform) {
+        double minTPM = Double.MAX_VALUE;
+        double maxTPM = 0;
+
+        for (Cluster cluster : deCategories.getCheckModel().getCheckedItems()) {
+            double expression = isoform.getAverageExpressionInCluster(cluster, false, false);
+            int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
+            double percentExpressed = (double) numExpressingCells / cluster.getCells().size();
+            if (expression > maxTPM && expression > deMinTPM.doubleValue() && percentExpressed * 100 > deMinPercentExpressed.doubleValue())
+                maxTPM = expression;
+            else if (expression < minTPM)
+                minTPM = expression;
+
+        }
+        return (maxTPM / minTPM) >= deMinFoldChange.doubleValue();
+    }
+
+    private boolean isoformHasCategorySpecificExpression(Isoform isoform) {
+        for (Cluster cluster : labelSetFilteringBy.getClusters()) {
+            double expression = isoform.getAverageExpressionInCluster(cluster, false, false);
+            int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
+            double percentExpressed = (double) numExpressingCells / cluster.getCells().size();
+
+            if (cseCategories.getCheckModel().isChecked(cluster)) {
+                if (expression < cseMinTPM.doubleValue() || percentExpressed * 100 < cseMinPercentExpressed.doubleValue())
+                    return false;
+            } else {
+                if (expression > cseMaxTPM.doubleValue() || percentExpressed * 100 > cseMaxPercentExpressed.doubleValue())
+                    return false;
+            }
+        }
+        return true;
     }
 
     private void setUpFieldUpdating(){

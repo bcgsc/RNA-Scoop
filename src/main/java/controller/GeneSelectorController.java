@@ -132,10 +132,17 @@ public class GeneSelectorController extends PopUpController implements Initializ
             filteredGenes.setPredicate(gene -> true);
             filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneHasIsoformSwitches(gene));
             System.out.println(filteredGenes.size());
-        } else if (ControllerMediator.getInstance().isFilteringByDifferentialExpression())
+        } else if (ControllerMediator.getInstance().isFilteringByDifferentialExpression()) {
+            System.out.println(filteredGenes.size());
             filteredGenes.setPredicate(gene -> true);
-        else
+            filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneIsDifferentiallyExpressed(gene));
+            System.out.println(filteredGenes.size());
+        } else {
+            System.out.println(filteredGenes.size());
             filteredGenes.setPredicate(gene -> true);
+            filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneHasCategorySpecificExpression(gene));
+            System.out.println(filteredGenes.size());
+        }
     }
 
     public void updateGenesMaxFoldChange() {
