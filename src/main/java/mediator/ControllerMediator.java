@@ -25,6 +25,7 @@ public class ControllerMediator implements Mediator{
     private IsoformPlotController isoformPlotController;
     private ClusterViewController clusterViewController;
     private GeneSelectorController geneSelectorController;
+    private GeneFiltererController geneFiltererController;
     private TPMGradientAdjusterController tpmGradientAdjusterController;
     private LabelSetManagerController labelSetManagerController;
     private AddLabelSetViewController addLabelSetViewController;
@@ -61,6 +62,11 @@ public class ControllerMediator implements Mediator{
     @Override
     public void registerGeneSelectorController(GeneSelectorController geneSelectorController) {
         this.geneSelectorController = geneSelectorController;
+    }
+
+    @Override
+    public void registerGeneFiltererController(GeneFiltererController geneFiltererController) {
+        this.geneFiltererController = geneFiltererController;
     }
 
     @Override
@@ -126,6 +132,10 @@ public class ControllerMediator implements Mediator{
     }
 
     // Display Genes
+    public void displayGeneFilterer() {
+        geneFiltererController.display();
+    }
+
     public void displayGeneSelector() {
         geneSelectorController.display();
     }
@@ -196,6 +206,22 @@ public class ControllerMediator implements Mediator{
 
     public void geneSelectorHandleRemovedLabelSet(LabelSet labelSet) {
         geneSelectorController.handleRemovedLabelSet(labelSet);
+    }
+
+    public void updateFilterCellCategories() {
+        geneFiltererController.updateFilterCellCategories();
+    }
+
+    public void unfilterGenes() {
+        geneFiltererController.unfilterGenes();
+    }
+
+    public void updateGenesTableFilteringMethod() {
+        geneSelectorController.updateGenesTableFilteringMethod();
+    }
+
+    public boolean geneHasIsoformSwitches(Gene gene) {
+        return geneFiltererController.geneHasIsoformSwitches(gene);
     }
 
     public void updateGenesMaxFoldChange() {
@@ -386,6 +412,22 @@ public class ControllerMediator implements Mediator{
 
     public Collection<Gene> getShownGenes() {
         return geneSelectorController.getShownGenes();
+    }
+
+    public boolean notFilteringGenes() {
+        return geneFiltererController.notFilteringGenes();
+    }
+
+    public boolean isFilteringByDominantIsoformSwitching() {
+        return geneFiltererController.isFilteringByDominantIsoformSwitching();
+    }
+
+    public boolean isFilteringByDifferentialExpression() {
+        return geneFiltererController.isFilteringByDifferentialExpression();
+    }
+
+    public boolean isFilteringByCategorySpecificExpression() {
+        return geneFiltererController.isFilteringByCategorySpecificExpression();
     }
 
     public Map<Integer, ClusterViewController.CellDataItem> getCellNumberCellMap() {

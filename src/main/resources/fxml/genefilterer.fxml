@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<?import org.controlsfx.control.CheckComboBox?>
+<ScrollPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
+            fx:id="geneFilterer" fx:controller="controller.GeneFiltererController"
+            style="-fx-background-color: #fcfcfc;" fitToHeight="true" fitToWidth="true">
+    <VBox>
+        <VBox style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets topRightBottomLeft="10" />
+            </VBox.margin>
+            <VBox>
+                <VBox.margin>
+                    <Insets topRightBottomLeft="10" />
+                </VBox.margin>
+                <fx:define>
+                    <ToggleGroup fx:id="filterToggles"/>
+                </fx:define>
+                <Text style="-fx-font-weight: bold; -fx-font-size: 14;" text="Filter by:"/>
+                <RadioButton fx:id="noneFilterOption" text="None" style="-fx-font-size: 13;" toggleGroup="$filterToggles">
+                    <VBox.margin>
+                        <Insets top="20" bottom="10"/>
+                    </VBox.margin>
+                </RadioButton>
+                <Separator/>
+                <RadioButton fx:id="disFilterOption" text="Dominant isoform switching" style="-fx-font-size: 13;" toggleGroup="$filterToggles">
+                    <VBox.margin>
+                        <Insets top="10" bottom="15"/>
+                    </VBox.margin>
+                </RadioButton>
+                <GridPane hgap="50">
+                    <VBox.margin>
+                        <Insets bottom="10"/>
+                    </VBox.margin>
+                    <HBox GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
+                        <Text text="Min average non-zero TPM: " />
+                        <TextField fx:id="disMinTPMField" prefWidth="45" minWidth="30" text="10">
+                            <HBox.margin>
+                                <Insets left="5"/>
+                            </HBox.margin>
+                        </TextField>
+                    </HBox>
+                    <HBox GridPane.columnIndex="1">
+                        <Text text="Min % of cells expressed in: ">
+                            <HBox.margin>
+                                <Insets right="5" />
+                            </HBox.margin>
+                        </Text>
+                        <TextField fx:id="disMinPercentExpressedField" prefWidth="45" minWidth="30" text="50" />
+                    </HBox>
+                </GridPane>
+                <Separator />
+                <RadioButton fx:id="deFilterOption" text="Differential Expression" style="-fx-font-size: 13;" toggleGroup="$filterToggles">
+                    <VBox.margin>
+                        <Insets top="10" bottom="15"/>
+                    </VBox.margin>
+                </RadioButton>
+                <GridPane hgap="50" vgap="15">
+                    <VBox.margin>
+                        <Insets bottom="12"/>
+                    </VBox.margin>
+                    <HBox GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
+                        <Text text="Categories: " />
+                        <CheckComboBox fx:id="deCategories">
+                            <HBox.margin>
+                                <Insets left="5"/>
+                            </HBox.margin>
+                        </CheckComboBox>
+                    </HBox>
+                    <HBox GridPane.columnIndex="1">
+                        <Text text="Min fold change: ">
+                            <HBox.margin>
+                                <Insets right="5" />
+                            </HBox.margin>
+                        </Text>
+                        <TextField fx:id="deMinFoldChangeField" prefWidth="45" minWidth="30" text="10" />
+                    </HBox>
+                    <HBox GridPane.rowIndex="1" GridPane.hgrow="ALWAYS">
+                        <Text text="Min average non-zero TPM: &#13; (in at least 1 category)" textAlignment="CENTER">
+                            <HBox.margin>
+                                <Insets right="5" />
+                            </HBox.margin>
+                        </Text>
+                        <TextField fx:id="deMinTPMField" prefWidth="45" minWidth="30" text="10" />
+                    </HBox>
+                    <HBox GridPane.rowIndex="1" GridPane.columnIndex="1">
+                        <Text text="Min % of cells expressed in: &#13; (in at least 1 category)" textAlignment="CENTER">
+                            <HBox.margin>
+                                <Insets right="5" />
+                            </HBox.margin>
+                        </Text>
+                        <TextField fx:id="deMinPercentExpressedField" prefWidth="45" minWidth="30" text="50" />
+                    </HBox>
+                </GridPane>
+                <Separator />
+                <RadioButton fx:id="cseFilterOption" text="Category-specific expression" style="-fx-font-size: 13;" toggleGroup="$filterToggles">
+                    <VBox.margin>
+                        <Insets top="10" bottom="15"/>
+                    </VBox.margin>
+                </RadioButton>
+                <HBox>
+                    <Text text="Categories: " />
+                    <CheckComboBox fx:id="cseCategories">
+                        <HBox.margin>
+                            <Insets left="5"/>
+                        </HBox.margin>
+                    </CheckComboBox>
+                </HBox>
+                <Text text="In chosen categories:" style="-fx-font-style: italic;">
+                    <VBox.margin>
+                        <Insets top="15" bottom="10"/>
+                    </VBox.margin>
+                </Text>
+                <GridPane hgap="50">
+                    <VBox.margin>
+                        <Insets bottom="15"/>
+                    </VBox.margin>
+                    <HBox GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
+                        <Text text="Min average non-zero TPM: " />
+                        <TextField fx:id="cseMinTPMField" prefWidth="45" minWidth="30" text="10">
+                            <HBox.margin>
+                                <Insets left="5"/>
+                            </HBox.margin>
+                        </TextField>
+                    </HBox>
+                    <HBox GridPane.columnIndex="1">
+                        <Text text="Min % of cells expressed in: ">
+                            <HBox.margin>
+                                <Insets right="5" />
+                            </HBox.margin>
+                        </Text>
+                        <TextField fx:id="cseMinPercentExpressedField" prefWidth="45" minWidth="30" text="75"/>
+                    </HBox>
+                </GridPane>
+                <Text text="In rest:" style="-fx-font-style: italic;"/>
+                <GridPane hgap="50">
+                    <VBox.margin>
+                        <Insets top="10" bottom="10"/>
+                    </VBox.margin>
+                    <HBox GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
+                        <Text text="Max average non-zero TPM: " />
+                        <TextField fx:id="cseMaxTPMField" prefWidth="45" minWidth="30" text="250">
+                            <HBox.margin>
+                                <Insets left="5"/>
+                            </HBox.margin>
+                        </TextField>
+                    </HBox>
+                    <HBox GridPane.columnIndex="1">
+                        <Text text="Max % of cells expressed in: ">
+                            <HBox.margin>
+                                <Insets right="5" />
+                            </HBox.margin>
+                        </Text>
+                        <TextField fx:id="cseMaxPercentExpressedField" prefWidth="45" minWidth="30" text="25" />
+                    </HBox>
+                </GridPane>
+                <Separator/>
+            </VBox>
+            <VBox alignment="CENTER">
+                <VBox.margin>
+                    <Insets topRightBottomLeft="10" />
+                </VBox.margin>
+                <Button style="-fx-font-size: 13" text="Filter" onAction="#handleFilterButton" />
+            </VBox>
+        </VBox>
+    </VBox>
+</ScrollPane>

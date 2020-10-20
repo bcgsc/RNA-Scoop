@@ -107,6 +107,8 @@ public class AddLabelSetViewController {
      */
     @FXML
     protected void handleSaveLabelSetButton() {
+        ControllerMediator.getInstance().unfilterGenes();
+        ControllerMediator.getInstance().updateFilterCellCategories();
         ControllerMediator.getInstance().addConsoleMessage("Saving label set...");
         disableUpdatingFoldChangeAssociatedFunctionality();
         addSavingAlert();

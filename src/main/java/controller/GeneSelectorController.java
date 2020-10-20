@@ -33,7 +33,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
 
     @FXML private ScrollPane geneSelector;
     @FXML private GridPane gridPane;
-    @FXML private TextField filterField;
+    @FXML private TextField searchFilter;
     @FXML private TableView genesTable;
     @FXML private TableView shownGenesTable;
     @FXML private Button selectFromFileButton;
@@ -43,6 +43,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
 
     private FileChooser fileChooser;
     private ObservableList<Gene> genes;
+    private FilteredList<Gene> filteredGenes;
     private ObservableList<Gene> shownGenes;
 
     /**
@@ -62,7 +63,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
      */
     public void disable() {
         genesTable.setDisable(true);
-        filterField.setDisable(true);
+        searchFilter.setDisable(true);
         shownGenesTable.setDisable(true);
         selectFromFileButton.setDisable(true);
         addSelectedButton.setDisable(true);
@@ -75,7 +76,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
      */
     public void enable() {
         genesTable.setDisable(false);
-        filterField.setDisable(false);
+        searchFilter.setDisable(false);
         shownGenesTable.setDisable(false);
         selectFromFileButton.setDisable(false);
         addSelectedButton.setDisable(false);
@@ -94,12 +95,12 @@ public class GeneSelectorController extends PopUpController implements Initializ
     }
 
     /**
-     * Clears all genes in genes table, clears genes being shown and filter field
+     * Clears all genes in genes table, clears genes being shown and search field
      */
     public void clearGeneSelector() {
         clearShownGenes();
         genes.clear();
-        filterField.setText(null);
+        searchFilter.setText(null);
     }
 
     /**
@@ -123,18 +124,33 @@ public class GeneSelectorController extends PopUpController implements Initializ
         genes.sort(Gene::compareTo);
     }
 
-    public void updateGenesMaxFoldChange() {
-        boolean cellPlotCleared = ControllerMediator.getInstance().isCellPlotCleared();
+    public void updateGenesTableFilteringMethod() {
+        if (ControllerMediator.getInstance().notFilteringGenes())
+            filteredGenes.setPredicate(gene -> true);
+        else if (ControllerMediator.getInstance().isFilteringByDominantIsoformSwitching()) {
+            System.out.println(filteredGenes.size());
+            filteredGenes.setPredicate(gene -> true);
+            filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneHasIsoformSwitches(gene));
+            System.out.println(filteredGenes.size());
+        } else if (ControllerMediator.getInstance().isFilteringByDifferentialExpression())
+            filteredGenes.setPredicate(gene -> true);
+        else
+            filteredGenes.setPredicate(gene -> true);
+    }
 
-        if (!cellPlotCleared) {
-            for (Gene gene : genes)
-                gene.updateMaxFoldChange();
-        }
+    public void updateGenesMaxFoldChange() {
+        for (Gene gene : genes)
+            gene.updateMaxFoldChange();
     }
 
     public void handleRemovedLabelSet(LabelSet labelSet) {
         for (Gene gene : genes)
             gene.removeLabelSet(labelSet);
+    }
+
+    @FXML
+    protected void handleFilterGenesButton() {
+        ControllerMediator.getInstance().displayGeneFilterer();
     }
 
     /**
@@ -226,7 +242,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
     private void setUpGenesTable() {
         genesTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         setUpGenesTableColumns();
-        setGenesTableItemsAndMakeSearchable();
+        setGenesTableItemsAndMakeFilterableAndSearchable();
     }
 
     /**
@@ -274,13 +290,15 @@ public class GeneSelectorController extends PopUpController implements Initializ
 
     /**
      * Sets genes table to contain all parsed genes. When something is typed into the
-     * filter field, filters gene table's list of genes to only contain genes whose names
-     * or IDs start with the filter field's text
+     * search field, filters gene table's list of genes to only contain genes whose names
+     * or IDs start with the filter field's text. Genes also filtered by selected method in
+     * gene filterer
      */
-    private void setGenesTableItemsAndMakeSearchable() {
+    private void setGenesTableItemsAndMakeFilterableAndSearchable() {
         genes = FXCollections.observableArrayList();
-        FilteredList<Gene> filteredGenes = new FilteredList<>(genes, gene -> true);
-        filterField.textProperty().addListener((observable, oldValue, newValue) -> filteredGenes.setPredicate(gene -> {
+        filteredGenes = new FilteredList<>(genes, genes -> true);
+        FilteredList<Gene> searchedGenes = new FilteredList<>(filteredGenes, gene -> true);
+        searchFilter.textProperty().addListener((observable, oldValue, newValue) -> searchedGenes.setPredicate(gene -> {
             // If filter text is empty, display all genes
             if (newValue == null || newValue.isEmpty())
                 return true;
@@ -292,7 +310,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
             else return gene.getId().toLowerCase().startsWith(lowerCaseFilter);
         }));
         // allows genes in genes table to be sortable
-        SortedList<Gene> sortedGenes = new SortedList<>(filteredGenes);
+        SortedList<Gene> sortedGenes = new SortedList<>(searchedGenes);
         sortedGenes.comparatorProperty().bind(genesTable.comparatorProperty());
         genesTable.setItems(sortedGenes);
     }

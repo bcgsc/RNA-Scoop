@@ -80,6 +80,8 @@ public class LabelSetManagerController extends PopUpController {
     public void clearLabelSets() {
         labelSets.clear();
         labelSetInUse = null;
+        ControllerMediator.getInstance().unfilterGenes();
+        ControllerMediator.getInstance().updateFilterCellCategories();
     }
 
     /**
@@ -176,8 +178,12 @@ public class LabelSetManagerController extends PopUpController {
             ControllerMediator.getInstance().clusterViewHandleChangedLabelSetInUse();
             ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
             boolean stillEditingLabelSet = ControllerMediator.getInstance().isAddLabelSetViewDisplayed();
-            if (!stillEditingLabelSet)
+            boolean cellPlotCleared = ControllerMediator.getInstance().isCellPlotCleared();
+            if (!stillEditingLabelSet && !cellPlotCleared) {
+                ControllerMediator.getInstance().unfilterGenes();
+                ControllerMediator.getInstance().updateFilterCellCategories();
                 ControllerMediator.getInstance().updateGenesMaxFoldChange();
+            }
         });
     }
 

@@ -1,7 +1,7 @@
 package controller;
 
 import exceptions.RNAScoopException;
-import exceptions.TPMGradientInvalidMaxMinException;
+import exceptions.InvalidTPMCutOffException;
 import exceptions.TPMGradientMinGreaterEqualMaxException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -254,7 +254,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
      * non-numeric, negative, min >= max), throws the appropriate exception and does not update the
      * stored TPM gradient max and min values
      */
-    private void updateTPMGradientMaxMin() throws TPMGradientInvalidMaxMinException, TPMGradientMinGreaterEqualMaxException {
+    private void updateTPMGradientMaxMin() throws InvalidTPMCutOffException, TPMGradientMinGreaterEqualMaxException {
         double newGradientMin;
         double newGradientMax;
 
@@ -262,13 +262,13 @@ public class TPMGradientAdjusterController extends PopUpController implements In
             newGradientMin = Double.parseDouble(gradientMinTPMField.getText());
             newGradientMax = Double.parseDouble(gradientMaxTPMField.getText());
         } catch (NumberFormatException e) {
-            throw new TPMGradientInvalidMaxMinException();
+            throw new InvalidTPMCutOffException();
         }
 
         if (newGradientMin >= newGradientMax)
             throw new TPMGradientMinGreaterEqualMaxException();
         if (newGradientMin < 0)
-            throw new TPMGradientInvalidMaxMinException();
+            throw new InvalidTPMCutOffException();
 
         gradientMinTPM = newGradientMin;
         gradientMaxTPM = newGradientMax;

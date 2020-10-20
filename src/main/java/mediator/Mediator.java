@@ -15,6 +15,7 @@ public interface Mediator {
     void registerIsoformPlotController(IsoformPlotController isoformPlotController);
     void registerClusterViewController(ClusterViewController clusterViewController);
     void registerGeneSelectorController(GeneSelectorController geneSelectorController);
+    void registerGeneFiltererController(GeneFiltererController geneFiltererController);
     void registerTPMGradientController(TPMGradientAdjusterController tpmGradientAdjusterController);
     void registerLabelSetManagerController(LabelSetManagerController labelSetManagerController);
     void registerAddLabelSetViewController(AddLabelSetViewController addLabelSetViewController);
