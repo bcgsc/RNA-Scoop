@@ -196,8 +196,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             plotMaker.start();
         } catch (Exception e) {
             enableAssociatedFunctionality();
-            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the cell plot");
-            e.printStackTrace();
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
     }
 
@@ -727,8 +726,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 runLater(() -> ControllerMediator.getInstance().updateFilterCellCategories());
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing cell plot"));
            } catch (Exception e) {
-                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the cell plot"));
-                e.printStackTrace();
+                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
             } finally {
                 runLater(ClusterViewController.this::enableAssociatedFunctionality);
             }

@@ -119,8 +119,8 @@ public class ControllerMediator implements Mediator{
         consoleController.addConsoleErrorMessage(message);
     }
 
-    public void addConsoleUnexpectedErrorMessage(String action) {
-        consoleController.addConsoleUnexpectedErrorMessage(action);
+    public void addConsoleUnexpectedExceptionMessage(Exception e) {
+        consoleController.addConsoleUnexpectedExceptionMessage(e);
     }
 
     public void clearConsole() {

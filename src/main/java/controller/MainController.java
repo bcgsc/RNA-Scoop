@@ -241,8 +241,7 @@ public class MainController implements InteractiveElementController {
                 SessionIO.saveSessionAtPath(file.getPath());
                 ControllerMediator.getInstance().addConsoleMessage("Successfully saved session");
             } catch (Exception e) {
-                ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("saving session at path: " + file.getPath());
-                e.printStackTrace();
+                ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
             }
         }
     }
@@ -259,8 +258,7 @@ public class MainController implements InteractiveElementController {
                 SessionIO.loadSessionAtPath(file.getPath());
                 ControllerMediator.getInstance().addConsoleMessage("Successfully loaded session");
             } catch (Exception e) {
-                ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading session from path: " + file.getPath());
-                e.printStackTrace();
+                ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
             }
         }
     }
