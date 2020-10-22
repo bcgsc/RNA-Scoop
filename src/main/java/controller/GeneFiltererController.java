@@ -185,6 +185,30 @@ public class GeneFiltererController extends PopUpController implements Initializ
         int isoformNumExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
         double isoformPercentExpressed = (double) isoformNumExpressingCells / cluster.getCells().size();
         if (isoformExpression >= disMinTPM.doubleValue() && isoformPercentExpressed * 100 >= disMinPercentExpressed.doubleValue()) {
+            for (Iterator<Isoform> iterator = dominantIsoforms.iterator(); iterator.hasNext();) {
+                Isoform dominantIsoform = iterator.next();
+                double dominantIsoformExpression = dominantIsoform.getAverageExpressionInCluster(cluster, false, false);
+                double expressionRatio = isoformExpression / dominantIsoformExpression;
+                if (expressionRatio < (double) 1/1.1) {
+                    return;
+                } else if (expressionRatio > 1) {
+                    if (expressionRatio > 1.1) {
+                        iterator.remove();
+                    } else {
+                        int dominantIsoformNumExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(dominantIsoform.getId(), cluster, false);
+                        double dominantIsoformPercentExpressed = (double) dominantIsoformNumExpressingCells / cluster.getCells().size();
+
+                        if (dominantIsoformPercentExpressed < isoformPercentExpressed)
+                            iterator.remove();
+                    }
+                } else {
+                    int dominantIsoformNumExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(dominantIsoform.getId(), cluster, false);
+                    double dominantIsoformPercentExpressed = (double) dominantIsoformNumExpressingCells / cluster.getCells().size();
+
+                    if (isoformPercentExpressed < dominantIsoformPercentExpressed)
+                        return;
+                }
+            }
             dominantIsoforms.add(isoform);
         }
     }

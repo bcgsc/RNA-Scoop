@@ -128,20 +128,14 @@ public class GeneSelectorController extends PopUpController implements Initializ
         if (ControllerMediator.getInstance().notFilteringGenes())
             filteredGenes.setPredicate(gene -> true);
         else if (ControllerMediator.getInstance().isFilteringByDominantIsoformSwitching()) {
-            System.out.println(filteredGenes.size());
             filteredGenes.setPredicate(gene -> true);
             filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneHasIsoformSwitches(gene));
-            System.out.println(filteredGenes.size());
         } else if (ControllerMediator.getInstance().isFilteringByDifferentialExpression()) {
-            System.out.println(filteredGenes.size());
             filteredGenes.setPredicate(gene -> true);
             filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneIsDifferentiallyExpressed(gene));
-            System.out.println(filteredGenes.size());
         } else {
-            System.out.println(filteredGenes.size());
             filteredGenes.setPredicate(gene -> true);
             filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneHasCategorySpecificExpression(gene));
-            System.out.println(filteredGenes.size());
         }
     }
 
