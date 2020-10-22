@@ -719,8 +719,6 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             try {
                 cellsInNewPlot = new XYSeriesCollection();
                 double[][] matrix = (embedding == null ? generatePlotMatrix() : embedding);
-                for (double[] coord : matrix)
-                    System.out.println(coord[0] + "\t" + coord[1]);
                 drawPlot(matrix);
                 ControllerMediator.getInstance().addCellsToLabelSetClusters();
                 setTPMGradientValues();

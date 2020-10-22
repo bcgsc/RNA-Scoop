@@ -55,7 +55,7 @@
                     </HBox>
                 </GridPane>
                 <Separator />
-                <RadioButton fx:id="deFilterOption" text="Differential Expression" style="-fx-font-size: 13;" toggleGroup="$filterToggles">
+                <RadioButton fx:id="deFilterOption" text="Differential isoform expression" style="-fx-font-size: 13;" toggleGroup="$filterToggles">
                     <VBox.margin>
                         <Insets top="10" bottom="15"/>
                     </VBox.margin>
@@ -98,7 +98,7 @@
                     </HBox>
                 </GridPane>
                 <Separator />
-                <RadioButton fx:id="cseFilterOption" text="Category-specific expression" style="-fx-font-size: 13;" toggleGroup="$filterToggles">
+                <RadioButton fx:id="cseFilterOption" text="Category-specific isoform expression" style="-fx-font-size: 13;" toggleGroup="$filterToggles">
                     <VBox.margin>
                         <Insets top="10" bottom="15"/>
                     </VBox.margin>

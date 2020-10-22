@@ -60,7 +60,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../json.jar!/" />
+          <root url="jar://$USER_HOME$/Downloads/json.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -69,7 +69,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../tsne-2.5.0.jar!/" />
+          <root url="jar://$USER_HOME$/Downloads/tsne-2.5.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -78,7 +78,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../umap-java-master/out/artifacts/umap_java_jar/umap-java.jar!/" />
+          <root url="jar://$USER_HOME$/Downloads/controlsfx-8.40.17.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -87,7 +87,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../jfreechart-fse/target/jfreechart2-2.0-pre1.jar!/" />
+          <root url="jar://$USER_HOME$/Downloads/jfreechart2-2.0-pre1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -96,7 +96,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../controlsfx-8.40.17.jar!/" />
+          <root url="jar://$USER_HOME$/Downloads/umap-java.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
