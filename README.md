@@ -36,3 +36,4 @@ RNA-Scoop is written in Java with IntelliJ IDEA. It uses the following external 
 * [UMAP-Java](https://github.com/tag-bio/umap-java)
 * [JFreeChart (Future State Edition)](https://github.com/jfree/jfreechart-fse)
 * [JSON-Java](https://github.com/stleary/JSON-java)
+* [ControlsFX](https://github.com/controlsfx/controlsfx)
