@@ -38,7 +38,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
     // Category-specific expression (CSE)
     private static final int DEFAULT_CSE_MIN_TPM = 10;
     private static final int DEFAULT_CSE_MIN_PERCENT_EXPRESSED = 75;
-    private static final int DEFAULT_CSE_MAX_TPM = 250;
+    private static final int DEFAULT_CSE_MAX_TPM = 25;
     private static final int DEFAULT_CSE_MAX_PERCENT_EXPRESSED = 25;
 
     @FXML private Parent geneFilterer;
@@ -240,7 +240,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
                 if (expression < cseMinTPM.doubleValue() || percentExpressed * 100 < cseMinPercentExpressed.doubleValue())
                     return false;
             } else {
-                if (expression > cseMaxTPM.doubleValue() || percentExpressed * 100 > cseMaxPercentExpressed.doubleValue())
+                if (expression > cseMaxTPM.doubleValue() && percentExpressed * 100 > cseMaxPercentExpressed.doubleValue())
                     return false;
             }
         }
