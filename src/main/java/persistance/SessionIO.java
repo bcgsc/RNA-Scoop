@@ -43,7 +43,7 @@ public class SessionIO {
         JSONObject session = SessionMaker.makeSession();
         FileWriter fileWriter = new FileWriter(path);
         fileWriter.write(session.toString());
-        fileWriter.flush();
+        fileWriter.close();
     }
 
     /**

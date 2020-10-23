@@ -12,6 +12,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.LinearGradient;
+import javafx.stage.Window;
 import labelset.Cluster;
 import labelset.LabelSet;
 import ui.LabelSetManagerWindow;
@@ -571,6 +572,10 @@ public class ControllerMediator implements Mediator{
 
     public boolean isAddLabelSetViewDisplayed() {
         return addLabelSetViewController.isDisplayed();
+    }
+
+    public Window getMainWindow() {
+        return mainController.getMainWindow();
     }
 
     //Setters

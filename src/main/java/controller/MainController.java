@@ -14,6 +14,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import mediator.ControllerMediator;
 import parser.Parser;
 import persistance.SessionIO;
@@ -227,6 +228,10 @@ public class MainController implements InteractiveElementController {
 
     public boolean isColoringCellPlotBySelectedIsoform() {
         return colorCellPlotByIsoformToggle.isSelected();
+    }
+
+    public Window getMainWindow() {
+        return window;
     }
 
     /**
