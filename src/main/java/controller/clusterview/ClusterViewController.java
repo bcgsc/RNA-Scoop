@@ -6,7 +6,6 @@ import com.jujutsu.utils.TSneUtils;
 import controller.InteractiveElementController;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -326,13 +325,17 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().displayClusterViewSettings();
     }
 
+    /**
+     * When export embedding button is pressed, if cell plot is drawn, exports
+     * embedding in use to file
+     */
     @FXML
     protected  void handleExportEmbeddingButton() {
         if (!isPlotCleared()) {
             FileChooser fileChooser = new FileChooser();
             File embeddingFile = fileChooser.showSaveDialog(ControllerMediator.getInstance().getMainWindow());
             if (embeddingFile != null)
-                writeEmbeddingToFile(embeddingFile);
+                exportEmbeddingToFile(embeddingFile);
         } else {
             ControllerMediator.getInstance().addConsoleErrorMessage("No embedding currently in use");
         }
@@ -360,7 +363,10 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().enableLabelSetManager();
     }
 
-    private void writeEmbeddingToFile(File embeddingFile) {
+    /**
+     * Writes embedding used to generate cell plot to given file
+     */
+    private void exportEmbeddingToFile(File embeddingFile) {
         StringBuilder embedding = new StringBuilder();
         for (CellDataItem cellDataItem : getCells(false))
             embedding.append(cellDataItem.getX()).append("\t").append(cellDataItem.getY()).append("\n");
