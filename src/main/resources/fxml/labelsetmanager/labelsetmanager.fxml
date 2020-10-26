@@ -28,7 +28,12 @@
                            <Insets right="10" />
                        </HBox.margin>
                    </Button>
-                   <Button fx:id="removeLabelSetButton" onAction="#handleRemoveLabelSetButton" text="Remove selected" />
+                   <Button fx:id="removeLabelSetButton" onAction="#handleRemoveLabelSetButton" text="Remove selected">
+                       <HBox.margin>
+                           <Insets right="10" />
+                       </HBox.margin>
+                   </Button>
+                   <Button fx:id="exportLabelSetButton" onAction="#handleExportLabelSetButton" text="Export"/>
                </HBox>
            </VBox>
        </VBox>

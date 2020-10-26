@@ -9,11 +9,15 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane;
+import javafx.stage.FileChooser;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
 import ui.LabelSetManagerWindow;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 import static javafx.application.Platform.runLater;
@@ -23,6 +27,7 @@ public class LabelSetManagerController extends PopUpController {
     @FXML private ListView labelSetsListView;
     @FXML private Button addLabelSetButton;
     @FXML private Button removeLabelSetButton;
+    @FXML private Button exportLabelSetButton;
 
     private ObservableList<LabelSet> labelSets;
     private LabelSet labelSetInUse;
@@ -40,6 +45,7 @@ public class LabelSetManagerController extends PopUpController {
         labelSetsListView.setDisable(true);
         removeLabelSetButton.setDisable(true);
         addLabelSetButton.setDisable(true);
+        exportLabelSetButton.setDisable(true);
     }
 
     /**
@@ -48,8 +54,10 @@ public class LabelSetManagerController extends PopUpController {
     public void enable() {
         labelSetsListView.setDisable(false);
         removeLabelSetButton.setDisable(false);
+        exportLabelSetButton.setDisable(false);
         if (!ControllerMediator.getInstance().isCellPlotCleared())
             addLabelSetButton.setDisable(false);
+
     }
 
     /**
@@ -154,12 +162,42 @@ public class LabelSetManagerController extends PopUpController {
     }
 
     /**
+     * If a label set is selected, exports it to a file
+     */
+    @FXML
+    protected void handleExportLabelSetButton() {
+        if (labelSetInUse != null) {
+            ControllerMediator.getInstance().disableMain();
+
+            FileChooser fileChooser = new FileChooser();
+            File labelSetFile = fileChooser.showSaveDialog(window);
+            if (labelSetFile != null)
+                exportLabelSetInUseToFile(labelSetFile);
+
+            ControllerMediator.getInstance().enableMain();
+        } else {
+            ControllerMediator.getInstance().addConsoleErrorMessage("No label set to export");
+        }
+    }
+
+    /**
      * Adds given label set to the list of label sets and selects it (making it the
      * label set in use)
      */
     private void addLabelSetHelper(LabelSet labelSet) {
         labelSets.add(labelSet);
         labelSetsListView.getSelectionModel().select(labelSet);
+    }
+
+    private void exportLabelSetInUseToFile(File labelSetFile) {
+        try {
+            FileWriter fileWriter = new FileWriter(labelSetFile);
+            fileWriter.write(labelSetInUse.toString());
+            fileWriter.close();
+            ControllerMediator.getInstance().addConsoleMessage("Exported label set to: " + labelSetFile.getPath());
+        } catch (Exception e) {
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
+        }
     }
 
     private void setUpLabelSetsListView() {

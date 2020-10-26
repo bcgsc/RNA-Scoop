@@ -46,7 +46,7 @@
                         </TextField>
                     </HBox>
                     <HBox GridPane.columnIndex="1">
-                        <Text text="Min % of cells expressed in: ">
+                        <Text text="Min % of cells expressed: ">
                             <HBox.margin>
                                 <Insets right="5" />
                             </HBox.margin>
@@ -89,7 +89,7 @@
                         <TextField fx:id="deMinTPMField" prefWidth="45" minWidth="30" text="10" />
                     </HBox>
                     <HBox GridPane.rowIndex="1" GridPane.columnIndex="1">
-                        <Text text="Min % of cells expressed in: &#13; (in at least 1 category)" textAlignment="CENTER">
+                        <Text text="Min % of cells expressed: &#13; (in at least 1 category)" textAlignment="CENTER">
                             <HBox.margin>
                                 <Insets right="5" />
                             </HBox.margin>
@@ -129,7 +129,7 @@
                         </TextField>
                     </HBox>
                     <HBox GridPane.columnIndex="1">
-                        <Text text="Min % of cells expressed in: ">
+                        <Text text="Min % of cells expressed: ">
                             <HBox.margin>
                                 <Insets right="5" />
                             </HBox.margin>
@@ -144,14 +144,14 @@
                     </VBox.margin>
                     <HBox GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
                         <Text text="Max average non-zero TPM: " />
-                        <TextField fx:id="cseMaxTPMField" prefWidth="45" minWidth="30" text="250">
+                        <TextField fx:id="cseMaxTPMField" prefWidth="45" minWidth="30" text="25">
                             <HBox.margin>
                                 <Insets left="5"/>
                             </HBox.margin>
                         </TextField>
                     </HBox>
                     <HBox GridPane.columnIndex="1">
-                        <Text text="Max % of cells expressed in: ">
+                        <Text text="Max % of cells expressed: ">
                             <HBox.margin>
                                 <Insets right="5" />
                             </HBox.margin>

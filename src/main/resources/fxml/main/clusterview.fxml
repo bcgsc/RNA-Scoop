@@ -17,7 +17,12 @@
                 <Insets left="10" right="10"/>
             </HBox.margin>
         </Button>
-        <Button fx:id="clusterViewSettingsButton" onAction="#handleClusterViewSettingsButton" text="Cluster view settings"/>
+        <Button fx:id="clusterViewSettingsButton" onAction="#handleClusterViewSettingsButton" text="Cluster view settings">
+            <HBox.margin>
+                <Insets right="10"/>
+            </HBox.margin>
+        </Button>
+        <Button fx:id="exportEmbeddingButton" onAction="#handleExportEmbeddingButton" text="Export embedding"/>
     </HBox>
     <StackPane fx:id="plotHolder" style="-fx-border-color: #adadad" VBox.vgrow="ALWAYS">
         <VBox.margin>

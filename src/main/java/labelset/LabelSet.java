@@ -117,6 +117,17 @@ public class LabelSet {
         return cellNumberClusterMap.size();
     }
 
+    @Override
+    public String toString() {
+        StringBuilder labelSetString = new StringBuilder();
+        for (int i = 0; i < ControllerMediator.getInstance().getNumCellsToPlot(); i++) {
+            Cluster cluster = cellNumberClusterMap.get(i);
+            labelSetString.append(cluster.getName()).append("\n");
+        }
+
+        return labelSetString.toString();
+    }
+
     /**
      * Creates a cluster and adds it to this label set. This cluster has all of the cells
      * in the t-SNE plot.

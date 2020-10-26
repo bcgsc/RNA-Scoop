@@ -14,6 +14,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import mediator.ControllerMediator;
 import parser.Parser;
 import persistance.SessionIO;
@@ -229,6 +230,10 @@ public class MainController implements InteractiveElementController {
         return colorCellPlotByIsoformToggle.isSelected();
     }
 
+    public Window getMainWindow() {
+        return window;
+    }
+
     /**
      * Saves current session to file chosen by user through file chooser and adds
      * error/success messages to console
@@ -241,8 +246,7 @@ public class MainController implements InteractiveElementController {
                 SessionIO.saveSessionAtPath(file.getPath());
                 ControllerMediator.getInstance().addConsoleMessage("Successfully saved session");
             } catch (Exception e) {
-                ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("saving session at path: " + file.getPath());
-                e.printStackTrace();
+                ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
             }
         }
     }
@@ -259,8 +263,7 @@ public class MainController implements InteractiveElementController {
                 SessionIO.loadSessionAtPath(file.getPath());
                 ControllerMediator.getInstance().addConsoleMessage("Successfully loaded session");
             } catch (Exception e) {
-                ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading session from path: " + file.getPath());
-                e.printStackTrace();
+                ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
             }
         }
     }

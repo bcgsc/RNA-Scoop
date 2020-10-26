@@ -55,18 +55,19 @@ public class ConsoleController implements Initializable{
     }
 
     /**
-     * Adds an error message to the console telling the user an unexpected
-     * error occurred when doing some action
-     * @param action the action happening when the error occurred
+     * Adds an error message to the console describing the unexpected
+     * exception thrown and why it was thrown. Also prints stack trace
+     * @param e the exception that occurred
      */
-    public void addConsoleUnexpectedErrorMessage(String action) {
-        String message = "An unexpected error occurred while " + action;
+    public void addConsoleUnexpectedExceptionMessage(Exception e) {
+        String message = e.toString();
         addFirstAndErrorMessageIndicators();
         consoleTextFlow.getChildren().add(new Text(message));
         scrollToBottom();
         lastMessageIsError = true;
         consoleIsCleared = false;
         consoleMessages.add(new Message(message, MessageType.ERROR));
+        e.printStackTrace();
     }
 
     public void clearConsole() {

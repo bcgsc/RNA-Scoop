@@ -3,10 +3,7 @@ package parser;
 import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
-import com.jujutsu.utils.MatrixUtils;
-import controller.MainController;
 import exceptions.*;
-import javafx.application.Platform;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
@@ -57,8 +54,7 @@ public class Parser {
             return false;
         } catch (Exception e) {
             runLater(Parser::clearLoadedData);
-            runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading file from path: " + pathToPaths));
-            e.printStackTrace();
+            runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
             return false;
         }
     }
@@ -73,8 +69,7 @@ public class Parser {
                 genesToSelect.add(currentLabel);
             }
         } catch (Exception e) {
-            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("loading gene selection file");
-            e.printStackTrace();
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
 
         return genesToSelect;

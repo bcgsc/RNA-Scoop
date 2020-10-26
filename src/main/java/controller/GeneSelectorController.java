@@ -163,8 +163,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
             ObservableList<Gene> selectedGenes = genesTable.getSelectionModel().getSelectedItems();
             addGenesToShownGenes(selectedGenes);
         } catch (Exception e) {
-            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("adding selected genes");
-            e.printStackTrace();
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
     }
 
@@ -179,8 +178,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
             ControllerMediator.getInstance().removeGenesFromIsoformPlot(genesToRemove);
             shownGenes.removeAll(genesToRemove);
         } catch (Exception e) {
-            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("removing selected genes");
-            e.printStackTrace();
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
     }
 
@@ -189,8 +187,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
         try {
             clearShownGenes();
         } catch (Exception e) {
-            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("clearing shown genes");
-            e.printStackTrace();
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
     }
 

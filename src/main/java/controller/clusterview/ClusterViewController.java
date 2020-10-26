@@ -14,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import labelset.Cluster;
 import mediator.ControllerMediator;
 import org.jfree.chart.ChartFactory;
@@ -41,6 +42,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
@@ -64,6 +68,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     @FXML private Button drawPlotButton;
     @FXML private Button changeClusterLabelsButton;
     @FXML private Button clusterViewSettingsButton;
+    @FXML private Button exportEmbeddingButton;
     @FXML private SwingNode swingNode;
     @FXML private StackPane plotHolder;
 
@@ -108,6 +113,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         drawPlotButton.setDisable(true);
         changeClusterLabelsButton.setDisable(true);
         clusterViewSettingsButton.setDisable(true);
+        exportEmbeddingButton.setDisable(true);
     }
 
     /**
@@ -117,6 +123,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         drawPlotButton.setDisable(false);
         changeClusterLabelsButton.setDisable(false);
         clusterViewSettingsButton.setDisable(false);
+        exportEmbeddingButton.setDisable(false);
     }
 
     public void setCellIsoformExpressionMatrix(double[][] cellIsoformExpressionMatrix) {
@@ -196,8 +203,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             plotMaker.start();
         } catch (Exception e) {
             enableAssociatedFunctionality();
-            ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the cell plot");
-            e.printStackTrace();
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
     }
 
@@ -319,6 +325,21 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().displayClusterViewSettings();
     }
 
+    /**
+     * When export embedding button is pressed, if cell plot is drawn, exports
+     * embedding in use to file
+     */
+    @FXML
+    protected  void handleExportEmbeddingButton() {
+        if (!isPlotCleared()) {
+            FileChooser fileChooser = new FileChooser();
+            File embeddingFile = fileChooser.showSaveDialog(ControllerMediator.getInstance().getMainWindow());
+            if (embeddingFile != null)
+                exportEmbeddingToFile(embeddingFile);
+        } else {
+            ControllerMediator.getInstance().addConsoleErrorMessage("No embedding currently in use");
+        }
+    }
 
     private void disableAssociatedFunctionality() {
         disable();
@@ -340,6 +361,24 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
         ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableLabelSetManager();
+    }
+
+    /**
+     * Writes embedding used to generate cell plot to given file
+     */
+    private void exportEmbeddingToFile(File embeddingFile) {
+        StringBuilder embedding = new StringBuilder();
+        for (CellDataItem cellDataItem : getCells(false))
+            embedding.append(cellDataItem.getX()).append("\t").append(cellDataItem.getY()).append("\n");
+
+        try {
+            FileWriter fileWriter = new FileWriter(embeddingFile);
+            fileWriter.write(embedding.toString());
+            fileWriter.close();
+            ControllerMediator.getInstance().addConsoleMessage("Exported embedding to: " + embeddingFile.getPath());
+        } catch (IOException e) {
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
+        }
     }
 
     /**
@@ -727,8 +766,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 runLater(() -> ControllerMediator.getInstance().updateFilterCellCategories());
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing cell plot"));
            } catch (Exception e) {
-                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedErrorMessage("drawing the cell plot"));
-                e.printStackTrace();
+                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
             } finally {
                 runLater(ClusterViewController.this::enableAssociatedFunctionality);
             }
