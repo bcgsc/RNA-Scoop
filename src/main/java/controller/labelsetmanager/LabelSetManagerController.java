@@ -77,16 +77,20 @@ public class LabelSetManagerController extends PopUpController {
         addFromCellSelectionOption.setDisable(true);
     }
 
+    public void addLabelSets(Collection<LabelSet> labelSets) {
+        this.labelSets.addAll(labelSets);
+        labelSetInUse = this.labelSets.get(0);
+        labelSetsListView.getSelectionModel().select(labelSetInUse);
+    }
+
     /**
-     * Checks if method is running on the JavaFX Application Thread (necessary because Parser calls this
-     * method on a different thread). If running on JavaFX Application thread, adds label set right away,
-     * else makes JavaFX Application Thread to do it later
+     * Adds given label set to the list of label sets and selects it (making it the
+     * label set in use)
      */
     public void addLabelSet(LabelSet labelSet) {
-        if (!Platform.isFxApplicationThread())
-            Platform.runLater(() -> addLabelSetHelper(labelSet));
-        else
-            addLabelSetHelper(labelSet);
+        labelSets.add(labelSet);
+        labelSetInUse = labelSet;
+        labelSetsListView.getSelectionModel().select(labelSet);
     }
 
     public void clearLabelSets() {
@@ -154,7 +158,7 @@ public class LabelSetManagerController extends PopUpController {
         labelSetInUse = labelSet;
         LabelSetManagerWindow labelSetManagerWindow = (LabelSetManagerWindow) window;
         labelSetManagerWindow.displayAddLabelSetView();
-        addLabelSetHelper(labelSet);
+        addLabelSet(labelSet);
     }
 
     @FXML
@@ -225,16 +229,6 @@ public class LabelSetManagerController extends PopUpController {
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableGeneSelector();
-    }
-
-    /**
-     * Adds given label set to the list of label sets and selects it (making it the
-     * label set in use)
-     */
-    private void addLabelSetHelper(LabelSet labelSet) {
-        labelSets.add(labelSet);
-        labelSetInUse = labelSet;
-        labelSetsListView.getSelectionModel().select(labelSet);
     }
 
     private void exportLabelSetInUseToFile(File labelSetFile) {

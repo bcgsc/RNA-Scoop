@@ -270,6 +270,10 @@ public class ControllerMediator implements Mediator{
         labelSetManagerController.addLabelSet(labelSet);
     }
 
+    public void addLabelSets(Collection<LabelSet> labelSets) {
+        labelSetManagerController.addLabelSets(labelSets);
+    }
+
     public void removeLabelSet(LabelSet labelSet) {
         labelSetManagerController.removeLabelSet(labelSet);
     }
