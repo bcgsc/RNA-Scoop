@@ -24,11 +24,11 @@
                 </TextField>
                 <Button text="Filter genes" onAction="#handleFilterGenesButton"/>
             </HBox>
-            <VBox fx:id="genesColumn" alignment="CENTER" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+            <VBox alignment="CENTER" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
                 <GridPane.margin>
                     <Insets topRightBottomLeft="10"/>
                 </GridPane.margin>
-                <Text text="Genes">
+                <Text fx:id="genesTableLabel" text="Genes">
                     <VBox.margin>
                         <Insets bottom="5"/>
                     </VBox.margin>

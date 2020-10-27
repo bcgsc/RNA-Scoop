@@ -121,7 +121,7 @@ public class AddLabelSetViewController {
             enableUpdatingFoldChangeAssociatedFunctionality();
             removeSavingAlert();
             window.displayMainView();
-            ControllerMediator.getInstance().addConsoleErrorMessage("updating gene maximum fold change values");
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
     }
 
@@ -138,6 +138,7 @@ public class AddLabelSetViewController {
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
+        ControllerMediator.getInstance().disableGeneFilterer();
     }
 
     /**
@@ -157,6 +158,7 @@ public class AddLabelSetViewController {
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
+        ControllerMediator.getInstance().enableGeneFilterer();
     }
 
     /**

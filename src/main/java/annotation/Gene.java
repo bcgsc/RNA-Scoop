@@ -68,6 +68,11 @@ public class Gene implements Comparable<Gene> {
         return maxFoldChange;
     }
 
+    /**
+     * Sets gene's max fold change to the saved max fold change of the current label
+     * set in use
+     * ASSUMES the fold change has been calculated and saved
+     */
     public void updateMaxFoldChange() {
         LabelSet labelSetInUse = ControllerMediator.getInstance().getLabelSetInUse();
         maxFoldChange.set(maxFoldChangeMap.get(labelSetInUse));

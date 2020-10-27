@@ -1,7 +1,6 @@
 package controller.labelsetmanager;
 
 import controller.PopUpController;
-import controller.clusterview.ClusterViewController;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -163,7 +162,7 @@ public class LabelSetManagerController extends PopUpController {
 
     @FXML
     protected void handleAddFromFileOption() {
-        disableSwitchingLabelSetAssociatedFunctionality();
+        disableCalculatingFoldChangeAssociatedFunctionality();
 
         FileChooser fileChooser = new FileChooser();
         File labelSetFile = fileChooser.showOpenDialog(window);
@@ -172,17 +171,17 @@ public class LabelSetManagerController extends PopUpController {
             boolean successfullyAdded = Parser.loadLabelSet(labelSetFile);
             if (calculatingLabelSetInUseFoldChanges && successfullyAdded) {
                 try {
-                    Thread foldChangeUpdaterThread = new Thread(new LabelSetManagerController.UpdateFoldChangeThread());
+                    Thread foldChangeUpdaterThread = new Thread(new CalculateAndUpdateFoldChangeThread());
                     foldChangeUpdaterThread.start();
                 } catch (Exception e) {
-                    enableSwitchingLabelSetAssociatedFunctionality();
-                    ControllerMediator.getInstance().addConsoleErrorMessage("updating gene maximum fold change values for selected label set");
+                    enableCalculatingFoldChangeAssociatedFunctionality();
+                    ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
                 }
             } else {
-                enableSwitchingLabelSetAssociatedFunctionality();
+                enableCalculatingFoldChangeAssociatedFunctionality();
             }
         } else {
-            enableSwitchingLabelSetAssociatedFunctionality();
+            enableCalculatingFoldChangeAssociatedFunctionality();
         }
     }
 
@@ -215,20 +214,22 @@ public class LabelSetManagerController extends PopUpController {
         }
     }
 
-    private void enableSwitchingLabelSetAssociatedFunctionality() {
+    private void enableCalculatingFoldChangeAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableGeneSelector();
+        ControllerMediator.getInstance().enableGeneFilterer();
     }
 
-    private void disableSwitchingLabelSetAssociatedFunctionality() {
+    private void disableCalculatingFoldChangeAssociatedFunctionality() {
         disable();
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableGeneSelector();
+        ControllerMediator.getInstance().disableGeneFilterer();
     }
 
     private void exportLabelSetInUseToFile(File labelSetFile) {
@@ -287,16 +288,17 @@ public class LabelSetManagerController extends PopUpController {
     }
 
     /**
-     * Thread which updates all gene max fold change values (should be used
-     * to update fold change values when a label set is saved, as this can take a while)
+     * Thread which calculates and updates all gene max fold change values for current label set in use
+     * (should be used to update fold change values when a label set is uploaded from a file, since
+     * calculating fold change values can take a while)
      */
-    private class UpdateFoldChangeThread implements Runnable {
+    private class CalculateAndUpdateFoldChangeThread implements Runnable {
 
         @Override
         public void run() {
             ControllerMediator.getInstance().calculateAndSaveMaxFoldChange(Collections.singletonList(labelSetInUse));
             ControllerMediator.getInstance().updateGenesMaxFoldChange();
-            Platform.runLater(LabelSetManagerController.this::enableSwitchingLabelSetAssociatedFunctionality);
+            Platform.runLater(LabelSetManagerController.this::enableCalculatingFoldChangeAssociatedFunctionality);
         }
     }
 }

@@ -359,6 +359,10 @@ public class ControllerMediator implements Mediator{
         labelSetManagerController.handleClearedCellPlot();
     }
 
+    public void geneFiltererHandleClearedCellPlot() {
+        geneFiltererController.handleCellClearedPlot();
+    }
+
     public void redrawCellPlotSansLegend() {
         clusterViewController.redrawPlotSansLegend();
     }
@@ -644,6 +648,10 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.disable();
     }
 
+    public void disableGeneFilterer() {
+        geneFiltererController.disable();
+    }
+
     public void disableTPMGradientAdjuster() {
         tpmGradientAdjusterController.disable();
     }
@@ -671,6 +679,10 @@ public class ControllerMediator implements Mediator{
 
     public void enableGeneSelector() {
         geneSelectorController.enable();
+    }
+
+    public void enableGeneFilterer() {
+        geneFiltererController.enable();
     }
 
     public void enableTPMGradientAdjuster() {
