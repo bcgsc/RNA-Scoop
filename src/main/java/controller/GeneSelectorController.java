@@ -144,6 +144,11 @@ public class GeneSelectorController extends PopUpController implements Initializ
             gene.updateMaxFoldChange();
     }
 
+    public void calculateAndSaveMaxFoldChange(Collection<LabelSet> labelSets) {
+        for (Gene gene : genes)
+            gene.calculateAndSaveMaxFoldChange(labelSets);
+    }
+
     public void handleRemovedLabelSet(LabelSet labelSet) {
         for (Gene gene : genes)
             gene.removeLabelSet(labelSet);

@@ -14,6 +14,7 @@ import mediator.ControllerMediator;
 import ui.LabelSetManagerWindow;
 
 import java.awt.*;
+import java.util.Collections;
 
 public class AddLabelSetViewController {
     @FXML private VBox addLabelSetView;
@@ -113,7 +114,7 @@ public class AddLabelSetViewController {
         disableUpdatingFoldChangeAssociatedFunctionality();
         addSavingAlert();
         try {
-            Thread foldChangeUpdaterThread = new Thread(new UpdateFoldChangeThread());
+            Thread foldChangeUpdaterThread = new Thread(new CalculateAndUpdateFoldChangeThread());
             foldChangeUpdaterThread.start();
         } catch (Exception e) {
             enableAssociatedFunctionality();
@@ -234,13 +235,14 @@ public class AddLabelSetViewController {
     }
 
     /**
-     * Thread which updates all gene max fold change values (should be used
-     * to update fold change values when a label set is saved, as this can take a while)
+     * Thread which calculates all gene fold change values for this label set, and
+     * updates each gene's fold change value
      */
-    private class UpdateFoldChangeThread implements Runnable {
+    private class CalculateAndUpdateFoldChangeThread implements Runnable {
 
         @Override
         public void run() {
+            ControllerMediator.getInstance().calculateAndSaveMaxFoldChange(Collections.singletonList(labelSet));
             ControllerMediator.getInstance().updateGenesMaxFoldChange();
             Platform.runLater(() -> {
                 enableAssociatedFunctionality();

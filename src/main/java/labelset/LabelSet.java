@@ -22,22 +22,24 @@ public class LabelSet {
         setUpClusters();
     }
 
-    public LabelSet(Map<Integer, Cluster> cellNumberClusterMap) {
+    public LabelSet(Map<Integer, Cluster> cellNumberClusterMap, String name) {
         clusters = FXCollections.observableArrayList();
-        name = "Label Set " + (ControllerMediator.getInstance().getNumLabelSets() + 1);
+        this.name = name;
         this.cellNumberClusterMap = cellNumberClusterMap;
         for (Cluster cluster: new LinkedHashSet<>(cellNumberClusterMap.values())) {
             clusters.add(cluster);
             cluster.setLabelSet(this);
         }
+        if (!ControllerMediator.getInstance().isCellPlotCleared())
+            addCellsToClusters();
     }
 
     /**
-     * Adds given cell to the cluster it belongs
+     * Adds all cells in cell plot to appropriate clusters
      */
-    public void addCell(ClusterViewController.CellDataItem cell) {
-        Cluster cluster = cellNumberClusterMap.get(cell.getCellNumber());
-        cluster.addCell(cell);
+    public void addCellsToClusters() {
+        for (ClusterViewController.CellDataItem cell : ControllerMediator.getInstance().getCells(false))
+            addCell(cell);
     }
 
     /**
@@ -129,6 +131,15 @@ public class LabelSet {
     }
 
     /**
+     * Adds given cell to the cluster it belongs
+     */
+    private void addCell(ClusterViewController.CellDataItem cell) {
+        Cluster cluster = cellNumberClusterMap.get(cell.getCellNumber());
+        if (cluster != null)
+            cluster.addCell(cell);
+    }
+
+    /**
      * Creates a cluster and adds it to this label set. This cluster has all of the cells
      * in the t-SNE plot.
      */
@@ -136,7 +147,7 @@ public class LabelSet {
         Cluster cluster = new Cluster("Cluster 1", this);
         clusters.add(cluster);
         if (!ControllerMediator.getInstance().isCellPlotCleared()) {
-            for (ClusterViewController.CellDataItem cell : ControllerMediator.getInstance().getCellNumberCellMap().values()) {
+            for (ClusterViewController.CellDataItem cell : ControllerMediator.getInstance().getCells(false)) {
                 cluster.addCell(cell);
                 cellNumberClusterMap.put(cell.getCellNumber(), cluster);
             }

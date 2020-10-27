@@ -762,6 +762,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 ControllerMediator.getInstance().addCellsToLabelSetClusters();
                 setTPMGradientValues();
                 runLater(() -> ControllerMediator.getInstance().updateIsoformPlot(false));
+                ControllerMediator.getInstance().calculateAndSaveMaxFoldChange(ControllerMediator.getInstance().getLabelSets());
                 ControllerMediator.getInstance().updateGenesMaxFoldChange();
                 runLater(() -> ControllerMediator.getInstance().updateFilterCellCategories());
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing cell plot"));

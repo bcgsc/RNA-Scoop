@@ -69,16 +69,18 @@ public class Gene implements Comparable<Gene> {
     }
 
     public void updateMaxFoldChange() {
-        LabelSet labelSet = ControllerMediator.getInstance().getLabelSetInUse();
-        if (maxFoldChangeMap.containsKey(labelSet)) {
-            maxFoldChange.setValue(maxFoldChangeMap.get(labelSet));
-        } else {
-            GeneMaxFoldChange maxFoldChange = getMaxFoldChangeForLabelSet(labelSet);
-            maxFoldChangeMap.put(labelSet, maxFoldChange);
-            this.maxFoldChange.setValue(maxFoldChange);
-        }
+        LabelSet labelSetInUse = ControllerMediator.getInstance().getLabelSetInUse();
+        maxFoldChange.set(maxFoldChangeMap.get(labelSetInUse));
     }
 
+    public void calculateAndSaveMaxFoldChange(Collection<LabelSet> labelSets) {
+        for (LabelSet labelSet : labelSets) {
+            if (!maxFoldChangeMap.containsKey(labelSet)) {
+                GeneMaxFoldChange maxFoldChange = getMaxFoldChangeForLabelSet(labelSet);
+                maxFoldChangeMap.put(labelSet, maxFoldChange);
+            }
+        }
+    }
     /**
      * Removes given label set from the map of max fold changes
      */

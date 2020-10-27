@@ -13,11 +13,11 @@ import javafx.stage.FileChooser;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
+import parser.Parser;
 import ui.LabelSetManagerWindow;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 import static javafx.application.Platform.runLater;
@@ -25,17 +25,20 @@ import static javafx.application.Platform.runLater;
 public class LabelSetManagerController extends PopUpController {
     @FXML private ScrollPane labelSetManager;
     @FXML private ListView labelSetsListView;
-    @FXML private Button addLabelSetButton;
+    @FXML private MenuButton addLabelSetButton;
+    @FXML private MenuItem addFromCellSelectionOption;
     @FXML private Button removeLabelSetButton;
     @FXML private Button exportLabelSetButton;
 
     private ObservableList<LabelSet> labelSets;
     private LabelSet labelSetInUse;
+    private boolean calculatingLabelSetInUseFoldChanges;
 
     public void initializeLabelSetManager(LabelSetManagerWindow window) {
         this.window = window;
         setUpLabelSetsListView();
-        addLabelSetButton.setDisable(true);
+        addFromCellSelectionOption.setDisable(true);
+        calculatingLabelSetInUseFoldChanges = false;
     }
 
     /**
@@ -55,8 +58,9 @@ public class LabelSetManagerController extends PopUpController {
         labelSetsListView.setDisable(false);
         removeLabelSetButton.setDisable(false);
         exportLabelSetButton.setDisable(false);
-        if (!ControllerMediator.getInstance().isCellPlotCleared())
-            addLabelSetButton.setDisable(false);
+        addLabelSetButton.setDisable(false);
+        if (!ControllerMediator.getInstance().isCellPlotCleared() && addFromCellSelectionOption.isDisable())
+            addFromCellSelectionOption.setDisable(false);
 
     }
 
@@ -70,7 +74,7 @@ public class LabelSetManagerController extends PopUpController {
     }
 
     public void handleClearedCellPlot() {
-        addLabelSetButton.setDisable(true);
+        addFromCellSelectionOption.setDisable(true);
     }
 
     /**
@@ -123,15 +127,16 @@ public class LabelSetManagerController extends PopUpController {
      * label set
      */
     public void addCellsToLabelSetClusters() {
-        Map<Integer, ClusterViewController.CellDataItem> cellNumberCellMap = ControllerMediator.getInstance().getCellNumberCellMap();
-        for (ClusterViewController.CellDataItem cellDataItem : cellNumberCellMap.values()) {
-            for (LabelSet labelSet : labelSets)
-                labelSet.addCell(cellDataItem);
-        }
+        for (LabelSet labelSet : labelSets)
+                labelSet.addCellsToClusters();
     }
 
     public LabelSet getLabelSetInUse() {
         return labelSetInUse;
+    }
+
+    public Collection<LabelSet> getLabelSets() {
+        return labelSets;
     }
 
     public int getNumLabelSets() {
@@ -139,18 +144,44 @@ public class LabelSetManagerController extends PopUpController {
     }
 
     /**
-     * When Add Label Set button is pressed, creates a new label set, and adds it to the list of label
-     * sets. Switches the window's display to the "Add Label Set" view, so that users can customize the
+     * When "Add label set from cell selection" option is pressed, creates a new label set, and adds it to the list of
+     * label sets. Switches the window's display to the "Add Label Set" view, so that users can customize the
      * new label set
      */
     @FXML
-    protected void handleAddLabelSetButton() {
+    protected void handleAddFromCellSelectionOption() {
         LabelSet labelSet = new LabelSet();
         labelSetInUse = labelSet;
         LabelSetManagerWindow labelSetManagerWindow = (LabelSetManagerWindow) window;
         labelSetManagerWindow.displayAddLabelSetView();
         addLabelSetHelper(labelSet);
     }
+
+    @FXML
+    protected void handleAddFromFileOption() {
+        disableSwitchingLabelSetAssociatedFunctionality();
+
+        FileChooser fileChooser = new FileChooser();
+        File labelSetFile = fileChooser.showOpenDialog(window);
+        if (labelSetFile != null) {
+            calculatingLabelSetInUseFoldChanges = !ControllerMediator.getInstance().isCellPlotCleared();
+            boolean successfullyAdded = Parser.loadLabelSet(labelSetFile);
+            if (calculatingLabelSetInUseFoldChanges && successfullyAdded) {
+                try {
+                    Thread foldChangeUpdaterThread = new Thread(new LabelSetManagerController.UpdateFoldChangeThread());
+                    foldChangeUpdaterThread.start();
+                } catch (Exception e) {
+                    enableSwitchingLabelSetAssociatedFunctionality();
+                    ControllerMediator.getInstance().addConsoleErrorMessage("updating gene maximum fold change values for selected label set");
+                }
+            } else {
+                enableSwitchingLabelSetAssociatedFunctionality();
+            }
+        } else {
+            enableSwitchingLabelSetAssociatedFunctionality();
+        }
+    }
+
 
     /**
      * When Remove Label Set button is pressed, removes selected label set (unless
@@ -180,12 +211,29 @@ public class LabelSetManagerController extends PopUpController {
         }
     }
 
+    private void enableSwitchingLabelSetAssociatedFunctionality() {
+        enable();
+        ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableClusterView();
+        ControllerMediator.getInstance().enableClusterViewSettings();
+        ControllerMediator.getInstance().enableGeneSelector();
+    }
+
+    private void disableSwitchingLabelSetAssociatedFunctionality() {
+        disable();
+        ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableClusterView();
+        ControllerMediator.getInstance().disableClusterViewSettings();
+        ControllerMediator.getInstance().disableGeneSelector();
+    }
+
     /**
      * Adds given label set to the list of label sets and selects it (making it the
      * label set in use)
      */
     private void addLabelSetHelper(LabelSet labelSet) {
         labelSets.add(labelSet);
+        labelSetInUse = labelSet;
         labelSetsListView.getSelectionModel().select(labelSet);
     }
 
@@ -242,5 +290,19 @@ public class LabelSetManagerController extends PopUpController {
                     }
                 }
         );
+    }
+
+    /**
+     * Thread which updates all gene max fold change values (should be used
+     * to update fold change values when a label set is saved, as this can take a while)
+     */
+    private class UpdateFoldChangeThread implements Runnable {
+
+        @Override
+        public void run() {
+            ControllerMediator.getInstance().calculateAndSaveMaxFoldChange(Collections.singletonList(labelSetInUse));
+            ControllerMediator.getInstance().updateGenesMaxFoldChange();
+            Platform.runLater(LabelSetManagerController.this::enableSwitchingLabelSetAssociatedFunctionality);
+        }
     }
 }

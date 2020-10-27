@@ -236,6 +236,10 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.updateGenesMaxFoldChange();
     }
 
+    public void calculateAndSaveMaxFoldChange(Collection<LabelSet> labelSets) {
+        geneSelectorController.calculateAndSaveMaxFoldChange(labelSets);
+    }
+
     public void clearGeneSelector() {
         geneSelectorController.clearGeneSelector();
     }
@@ -280,6 +284,10 @@ public class ControllerMediator implements Mediator{
 
     public void addCellsToLabelSetClusters() {
         labelSetManagerController.addCellsToLabelSetClusters();
+    }
+
+    public Collection<LabelSet> getLabelSets() {
+        return labelSetManagerController.getLabelSets();
     }
 
     public int getNumLabelSets() {
