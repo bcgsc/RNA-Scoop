@@ -1,0 +1,6 @@
+# To install required Python packages:
+# pip install -r requirements.txt
+
+intervaltree
+numpy
+umap-learn
