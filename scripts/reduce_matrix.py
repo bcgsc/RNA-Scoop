@@ -12,22 +12,23 @@ def file_handler(p, tags):
         return open(p, tags)
 
 def get_encoding(labels):
-    visited = set()
-    new_labels = list()
+    occurrences_dict = dict()
+    for i in range(len(labels)):
+        key = labels[i]
+        if key in occurrences_dict:
+            occurrences_dict[key].append(i)
+        else:
+            occurrences_dict[key] = [i]
+    new_labels = sorted(occurrences_dict.keys())
     occurrences = list()
-    for index in range(len(labels)):
-        if index not in visited:
-            key = labels[index]
-            indices = [i for i, x in enumerate(labels) if x == key]
-            new_labels.append(key)
-            occurrences.append(indices)
-            visited.update(indices)
+    for key in new_labels:
+        occurrences.append(occurrences_dict[key])
     return new_labels, occurrences
 
 def reduce_arr(arr, occurrences, op=sum):
     new_arr = list()
     for x in occurrences:
-        new_arr.append(op([arr[i] for i in x]))
+        new_arr.append(op(arr[i] for i in x))
     return new_arr
     
 parser = argparse.ArgumentParser(description='Reduce matrix based on column labels.')
