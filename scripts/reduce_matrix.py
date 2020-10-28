@@ -13,8 +13,7 @@ def file_handler(p, tags):
 
 def get_encoding(labels):
     occurrences_dict = dict()
-    for i in range(len(labels)):
-        key = labels[i]
+    for i, key in enumerate(labels):
         if key in occurrences_dict:
             occurrences_dict[key].append(i)
         else:
@@ -29,6 +28,12 @@ def reduce_arr(arr, occurrences, op=sum):
     new_arr = list()
     for x in occurrences:
         new_arr.append(op(arr[i] for i in x))
+    return new_arr
+
+def reduce_arr_str(arr, occurrences):
+    new_arr = list()
+    for x in occurrences:
+        new_arr.append(str(sum(float(arr[i]) for i in x)))
     return new_arr
     
 parser = argparse.ArgumentParser(description='Reduce matrix based on column labels.')
@@ -57,7 +62,8 @@ logging.info(str(len(labels)) + ' labels')
 
 new_labels, occurrences = get_encoding(labels)
 
-logging.info(str(len(occurrences)) + ' unique labels')
+num_new_labels = len(new_labels)
+logging.info(str(num_new_labels) + ' unique labels')
 
 logging.info('writing output labels file...')
 with file_handler(args.out_labels, 'wt') as fw:
@@ -68,8 +74,8 @@ logging.info('reducing matrix...')
 with file_handler(args.out_matrix, 'wt') as fw:
     with file_handler(args.in_matrix, 'rt') as fr:
         for line in fr:
-            row = [float(x) for x in line.strip().split('\t')]
-            row_new = reduce_arr(row, occurrences)
-            fw.write('\t'.join([str(x) for x in row_new]) + '\n')
+            row = line.strip().split('\t')
+            row_new = reduce_arr_str(row, occurrences)
+            fw.write('\t'.join(row_new) + '\n')
 
 logging.info('done')
