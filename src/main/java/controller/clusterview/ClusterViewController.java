@@ -808,12 +808,45 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         }
 
         private void setTPMGradientValues() {
-            double[] expressionArray = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).toArray();
-            Arrays.sort(expressionArray);
-            double[] filteredExpressionArray = Arrays.stream(expressionArray).filter(tpm -> tpm >= 1).toArray();
+            //double[] expressionArray = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).toArray();
+            //Arrays.sort(expressionArray);
+            //double[] filteredExpressionArray = Arrays.stream(expressionArray).filter(tpm -> tpm >= 1).toArray();
 
-            addMinMaxTPMToTPMGradientLabels(expressionArray);
-            setTPMGradientMaxMinToRecommended(filteredExpressionArray);
+            double minTPM = Double.MAX_VALUE;
+            double maxTPM = Double.MIN_VALUE;
+
+            int sampleSize = 100000;
+            double[] sampleTpms = new double[sampleSize];
+            int numTpmValsGE1 = 0;
+
+            for (double[] row : cellIsoformExpressionMatrix) {
+                for (double d : row) {
+                    if (d < minTPM) {
+                        minTPM = d;
+                    }
+                    if (d > maxTPM) {
+                        maxTPM = d;
+                    }
+                    if (d >= 1) {
+                        if (numTpmValsGE1 < sampleSize) {
+                            sampleTpms[numTpmValsGE1] = d;
+                        }
+                        else {
+                            // randomly replace one value in the sample
+                            int i = (int) Math.floor(Math.random() * sampleSize);
+                            sampleTpms[i] = d;
+                        }
+                        ++numTpmValsGE1;
+                    }
+                }
+            }
+
+            if (numTpmValsGE1 < sampleSize) {
+                sampleTpms = Arrays.copyOfRange(sampleTpms, 0, numTpmValsGE1 + 1);
+            }
+
+            addMinMaxTPMToTPMGradientLabels(minTPM, maxTPM);
+            setTPMGradientMaxMinToRecommended(sampleTpms);
         }
 
         private double[][] generateTSNEMatrix() {
@@ -912,13 +945,10 @@ public class ClusterViewController implements Initializable, InteractiveElementC
          * Adds the absolute min and max expression values in the expressionArray to the min
          * and max labels of the TPM gradient adjuster window
          *
-         * @param expressionArray sorted array of all the isoform expression values for all cells in the
-         *                        plot
+         * @param minTPM min TPM value to set
+         * @param maxTPM max TPM value to set
          */
-        private void addMinMaxTPMToTPMGradientLabels(double[] expressionArray) {
-            int expressionArraySize = expressionArray.length;
-            double minTPM = expressionArray[0];
-            double maxTPM = expressionArray[expressionArraySize - 1];
+        private void addMinMaxTPMToTPMGradientLabels(double minTPM, double maxTPM) {
             ControllerMediator.getInstance().addMinTPMToGradientMinTPMLabel(minTPM);
             ControllerMediator.getInstance().addMaxTPMToGradientMaxTPMLabel(maxTPM);
         }
