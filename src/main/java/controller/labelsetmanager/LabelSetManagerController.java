@@ -168,6 +168,7 @@ public class LabelSetManagerController extends PopUpController {
         File labelSetFile = fileChooser.showOpenDialog(window);
         if (labelSetFile != null) {
             calculatingLabelSetInUseFoldChanges = !ControllerMediator.getInstance().isCellPlotCleared();
+            ControllerMediator.getInstance().addConsoleMessage("Loading label set...");
             boolean successfullyAdded = Parser.loadLabelSet(labelSetFile);
             if (calculatingLabelSetInUseFoldChanges && successfullyAdded) {
                 try {
@@ -178,6 +179,7 @@ public class LabelSetManagerController extends PopUpController {
                     ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
                 }
             } else {
+                ControllerMediator.getInstance().addConsoleMessage("Successfully loaded label set");
                 enableCalculatingFoldChangeAssociatedFunctionality();
             }
         } else {
@@ -298,6 +300,7 @@ public class LabelSetManagerController extends PopUpController {
         public void run() {
             ControllerMediator.getInstance().calculateAndSaveMaxFoldChange(Collections.singletonList(labelSetInUse));
             ControllerMediator.getInstance().updateGenesMaxFoldChange();
+            Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded label set"));
             Platform.runLater(LabelSetManagerController.this::enableCalculatingFoldChangeAssociatedFunctionality);
         }
     }

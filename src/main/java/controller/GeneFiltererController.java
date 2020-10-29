@@ -421,7 +421,18 @@ public class GeneFiltererController extends PopUpController implements Initializ
         @Override
         public void run() {
             optionFilteringBy = filterToggles.getSelectedToggle();
+
+            boolean filteringGenes = (optionFilteringBy != noneFilterOption);
+            if (filteringGenes)
+                Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Filtering genes..."));
+
             ControllerMediator.getInstance().updateGenesTableFilteringMethod();
+
+            if (filteringGenes)
+                Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully filtered genes"));
+            else
+                Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Stopped filtering genes"));
+
             enableAssociatedFunctionality();
         }
     }
