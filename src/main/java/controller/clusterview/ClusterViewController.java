@@ -808,10 +808,6 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         }
 
         private void setTPMGradientValues() {
-            //double[] expressionArray = Arrays.stream(cellIsoformExpressionMatrix).flatMapToDouble(Arrays::stream).toArray();
-            //Arrays.sort(expressionArray);
-            //double[] filteredExpressionArray = Arrays.stream(expressionArray).filter(tpm -> tpm >= 1).toArray();
-
             double minTPM = Double.MAX_VALUE;
             double maxTPM = Double.MIN_VALUE;
 
@@ -949,8 +945,9 @@ public class ClusterViewController implements Initializable, InteractiveElementC
          * @param maxTPM max TPM value to set
          */
         private void addMinMaxTPMToTPMGradientLabels(double minTPM, double maxTPM) {
-            ControllerMediator.getInstance().addMinTPMToGradientMinTPMLabel(minTPM);
-            ControllerMediator.getInstance().addMaxTPMToGradientMaxTPMLabel(maxTPM);
+            ControllerMediator c = ControllerMediator.getInstance();
+            c.addMinTPMToGradientMinTPMLabel(minTPM);
+            c.addMaxTPMToGradientMaxTPMLabel(maxTPM);
         }
 
         /**
