@@ -304,26 +304,29 @@ public class Parser {
     private static class CellPlotInfoLoader {
 
         public static void loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, JSONArray pathsToLabelSets, String pathToEmbedding) throws IOException, RNAScoopException {
-            double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix(pathToMatrix);
             HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap(pathToIsoformLabels);
-
-            if (isoformIndexMap.size() != cellIsoformExpressionMatrix[0].length)
-                throw new ColumnLabelsLengthException();
+            int numIsoforms = isoformIndexMap.size();
 
             List<LabelSet> labelSets = new ArrayList<>();
+            int numCells = -1;
             for (Object pathToLabelSet : pathsToLabelSets) {
                 LabelSet labelSet = getLabelSet(new File((String) pathToLabelSet));
-                if (labelSet.getNumCellsInLabelSet() != cellIsoformExpressionMatrix.length)
+                if (numCells < 0) {
+                    numCells = labelSet.getNumCellsInLabelSet();
+                }
+                else if (numCells != labelSet.getNumCellsInLabelSet()) {
+                    // inconsistent number of cell labels between sets
                     throw new RowLabelsLengthException();
+                }
                 labelSets.add(labelSet);
             }
 
+            double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix(pathToMatrix, numCells, numIsoforms);
 
             if (pathToEmbedding != null) {
                 double[][] embedding = getEmbedding(pathToEmbedding);
 
-
-                if (embedding.length != cellIsoformExpressionMatrix.length)
+                if (embedding.length != numCells)
                     throw new EmbeddingLengthException();
                 ControllerMediator.getInstance().setEmbedding(embedding);
             }
@@ -371,12 +374,75 @@ public class Parser {
          * Throws exceptions if size of the matrix is 0, or if the matrix contains negative
          * expression values
          */
-        private static double[][] getCellIsoformExpressionMatrix(String pathToMatrix) throws MatrixSizeZeroException, NegativeExpressionInMatrixException {
-            double[][] cellIsoformExpressionMatrix = parse2DMatrix(pathToMatrix, "\t");
+        private static double[][] getCellIsoformExpressionMatrix(String pathToMatrix, int numCells, int numIsoforms) throws MatrixSizeZeroException, NegativeExpressionInMatrixException, ColumnLabelsLengthException, RowLabelsLengthException {
+            double[][] cellIsoformExpressionMatrix = parse2DMatrix(pathToMatrix, "\t", numCells, numIsoforms);
             if (cellIsoformExpressionMatrix.length == 0)
                 throw new MatrixSizeZeroException();
 
             return cellIsoformExpressionMatrix;
+        }
+
+        /**
+         * Parse a 2D matrix text file.
+         * @param pathToMatrix input matrix path
+         * @param columnDelimiter column delimiter
+         * @param numRows number of matrix rows
+         * @param numCols number of matrix columns
+         * @return 2D double array
+         * @throws NegativeExpressionInMatrixException a negative expression value is found
+         * @throws ColumnLabelsLengthException unexpected number of columns in input matrix
+         * @throws RowLabelsLengthException unexpected number of rows in input matrix
+         */
+        private static double[][] parse2DMatrix(String pathToMatrix, String columnDelimiter, int numRows, int numCols) throws NegativeExpressionInMatrixException, ColumnLabelsLengthException, RowLabelsLengthException {
+            double[][] matrix = new double[numRows][numCols];
+
+            try {
+                BufferedReader reader;
+
+                if (pathToMatrix.toLowerCase().endsWith(GZIP_EXTENSION)) {
+                    reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(pathToMatrix))));
+                }
+                else {
+                    reader = new BufferedReader(new InputStreamReader(new FileInputStream(pathToMatrix)));
+                }
+
+                Pattern pattern = Pattern.compile(columnDelimiter);
+
+                for (int i=0; i<numRows; ++i) {
+                    String line = reader.readLine();
+                    if (line == null) {
+                        // too few rows
+                        throw new RowLabelsLengthException();
+                    }
+
+                    matrix[i] = pattern.splitAsStream(line)
+                                .mapToDouble(Double::parseDouble)
+                                .toArray();
+
+                    if (matrix[i].length != numCols) {
+                        // unexpected number of columns
+                        throw new ColumnLabelsLengthException();
+                    }
+
+                    for (double d : matrix[i]) {
+                        if (d < 0) {
+                            throw new NegativeExpressionInMatrixException();
+                        }
+                    }
+                }
+
+                String line = reader.readLine();
+                if (line != null && !line.matches("\\s*")) {
+                    // too many rows
+                    throw new RowLabelsLengthException();
+                }
+
+                reader.close();
+            } catch (IOException e) {
+                throw new IllegalArgumentException(e);
+            }
+
+            return matrix;
         }
 
         /**
