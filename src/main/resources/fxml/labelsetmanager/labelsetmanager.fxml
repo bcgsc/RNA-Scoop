@@ -23,11 +23,15 @@
                    </VBox.margin>
                </ListView>
                <HBox alignment="CENTER">
-                   <Button fx:id="addLabelSetButton" onAction="#handleAddLabelSetButton" text="Add new">
+                   <MenuButton fx:id="addLabelSetButton" text="Add new">
                        <HBox.margin>
                            <Insets right="10" />
                        </HBox.margin>
-                   </Button>
+                       <items>
+                           <MenuItem fx:id="addFromCellSelectionOption" text="From cell selection" onAction="#handleAddFromCellSelectionOption"/>
+                           <MenuItem text="From file" onAction="#handleAddFromFileOption"/>
+                       </items>
+                   </MenuButton>
                    <Button fx:id="removeLabelSetButton" onAction="#handleRemoveLabelSetButton" text="Remove selected">
                        <HBox.margin>
                            <Insets right="10" />

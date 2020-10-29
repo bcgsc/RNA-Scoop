@@ -3,6 +3,7 @@ package controller;
 import annotation.Gene;
 import annotation.GeneMaxFoldChange;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -13,6 +14,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -35,6 +37,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
     @FXML private GridPane gridPane;
     @FXML private TextField searchFilter;
     @FXML private TableView genesTable;
+    @FXML private Text genesTableLabel;
     @FXML private TableView shownGenesTable;
     @FXML private Button selectFromFileButton;
     @FXML private Button addSelectedButton;
@@ -56,8 +59,8 @@ public class GeneSelectorController extends PopUpController implements Initializ
         setUpGenesTable();
         setUpShownGenesTable();
         setUpWindow();
+        updateGenesTableLabel();
     }
-
     /**
      * Disables all functionality
      */
@@ -101,6 +104,7 @@ public class GeneSelectorController extends PopUpController implements Initializ
         clearShownGenes();
         genes.clear();
         searchFilter.setText(null);
+        updateGenesTableLabel();
     }
 
     /**
@@ -122,26 +126,28 @@ public class GeneSelectorController extends PopUpController implements Initializ
         genes.clear();
         genes.addAll(genesList);
         genes.sort(Gene::compareTo);
+        updateGenesTableLabel();
     }
 
     public void updateGenesTableFilteringMethod() {
-        if (ControllerMediator.getInstance().notFilteringGenes())
-            filteredGenes.setPredicate(gene -> true);
-        else if (ControllerMediator.getInstance().isFilteringByDominantIsoformSwitching()) {
-            filteredGenes.setPredicate(gene -> true);
+        filteredGenes.setPredicate(gene -> true);
+        if (ControllerMediator.getInstance().isFilteringByDominantIsoformSwitching())
             filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneHasIsoformSwitches(gene));
-        } else if (ControllerMediator.getInstance().isFilteringByDifferentialExpression()) {
-            filteredGenes.setPredicate(gene -> true);
+        else if (ControllerMediator.getInstance().isFilteringByDifferentialExpression())
             filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneIsDifferentiallyExpressed(gene));
-        } else {
-            filteredGenes.setPredicate(gene -> true);
+        else if (ControllerMediator.getInstance().isFilteringByCategorySpecificExpression())
             filteredGenes.setPredicate(gene -> ControllerMediator.getInstance().geneHasCategorySpecificExpression(gene));
-        }
+        updateGenesTableLabel();
     }
 
     public void updateGenesMaxFoldChange() {
         for (Gene gene : genes)
             gene.updateMaxFoldChange();
+    }
+
+    public void calculateAndSaveMaxFoldChange(Collection<LabelSet> labelSets) {
+        for (Gene gene : genes)
+            gene.calculateAndSaveMaxFoldChange(labelSets);
     }
 
     public void handleRemovedLabelSet(LabelSet labelSet) {
@@ -217,6 +223,11 @@ public class GeneSelectorController extends PopUpController implements Initializ
         if (genesAdded.size() > 0)
             ControllerMediator.getInstance().addGenesToIsoformPlot(genesAdded);
     }
+
+    private void updateGenesTableLabel() {
+        genesTableLabel.setText("Genes (" + filteredGenes.size() + "/" + genes.size() + ")");
+    }
+
 
     /**
      * Sets up grid pane's columns and rows

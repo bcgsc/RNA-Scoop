@@ -620,6 +620,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableTPMGradientAdjuster();
         ControllerMediator.getInstance().disableLabelSetManager();
+        ControllerMediator.getInstance().disableGeneFilterer();
         // doesn't disable add label set view, because main should be disabled when
         // that view is active
     }
@@ -632,6 +633,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
         ControllerMediator.getInstance().enableLabelSetManager();
+        ControllerMediator.getInstance().enableGeneFilterer();
     }
 
     /**

@@ -159,6 +159,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             cellNumberCellMap.clear();
             ControllerMediator.getInstance().clearLabelSetClusterCells();
             ControllerMediator.getInstance().labelSetManagerHandleClearedCellPlot();
+            ControllerMediator.getInstance().geneFiltererHandleClearedCellPlot();
         }
     }
 
@@ -349,6 +350,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().disableTPMGradientAdjuster();
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableLabelSetManager();
+        ControllerMediator.getInstance().disableGeneFilterer();
         // doesn't disable add label set view because plot should be
         // disabled when that view is active
     }
@@ -361,6 +363,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().enableTPMGradientAdjuster();
         ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableLabelSetManager();
+        ControllerMediator.getInstance().enableGeneFilterer();
     }
 
     /**
@@ -762,6 +765,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 ControllerMediator.getInstance().addCellsToLabelSetClusters();
                 setTPMGradientValues();
                 runLater(() -> ControllerMediator.getInstance().updateIsoformPlot(false));
+                ControllerMediator.getInstance().calculateAndSaveMaxFoldChange(ControllerMediator.getInstance().getLabelSets());
                 ControllerMediator.getInstance().updateGenesMaxFoldChange();
                 runLater(() -> ControllerMediator.getInstance().updateFilterCellCategories());
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing cell plot"));

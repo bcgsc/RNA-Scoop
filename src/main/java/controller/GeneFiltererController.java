@@ -2,9 +2,10 @@ package controller;
 
 import annotation.Gene;
 import annotation.Isoform;
-import exceptions.InvalidMinFoldChangeCutOff;
-import exceptions.InvalidPercentCutOff;
-import exceptions.InvalidTPMCutOffException;
+import controller.labelsetmanager.AddLabelSetViewController;
+import controller.labelsetmanager.LabelSetManagerController;
+import exceptions.*;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -25,7 +26,7 @@ import ui.Main;
 import java.net.URL;
 import java.util.*;
 
-public class GeneFiltererController extends PopUpController implements Initializable {
+public class GeneFiltererController extends PopUpController implements Initializable, InteractiveElementController{
     private static final double GENE_FILTERER_WIDTH = 550;
     private static final double GENE_FILTERER_HEIGHT = 600;
     // Dominant isoform switching (DIS)
@@ -79,18 +80,27 @@ public class GeneFiltererController extends PopUpController implements Initializ
     private MutableDouble cseMaxPercentExpressed;
 
 
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpFieldUpdating();
         setFilteringParamsToDefault();
         setUpWindow();
+        disable();
     }
 
     public void unfilterGenes() {
         noneFilterOption.setSelected(true);
         optionFilteringBy = noneFilterOption;
         ControllerMediator.getInstance().updateGenesTableFilteringMethod();
+    }
+
+    public void enable() {
+        if (!ControllerMediator.getInstance().isCellPlotCleared())
+            geneFilterer.setDisable(false);
+    }
+
+    public void disable() {
+        geneFilterer.setDisable(true);
     }
 
     public boolean geneHasIsoformSwitches(Gene gene) {
@@ -158,6 +168,10 @@ public class GeneFiltererController extends PopUpController implements Initializ
         }
     }
 
+    public void handleCellClearedPlot() {
+        disable();
+    }
+
     public boolean notFilteringGenes() {
         return noneFilterOption.isSelected();
     }
@@ -176,8 +190,21 @@ public class GeneFiltererController extends PopUpController implements Initializ
     
     @FXML
     protected void handleFilterButton() {
-        optionFilteringBy = filterToggles.getSelectedToggle();
-        ControllerMediator.getInstance().updateGenesTableFilteringMethod();
+        Toggle optionToFilterBy = filterToggles.getSelectedToggle();
+        if (optionToFilterBy == deFilterOption && deCategories.getCheckModel().getCheckedItems().size() < 2) {
+            ControllerMediator.getInstance().addConsoleErrorMessage("Must select at least two categories to filter by differential isoform expression");
+        } else if (optionToFilterBy == cseFilterOption && cseCategories.getCheckModel().getCheckedItems().isEmpty()) {
+            ControllerMediator.getInstance().addConsoleErrorMessage("Must select at least one category to filter by category-specific isoform expression");
+        } else {
+            disableAssociatedFunctionality();
+            try {
+                Thread filterGenesThread = new Thread(new FilterGenesThread());
+                filterGenesThread.start();
+            } catch (Exception e) {
+                enableAssociatedFunctionality();
+                ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
+            }
+        }
     }
 
     private void updateClusterDominantIsoforms(Cluster cluster, Isoform isoform, Set<Isoform> dominantIsoforms) {
@@ -245,6 +272,24 @@ public class GeneFiltererController extends PopUpController implements Initializ
             }
         }
         return true;
+    }
+
+    private void enableAssociatedFunctionality() {
+        enable();
+        ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableClusterView();
+        ControllerMediator.getInstance().enableClusterViewSettings();
+        ControllerMediator.getInstance().enableLabelSetManager();
+        ControllerMediator.getInstance().enableGeneSelector();
+   }
+
+    private void disableAssociatedFunctionality() {
+        disable();
+        ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableClusterView();
+        ControllerMediator.getInstance().disableClusterViewSettings();
+        ControllerMediator.getInstance().disableLabelSetManager();
+        ControllerMediator.getInstance().disableGeneSelector();
     }
 
     private void setUpFieldUpdating(){
@@ -368,6 +413,28 @@ public class GeneFiltererController extends PopUpController implements Initializ
 
     private void setWindowSizeAndDisplay() {
         window.setScene(new Scene(geneFilterer, GENE_FILTERER_WIDTH, GENE_FILTERER_HEIGHT));
+    }
+
+
+    private class FilterGenesThread implements Runnable {
+
+        @Override
+        public void run() {
+            optionFilteringBy = filterToggles.getSelectedToggle();
+
+            boolean filteringGenes = (optionFilteringBy != noneFilterOption);
+            if (filteringGenes)
+                Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Filtering genes..."));
+
+            ControllerMediator.getInstance().updateGenesTableFilteringMethod();
+
+            if (filteringGenes)
+                Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully filtered genes"));
+            else
+                Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Stopped filtering genes"));
+
+            enableAssociatedFunctionality();
+        }
     }
 
     private class MutableDouble {

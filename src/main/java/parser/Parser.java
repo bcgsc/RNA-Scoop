@@ -4,9 +4,11 @@ import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
 import exceptions.*;
+import javafx.application.Platform;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -44,7 +46,7 @@ public class Parser {
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing matrix files..."));
             CellPlotInfoLoader.loadCellPlotInfo((String) paths.get(MATRIX_PATH_KEY),
                     (String) paths.get(ISOFORM_LABELS_PATH_KEY),
-                    (String) paths.get(CELL_LABELS_PATH_KEY),
+                    (JSONArray) paths.get(CELL_LABELS_PATH_KEY),
                     paths.has(EMBEDDING_PATH_KEY) ? (String) paths.get(EMBEDDING_PATH_KEY) : null);
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + pathToPaths));
             return true;
@@ -57,6 +59,24 @@ public class Parser {
             runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
             return false;
         }
+    }
+
+    /**
+     * Assumes cell plot info (like expression matrix) has already been loaded
+     */
+    public static boolean loadLabelSet(File labelSetFile) {
+        try {
+            LabelSet labelSet = CellPlotInfoLoader.getLabelSet(labelSetFile);
+            if (labelSet.getNumCellsInLabelSet() == ControllerMediator.getInstance().getNumCellsToPlot()) {
+                ControllerMediator.getInstance().addLabelSet(labelSet);
+                return true;
+            } else {
+                ControllerMediator.getInstance().addConsoleErrorMessage("Uploaded label set does not have the same number of cells as the expression matrix");
+            }
+        } catch (IOException e) {
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
+        }
+        return false;
     }
 
     public static Set<String> loadGeneSelectionFile(File geneSelectionFile) {
@@ -283,17 +303,21 @@ public class Parser {
 
     private static class CellPlotInfoLoader {
 
-        public static void loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, String pathToCellLabels, String pathToEmbedding) throws IOException, RNAScoopException {
+        public static void loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, JSONArray pathsToLabelSets, String pathToEmbedding) throws IOException, RNAScoopException {
             double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix(pathToMatrix);
             HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap(pathToIsoformLabels);
 
             if (isoformIndexMap.size() != cellIsoformExpressionMatrix[0].length)
                 throw new ColumnLabelsLengthException();
 
-            LabelSet cellLabels = getCellLabels(pathToCellLabels);
+            List<LabelSet> labelSets = new ArrayList<>();
+            for (Object pathToLabelSet : pathsToLabelSets) {
+                LabelSet labelSet = getLabelSet(new File((String) pathToLabelSet));
+                if (labelSet.getNumCellsInLabelSet() != cellIsoformExpressionMatrix.length)
+                    throw new RowLabelsLengthException();
+                labelSets.add(labelSet);
+            }
 
-            if (cellLabels.getNumCellsInLabelSet() != cellIsoformExpressionMatrix.length)
-                throw new RowLabelsLengthException();
 
             if (pathToEmbedding != null) {
                 double[][] embedding = getEmbedding(pathToEmbedding);
@@ -306,7 +330,40 @@ public class Parser {
 
             ControllerMediator.getInstance().setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
             ControllerMediator.getInstance().setIsoformIndexMap(isoformIndexMap);
-            ControllerMediator.getInstance().addLabelSet(cellLabels);
+            Platform.runLater(() -> ControllerMediator.getInstance().addLabelSets(labelSets));
+        }
+
+        /**
+         * Creates a label set from given cell labels file. Label set is made based on map of cells
+         * (represented by their numbers) and the clusters they belong to.
+         * If the first line of the cell labels file says "T Cells", the cell represented by the first
+         * row of the matrix should be in the cluster labelled "T Cells". The map from which the
+         * label set is produced will map 0 to a cluster with label "T Cells"
+         */
+        public static LabelSet getLabelSet(File cellLabelsFile) throws IOException {
+            Map<Integer, Cluster> cellNumberClusterMap = new LinkedHashMap<>();
+            Map<String, Cluster> clusterMap = new HashMap<>();
+
+            String currentLabel;
+            Cluster cluster;
+            int cellNumber = 0;
+
+            BufferedReader reader= new BufferedReader(new FileReader(cellLabelsFile));
+            while ((currentLabel = reader.readLine()) != null) {
+                if (clusterMap.containsKey(currentLabel)) {
+                    cluster = clusterMap.get(currentLabel);
+                } else {
+                    cluster = new Cluster(currentLabel);
+                    clusterMap.put(currentLabel, cluster);
+                }
+                cellNumberClusterMap.put(cellNumber, cluster);
+                cellNumber++;
+            }
+
+            String name = cellLabelsFile.getName();
+            String nameWithoutExtension = name.replaceFirst("[.][^.]+$", "");
+
+            return new LabelSet(cellNumberClusterMap, nameWithoutExtension);
         }
 
         /**
@@ -329,7 +386,7 @@ public class Parser {
          * @return 2D double array
          * @throws NegativeExpressionInMatrixException a negative expression value is found
          */
-        public static double[][] parse2DMatrix(String pathToMatrix, String columnDelimiter) throws NegativeExpressionInMatrixException {
+        private static double[][] parse2DMatrix(String pathToMatrix, String columnDelimiter) throws NegativeExpressionInMatrixException {
             List<double[]> rows = new ArrayList<>();
 
             try {
@@ -392,36 +449,6 @@ public class Parser {
                 index++;
             }
             return isoformIndexMap;
-        }
-
-        /**
-         * Creates a label set from given cell labels file. Label set is made based on map of cells
-         * (represented by their numbers) and the clusters they belong to.
-         * If the first line of the cell labels file says "T Cells", the cell represented by the first
-         * row of the matrix should be in the cluster labelled "T Cells". The map from which the
-         * label set is produced will map 0 to a cluster with label "T Cells"
-         */
-        private static LabelSet getCellLabels(String pathToCellLabels) throws IOException {
-            Map<Integer, Cluster> cellNumberClusterMap = new LinkedHashMap<>();
-            Map<String, Cluster> clusterMap = new HashMap<>();
-
-            String currentLabel;
-            Cluster cluster;
-            int cellNumber = 0;
-
-            File cellLabelsFile = new File(pathToCellLabels);
-            BufferedReader reader= new BufferedReader(new FileReader(cellLabelsFile));
-            while ((currentLabel = reader.readLine()) != null) {
-                if (clusterMap.containsKey(currentLabel)) {
-                    cluster = clusterMap.get(currentLabel);
-                } else {
-                    cluster = new Cluster(currentLabel);
-                    clusterMap.put(currentLabel, cluster);
-                }
-                cellNumberClusterMap.put(cellNumber, cluster);
-                cellNumber++;
-            }
-            return new LabelSet(cellNumberClusterMap);
         }
 
         private static double[][] getEmbedding(String pathToEmbedding) throws IOException, EmbeddingColumnsException, EmbeddingNotNumberException {

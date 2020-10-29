@@ -236,6 +236,10 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.updateGenesMaxFoldChange();
     }
 
+    public void calculateAndSaveMaxFoldChange(Collection<LabelSet> labelSets) {
+        geneSelectorController.calculateAndSaveMaxFoldChange(labelSets);
+    }
+
     public void clearGeneSelector() {
         geneSelectorController.clearGeneSelector();
     }
@@ -266,6 +270,10 @@ public class ControllerMediator implements Mediator{
         labelSetManagerController.addLabelSet(labelSet);
     }
 
+    public void addLabelSets(Collection<LabelSet> labelSets) {
+        labelSetManagerController.addLabelSets(labelSets);
+    }
+
     public void removeLabelSet(LabelSet labelSet) {
         labelSetManagerController.removeLabelSet(labelSet);
     }
@@ -280,6 +288,10 @@ public class ControllerMediator implements Mediator{
 
     public void addCellsToLabelSetClusters() {
         labelSetManagerController.addCellsToLabelSetClusters();
+    }
+
+    public Collection<LabelSet> getLabelSets() {
+        return labelSetManagerController.getLabelSets();
     }
 
     public int getNumLabelSets() {
@@ -345,6 +357,10 @@ public class ControllerMediator implements Mediator{
 
     public void labelSetManagerHandleClearedCellPlot() {
         labelSetManagerController.handleClearedCellPlot();
+    }
+
+    public void geneFiltererHandleClearedCellPlot() {
+        geneFiltererController.handleCellClearedPlot();
     }
 
     public void redrawCellPlotSansLegend() {
@@ -632,6 +648,10 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.disable();
     }
 
+    public void disableGeneFilterer() {
+        geneFiltererController.disable();
+    }
+
     public void disableTPMGradientAdjuster() {
         tpmGradientAdjusterController.disable();
     }
@@ -659,6 +679,10 @@ public class ControllerMediator implements Mediator{
 
     public void enableGeneSelector() {
         geneSelectorController.enable();
+    }
+
+    public void enableGeneFilterer() {
+        geneFiltererController.enable();
     }
 
     public void enableTPMGradientAdjuster() {
