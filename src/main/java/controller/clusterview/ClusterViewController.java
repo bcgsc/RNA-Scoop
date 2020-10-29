@@ -812,6 +812,8 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             double maxTPM = Double.MIN_VALUE;
 
             int sampleSize = 100000;
+            double replacementProb = 0.5d;
+            double maxRandNum = sampleSize/replacementProb;
             double[] sampleTpms = new double[sampleSize];
             int numTpmValsGE1 = 0;
 
@@ -829,8 +831,10 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                         }
                         else {
                             // randomly replace one value in the sample
-                            int i = (int) Math.floor(Math.random() * sampleSize);
-                            sampleTpms[i] = d;
+                            int i = (int) Math.floor(Math.random() * maxRandNum);
+                            if (i < sampleSize) {
+                                sampleTpms[i] = d;
+                            }
                         }
                         ++numTpmValsGE1;
                     }
@@ -840,6 +844,8 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             if (numTpmValsGE1 < sampleSize) {
                 sampleTpms = Arrays.copyOfRange(sampleTpms, 0, numTpmValsGE1 + 1);
             }
+
+            Arrays.sort(sampleTpms);
 
             addMinMaxTPMToTPMGradientLabels(minTPM, maxTPM);
             setTPMGradientMaxMinToRecommended(sampleTpms);
