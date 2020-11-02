@@ -1106,12 +1106,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
 
             /**
-             * Rounds number to closest whole number if >= 1, else rounds number to
+             * Rounds number to closest whole number if >= 1 or = 0, else rounds number to
              * one decimal. Converts result to string
              */
             public String roundAndConvertToString(double num) {
                 if (num >= 1)
                     return Integer.toString((int) Math.round(num));
+                else if (num == 0)
+                    return Integer.toString((int) num);
                 else
                     return Double.toString(Util.roundToOneDecimal(num));
             }

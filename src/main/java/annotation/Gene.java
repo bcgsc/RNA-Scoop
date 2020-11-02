@@ -13,6 +13,9 @@ import util.Util;
 import java.util.Collection;
 import java.util.HashMap;
 
+/**
+ * @TODO Add support for genes on chromosomes > 2.1Gbp
+ */
 public class Gene implements Comparable<Gene> {
 
     /**

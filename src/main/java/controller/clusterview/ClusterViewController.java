@@ -842,7 +842,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             }
 
             if (numTpmValsGE1 < sampleSize) {
-                sampleTpms = Arrays.copyOfRange(sampleTpms, 0, numTpmValsGE1 );
+                sampleTpms = Arrays.copyOfRange(sampleTpms, 0, numTpmValsGE1);
             }
 
             Arrays.sort(sampleTpms);
