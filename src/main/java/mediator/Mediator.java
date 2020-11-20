@@ -22,4 +22,5 @@ public interface Mediator {
     void registerClusterViewSettingsController(ClusterViewSettingsController clusterViewSettingsController);
     void registerUMAPSettingsController(UMAPSettingsController umapSettingsController);
     void registerTSNESettingsController(TSNESettingsController tsneSettingsController);
+    void registerImageExporterController(ImageExporterController imageExporterController);
 }
