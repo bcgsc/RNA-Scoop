@@ -7,7 +7,6 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -28,7 +27,6 @@ import labelset.Cluster;
 import mediator.ControllerMediator;
 import ui.CategoryLabelsLegend;
 import util.Util;
-
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -62,10 +60,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         setScrollPaneWidthSpacing();
         setUpRedrawIsoformsToMatchScrollPaneWidth();
         setGeneGroupsStyling();
-    }
-
-    public Node getIsoformPlot() {
-        return isoformPlotPanel;
     }
 
     /**
@@ -117,9 +111,15 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * Removes all given genes that are in the isoform plot
      */
     public void removeGenes(Collection<Gene> genes) {
+        boolean selectedIsoformsChanged = false;
+
         for (Gene gene : genes) {
             if (geneGeneGroupMap.containsKey(gene)) {
                 GeneGroup geneGroup = geneGeneGroupMap.get(gene);
+
+                if (selectionModel.areIsoformGraphicsSelected() && !selectedIsoformsChanged)
+                    selectedIsoformsChanged = geneGroup.hasSelectedIsoforms();
+
                 // gene group must be made unselectable to remove references to its isoform
                 // graphics
                 geneGroup.makeUnselectable();
@@ -129,6 +129,9 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                     updateFirstGeneGroup();
             }
         }
+        if (selectedIsoformsChanged)
+            ControllerMediator.getInstance().clusterViewHandleChangedIsoformSelection();
+
         updateIsoformPlotLegend(false);
         DotPlot.updateDotPlotLegend(false);
     }
@@ -263,6 +266,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     public boolean areIsoformGraphicsSelected() {
         return selectionModel.areIsoformGraphicsSelected();
+    }
+
+    public Node getIsoformPlotPanel() {
+        return isoformPlotPanel;
+    }
+
+    public Node getIsoformPlot() {
+        return isoformPlot;
     }
 
     /**
@@ -411,14 +422,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 isoformGroup.makeIsoformGraphicNonSelectable();
         }
 
-        public Collection<IsoformGroup> getIsoformGroups() {
-            return isoformsIsoformGroupMap.values();
-        }
-
-        private IsoformGroup getFirstIsoformGroup() {
-            return firstIsoformGroup;
-        }
-
         public void redrawIsoforms(boolean reverseComplement, boolean cellPlotCleared, boolean cellsSelected) {
             double pixelsPerNucleotide = getPixelsPerNucleotide();
             for (IsoformGroup isoformGroup : isoformsIsoformGroupMap.values())
@@ -450,6 +453,23 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                     addIsoform(isoformGroup);
                 }
             }
+        }
+
+        public boolean hasSelectedIsoforms() {
+            for (IsoformGroup isoformGroup : getIsoformGroups()) {
+                if (isoformGroup.isSelected()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public Collection<IsoformGroup> getIsoformGroups() {
+            return isoformsIsoformGroupMap.values();
+        }
+
+        private IsoformGroup getFirstIsoformGroup() {
+            return firstIsoformGroup;
         }
 
         private void addLabel(boolean showGeneNameAndID, boolean showGeneName, boolean reverseComplement) {
@@ -594,6 +614,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 BorderPane.setAlignment(dotPlotLegend, Pos.CENTER_RIGHT);
             this.dotPlotLegend = dotPlotLegend;
             labelAndLegendHolder.setRight(dotPlotLegend);
+        }
+
+        public boolean isSelected() {
+            return selectionModel.isIsoformGraphicSelected(isoformGraphic);
         }
 
         public Isoform getIsoform() {
@@ -1264,7 +1288,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 clearRectangularSelection();
 
                 if (changedSelection)
-                    updateClusterView();
+                    ControllerMediator.getInstance().clusterViewHandleChangedIsoformSelection();
 
                 event.consume();
             }
@@ -1274,21 +1298,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 boolean changedSelectionOnAddingRemoving = addOrRemoveFromSelection(event);
 
                 return changedSelectionOnClear || changedSelectionOnAddingRemoving;
-            }
-
-            private void updateClusterView() {
-                boolean coloringCellPlotByIsoform = ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform();
-                if (coloringCellPlotByIsoform) {
-
-                    if (ControllerMediator.getInstance().areCellsSelected())
-                        ControllerMediator.getInstance().clearSelectedCellsAndRedrawPlot();
-                    else
-                        ControllerMediator.getInstance().redrawCellPlotSansLegend();
-
-                } else if (!ControllerMediator.getInstance().isCellPlotCleared()) {
-                    List<String> isoformIDs = selectionModel.getSelectedIsoformGraphics().stream().map(isoformGraphic -> selectableIsoformGraphics.get(isoformGraphic)).collect(Collectors.toList());
-                    ControllerMediator.getInstance().selectCellsIsoformsExpressedIn(isoformIDs);
-                }
             }
 
             private boolean clearSelectionIfShould(MouseEvent event) {

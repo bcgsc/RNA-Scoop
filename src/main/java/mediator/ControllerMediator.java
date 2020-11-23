@@ -33,6 +33,7 @@ public class ControllerMediator implements Mediator{
     private ClusterViewSettingsController clusterViewSettingsController;
     private UMAPSettingsController umapSettingsController;
     private TSNESettingsController tsneSettingsController;
+    private ImageExporterController imageExporterController;
 
     // Register controllers
     @Override
@@ -98,6 +99,11 @@ public class ControllerMediator implements Mediator{
     @Override
     public void registerTSNESettingsController(TSNESettingsController tsneSettingsController) {
         this.tsneSettingsController = tsneSettingsController;
+    }
+
+    @Override
+    public void registerImageExporterController(ImageExporterController imageExporterController) {
+        this.imageExporterController = imageExporterController;
     }
 
     // Change Main Display
@@ -367,6 +373,10 @@ public class ControllerMediator implements Mediator{
         clusterViewController.redrawPlotSansLegend();
     }
 
+    public void clusterViewHandleChangedIsoformSelection() {
+        clusterViewController.handleChangedIsoformSelection();
+    }
+
     public void clusterViewHandleClusterAddedFromSelectedCells() {
         clusterViewController.handleClusterAddedFromSelectedCells();
     }
@@ -391,10 +401,6 @@ public class ControllerMediator implements Mediator{
         clusterViewController.redrawLegend();
     }
 
-    public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
-        clusterViewController.selectCellsIsoformsExpressedIn(isoformIDs);
-    }
-
     public void selectCluster(Cluster cluster, boolean unselectRest) {
         clusterViewController.selectCluster(cluster, unselectRest);
     }
@@ -413,13 +419,27 @@ public class ControllerMediator implements Mediator{
         consoleController.restoreConsoleFromJSON(settings);
     }
 
+    // Export figures
+
+    public void displayImageExporter() {
+        imageExporterController.display();
+    }
+
     // Getters
     public Node getClusterView() {
         return clusterViewController.getClusterView();
     }
 
+    public Node getCellClusterPlot() {
+        return clusterViewController.getCellClusterPlot();
+    }
+
     public Node getConsole() {
         return consoleController.getConsole();
+    }
+
+    public Node getIsoformPlotPanel() {
+        return isoformPlotController.getIsoformPlotPanel();
     }
 
     public Node getIsoformPlot() {

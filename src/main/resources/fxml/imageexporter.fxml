@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+<ScrollPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.ImageExporterController"
+            fx:id="imageExporter" style="-fx-background-color: #fcfcfc;" fitToWidth="true" fitToHeight="true">
+    <VBox>
+        <VBox style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets topRightBottomLeft="10"/>
+            </VBox.margin>
+            <HBox>
+                <VBox.margin>
+                    <Insets top="10" right="10" left="10" bottom="15"/>
+                </VBox.margin>
+                <Text text="Figure: " textAlignment="RIGHT">
+                    <HBox.margin>
+                        <Insets right="5" top="2"/>
+                    </HBox.margin>
+                </Text>
+                <ComboBox fx:id="exportOptions"/>
+                <Text text="Scale (increase if blurry):" textAlignment="RIGHT">
+                    <HBox.margin>
+                        <Insets left="50" right="5" top="2"/>
+                    </HBox.margin>
+                </Text>
+                <TextField fx:id="scaleField" prefWidth="35" minWidth="35"/>
+            </HBox>
+            <HBox alignment="CENTER">
+                <VBox.margin>
+                    <Insets topRightBottomLeft="10"/>
+                </VBox.margin>
+                <Button text="Export" onAction="#handleExportButton"/>
+            </HBox>
+        </VBox>
+    </VBox>
+</ScrollPane>

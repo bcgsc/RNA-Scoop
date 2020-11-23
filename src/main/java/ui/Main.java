@@ -37,6 +37,7 @@ public class Main extends Application {
         FXMLLoader clusterViewSettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/clusterviewsettings.fxml"));
         FXMLLoader tSNESettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/tsnesettings.fxml"));
         FXMLLoader umapSettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/umapsettings.fxml"));
+        FXMLLoader imageExporterLoader = new FXMLLoader(getClass().getResource("/fxml/imageexporter.fxml"));
 
         mainLoader.load();
         aboutLoader.load();
@@ -51,11 +52,13 @@ public class Main extends Application {
         clusterViewSettingsLoader.load();
         Parent tSNESettings = tSNESettingsLoader.load();
         Parent umapSettings = umapSettingsLoader.load();
+        imageExporterLoader.load();
 
         registerControllers(mainLoader.getController(), aboutLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
                             clusterViewLoader.getController(), geneSelectorLoader.getController(), geneFiltererLoader.getController(),
                             tpmGradientLoader.getController(), labelSetManagerLoader.getController(), addLabelSetViewLoader.getController(),
-                            clusterViewSettingsLoader.getController(), tSNESettingsLoader.getController(), umapSettingsLoader.getController());
+                            clusterViewSettingsLoader.getController(), tSNESettingsLoader.getController(), umapSettingsLoader.getController(),
+                            imageExporterLoader.getController());
         ControllerMediator.getInstance().initializeMain(console, isoformPlot, clusterView);
         ControllerMediator.getInstance().initializeClusterViewSettings(tSNESettings, umapSettings);
         setUpLabelSetManagerPopUp(labelSetManager, addLabelSetView);
@@ -78,7 +81,8 @@ public class Main extends Application {
                                      GeneSelectorController geneSelectorController, GeneFiltererController geneFiltererController,
                                      TPMGradientAdjusterController tpmGradientAdjusterController, LabelSetManagerController labelSetManagerController,
                                      AddLabelSetViewController addLabelSetViewController, ClusterViewSettingsController clusterViewSettingsController,
-                                     TSNESettingsController tsneSettingsController, UMAPSettingsController umapSettingsController) {
+                                     TSNESettingsController tsneSettingsController, UMAPSettingsController umapSettingsController,
+                                     ImageExporterController imageExporterController) {
         ControllerMediator.getInstance().registerMainController(mainController);
         ControllerMediator.getInstance().registerAboutController(aboutController);
         ControllerMediator.getInstance().registerConsoleController(consoleController);
@@ -92,6 +96,7 @@ public class Main extends Application {
         ControllerMediator.getInstance().registerClusterViewSettingsController(clusterViewSettingsController);
         ControllerMediator.getInstance().registerTSNESettingsController(tsneSettingsController);
         ControllerMediator.getInstance().registerUMAPSettingsController(umapSettingsController);
+        ControllerMediator.getInstance().registerImageExporterController(imageExporterController);
     }
 
     private void setUpLabelSetManagerPopUp(Parent labelSetManager, Parent addLabelSetView) {

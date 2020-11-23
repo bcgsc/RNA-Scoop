@@ -102,10 +102,6 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         cellNumberCellMap = new HashMap<>();
     }
 
-    public Node getClusterView() {
-        return clusterView;
-    }
-
     /**
      * Disables all functionality
      */
@@ -163,6 +159,20 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         }
     }
 
+    public void handleChangedIsoformSelection() {
+        boolean coloringCellPlotByIsoform = ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform();
+        if (coloringCellPlotByIsoform) {
+
+            if (areCellsSelected())
+                clearSelectedCellsAndRedrawPlot();
+            else
+                redrawPlotSansLegend();
+
+        } else if (!isPlotCleared()) {
+            cellSelectionManager.selectCellsSelectedIsoformsExpressedIn();
+        }
+    }
+
     /*
     The below three functions should be called when changes happen to the label set in use
     They all redraw the plot and notify the cell selection manager about the changes
@@ -216,10 +226,6 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         }
     }
 
-    public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
-        cellSelectionManager.selectCellsIsoformsExpressedIn(isoformIDs);
-    }
-
     public void selectCluster(Cluster cluster, boolean unselectRest) {
         cellSelectionManager.selectCluster(cluster, unselectRest);
     }
@@ -235,6 +241,14 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     public void redrawPlotSansLegend() {
         if (!isPlotCleared())
             plotRenderer.updateOutlineAndRedraw();
+    }
+
+    public Node getClusterView() {
+        return clusterView;
+    }
+
+    public Node getCellClusterPlot() {
+        return plotHolder;
     }
 
     public boolean isPlotCleared() {
@@ -567,10 +581,11 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         }
 
         /**
-         * Clears selected cells in plot, then selects cells in which isoforms with
-         * the given IDs are expressed
+         * Clears selected cells in plot, then selects cells in which selected isoforms
+         * are expressed
          */
-        public void selectCellsIsoformsExpressedIn(Collection<String> isoformIDs) {
+        public void selectCellsSelectedIsoformsExpressedIn() {
+            Collection<String> isoformIDs = ControllerMediator.getInstance().getSelectedIsoformIDs();
             List<XYSeries> cellGroups = cellsInPlot.getSeries();
             redrawOnClear = false;
             clearSelection();

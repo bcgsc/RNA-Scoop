@@ -94,7 +94,7 @@ public class MainController implements InteractiveElementController {
 
     public void openIsoformPlot() {
         if (!isoformPlotIsOpen) {
-            horizontalSplitPane.getItems().add(0, ControllerMediator.getInstance().getIsoformPlot());
+            horizontalSplitPane.getItems().add(0, ControllerMediator.getInstance().getIsoformPlotPanel());
             isoformPlotToggle.setText("Close Isoform plot");
             isoformPlotIsOpen = true;
         }
@@ -102,7 +102,7 @@ public class MainController implements InteractiveElementController {
 
     public void closeIsoformPlot() {
         if (isoformPlotIsOpen) {
-            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getIsoformPlot());
+            horizontalSplitPane.getItems().remove(ControllerMediator.getInstance().getIsoformPlotPanel());
             isoformPlotToggle.setText("Open Isoform plot");
             isoformPlotIsOpen = false;
         }
@@ -280,6 +280,11 @@ public class MainController implements InteractiveElementController {
         openConsole();
         setViewTogglesToDefault();
         SessionIO.clearCurrentSessionData();
+    }
+
+    @FXML
+    protected void handleExportFiguresButton() {
+        ControllerMediator.getInstance().displayImageExporter();
     }
 
     /**
