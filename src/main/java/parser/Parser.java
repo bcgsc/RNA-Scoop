@@ -13,8 +13,7 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,16 +37,29 @@ public class Parser {
         runLater(Parser::clearProgram);
         try {
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + pathToPaths));
-            byte[] encoded = Files.readAllBytes(Paths.get(pathToPaths));
+            Path jsonPath = Paths.get(pathToPaths);
+            byte[] encoded = Files.readAllBytes(jsonPath);
             String pathsString = new String(encoded, Charset.defaultCharset());
-            JSONObject paths = new JSONObject(pathsString);
+
+            // resolve relative paths in JSON
+            String jsonParent = jsonPath.toAbsolutePath().getParent().toString();
+            JSONObject jsonObj = new JSONObject(pathsString);
+            String gtf = resolveRelativePath((String) jsonObj.get(GTF_PATH_KEY), jsonParent);
+            String matrix = resolveRelativePath((String) jsonObj.get(MATRIX_PATH_KEY), jsonParent);
+            String isoformLabels = resolveRelativePath((String) jsonObj.get(ISOFORM_LABELS_PATH_KEY), jsonParent);
+            String embedding = null;
+            if (jsonObj.has(EMBEDDING_PATH_KEY)) {
+                embedding = resolveRelativePath((String) jsonObj.get(EMBEDDING_PATH_KEY), jsonParent);
+            }
+            ArrayList<String> cellLabels = new ArrayList<>();
+            for (Object o : (JSONArray) jsonObj.get(CELL_LABELS_PATH_KEY)) {
+                cellLabels.add(resolveRelativePath((String) o, jsonParent));
+            }
+
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing GTF file..."));
-            GTFLoader.loadGTF((String) paths.get(GTF_PATH_KEY));
+            GTFLoader.loadGTF(gtf);
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing matrix files..."));
-            CellPlotInfoLoader.loadCellPlotInfo((String) paths.get(MATRIX_PATH_KEY),
-                    (String) paths.get(ISOFORM_LABELS_PATH_KEY),
-                    (JSONArray) paths.get(CELL_LABELS_PATH_KEY),
-                    paths.has(EMBEDDING_PATH_KEY) ? (String) paths.get(EMBEDDING_PATH_KEY) : null);
+            CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, cellLabels, embedding);
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + pathToPaths));
             return true;
         } catch (RNAScoopException e){
@@ -59,6 +71,17 @@ public class Parser {
             runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
             return false;
         }
+    }
+
+    private static String resolveRelativePath(String f, String parent) throws FileNotFoundException {
+        if (! new File(f).exists()) {
+            String newPath = parent + File.separator + f;
+            if (! new File(newPath).exists()) {
+                throw new FileNotFoundException("Cannot find file \"" + f + "\"");
+            }
+            return newPath;
+        }
+        return f;
     }
 
     /**
@@ -303,14 +326,14 @@ public class Parser {
 
     private static class CellPlotInfoLoader {
 
-        public static void loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, JSONArray pathsToLabelSets, String pathToEmbedding) throws IOException, RNAScoopException {
+        public static void loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, ArrayList<String> pathsToLabelSets, String pathToEmbedding) throws IOException, RNAScoopException {
             HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap(pathToIsoformLabels);
             int numIsoforms = isoformIndexMap.size();
 
             List<LabelSet> labelSets = new ArrayList<>();
             int numCells = -1;
-            for (Object pathToLabelSet : pathsToLabelSets) {
-                LabelSet labelSet = getLabelSet(new File((String) pathToLabelSet));
+            for (String pathToLabelSet : pathsToLabelSets) {
+                LabelSet labelSet = getLabelSet(new File(pathToLabelSet));
                 if (numCells < 0) {
                     numCells = labelSet.getNumCellsInLabelSet();
                 }
