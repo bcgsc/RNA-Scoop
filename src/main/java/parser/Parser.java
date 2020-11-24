@@ -47,13 +47,21 @@ public class Parser {
             String gtf = resolveRelativePath((String) jsonObj.get(GTF_PATH_KEY), jsonParent);
             String matrix = resolveRelativePath((String) jsonObj.get(MATRIX_PATH_KEY), jsonParent);
             String isoformLabels = resolveRelativePath((String) jsonObj.get(ISOFORM_LABELS_PATH_KEY), jsonParent);
+
             String embedding = null;
             if (jsonObj.has(EMBEDDING_PATH_KEY)) {
                 embedding = resolveRelativePath((String) jsonObj.get(EMBEDDING_PATH_KEY), jsonParent);
             }
+
             ArrayList<String> cellLabels = new ArrayList<>();
-            for (Object o : (JSONArray) jsonObj.get(CELL_LABELS_PATH_KEY)) {
-                cellLabels.add(resolveRelativePath((String) o, jsonParent));
+            Object cellLabelsObj = jsonObj.get(CELL_LABELS_PATH_KEY);
+            if (cellLabelsObj instanceof JSONArray) {
+                for (Object o : (JSONArray) cellLabelsObj) {
+                    cellLabels.add(resolveRelativePath((String) o, jsonParent));
+                }
+            }
+            else {
+                cellLabels.add(resolveRelativePath((String) cellLabelsObj, jsonParent));
             }
 
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing GTF file..."));
