@@ -22,9 +22,12 @@ import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
+import org.json.JSONObject;
+import persistance.SessionMaker;
 import ui.Main;
 
 import java.net.URL;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import static util.Util.roundToOneDecimal;
@@ -36,7 +39,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     private static final Color DEFAULT_MID_TPM_COLOR = Color.color(0.659, 0.867, 0.710);
     private static final Color DEFAULT_MAX_TPM_COLOR = Color.color(0.263, 0.635,0.792);
     private static final int DEFAULT_RECOMMENDED_MIN_TPM = 1;
-    private static final int DEFAULT_RECOMMENDED_MAX_TPM = 10000;
+    private static final int DEFAULT_RECOMMENDED_MAX_TPM = 1000;
     private static final String SCALE_CHOOSER_LINEAR_OPTION = "Linear";
     private static final String SCALE_CHOOSER_EXPONENTIAL_OPTION = "Logarithmic";
     private static final double TPM_GRADIENT_GRID_PANE_ROW_PERCENT_HEIGHT = 40;
@@ -109,6 +112,17 @@ public class TPMGradientAdjusterController extends PopUpController implements In
         maxGradientTPMLabel.setText("Max TPM (" + roundToOneDecimal(maxTPM)+ ")" + ": ");
     }
 
+    public void setTPMGradientToDefault() {
+        scaleChooser.setValue(SCALE_CHOOSER_LINEAR_OPTION);
+        minTPMColorPicker.setValue(DEFAULT_MIN_TPM_COLOR);
+        midTPMColorPicker.setValue(DEFAULT_MID_TPM_COLOR);
+        maxTPMColorPicker.setValue(DEFAULT_MAX_TPM_COLOR);
+        recommendedMinTPM = DEFAULT_RECOMMENDED_MIN_TPM;
+        recommendedMaxTPM = DEFAULT_RECOMMENDED_MAX_TPM;
+        setGradientMinMaxToRecommended();
+        drawTPMGradient();
+    }
+
     public void setRecommendedMinTPM(int recommendedMinTPM) {
         this.recommendedMinTPM = recommendedMinTPM;
     }
@@ -122,6 +136,34 @@ public class TPMGradientAdjusterController extends PopUpController implements In
         gradientMaxTPMField.setText(Integer.toString(recommendedMaxTPM));
         gradientMinTPM = recommendedMinTPM;
         gradientMaxTPM = recommendedMaxTPM;
+    }
+
+    public void restoreTPMGradientFromJSON(JSONObject settings) {
+        restoreGradientMinTPMFromJSON(settings);
+        restoreGradientMaxTPMFromJSON(settings);
+        restoreGradientColorsFromJSON(settings);
+        restoreGradientScaleFromJSON(settings);
+    }
+
+    private void restoreGradientMinTPMFromJSON(JSONObject settings) {
+        gradientMinTPM = settings.getDouble(SessionMaker.MIN_TPM_KEY);
+        gradientMinTPMField.setText(Double.toString(gradientMinTPM));
+    }
+
+    private void restoreGradientMaxTPMFromJSON(JSONObject settings) {
+        gradientMaxTPM = settings.getDouble(SessionMaker.MAX_TPM_KEY);
+        gradientMaxTPMField.setText(Double.toString(gradientMaxTPM));
+    }
+
+    private void restoreGradientColorsFromJSON(JSONObject settings) {
+        minTPMColorPicker.setValue(Color.web(settings.getString(SessionMaker.MIN_TPM_COLOR_KEY)));
+        midTPMColorPicker.setValue(Color.web(settings.getString(SessionMaker.MID_TPM_COLOR_KEY)));
+        maxTPMColorPicker.setValue(Color.web(settings.getString(SessionMaker.MAX_TPM_COLOR_KEY)));
+    }
+
+
+    private void restoreGradientScaleFromJSON(JSONObject settings) {
+        scaleChooser.getSelectionModel().select(settings.getString(SessionMaker.TPM_SCALE_KEY));
     }
 
     public double getGradientMinTPM() {
@@ -172,6 +214,18 @@ public class TPMGradientAdjusterController extends PopUpController implements In
         Color maxTPMColor = maxTPMColorPicker.getValue();
         Stop[] stops = new Stop[] { new Stop(0, minTPMColor), new Stop(0.5, midTPMColor), new Stop(1, maxTPMColor)};
         return new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
+    }
+
+    public String getGradientMinColorCode() {
+        return getColorHexString(minTPMColorPicker.getValue());
+    }
+
+    public String getGradientMidColorCode() {
+        return getColorHexString(midTPMColorPicker.getValue());
+    }
+
+    public String getGradientMaxColorCode() {
+        return getColorHexString(maxTPMColorPicker.getValue());
     }
 
     /**
@@ -246,6 +300,14 @@ public class TPMGradientAdjusterController extends PopUpController implements In
         return t;
     }
 
+    public String getColorHexString(Color color) {
+        return String.format( "#%02X%02X%02X%02X",
+                (int) (Math.round(color.getRed() * 255)),
+                (int) (Math.round(color.getGreen() * 255)),
+                (int) (Math.round(color.getBlue() * 255)),
+                (int) (Math.round(color.getOpacity() * 255)));
+    }
+
     /**
      * Attempts to update TPM gradient min and max values by setting them to values in TPM gradient max and
      * min fields
@@ -310,14 +372,8 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     private void setUpTPMGradientAndControls() {
         makeTPMGradientResizeToWindow();
         setUpHandlingChangedMinMaxFields();
-        setUpScaleChooser();
-        minTPMColorPicker.setValue(DEFAULT_MIN_TPM_COLOR);
-        midTPMColorPicker.setValue(DEFAULT_MID_TPM_COLOR);
-        maxTPMColorPicker.setValue(DEFAULT_MAX_TPM_COLOR);
-        recommendedMinTPM = DEFAULT_RECOMMENDED_MIN_TPM;
-        recommendedMaxTPM = DEFAULT_RECOMMENDED_MAX_TPM;
-        setGradientMinMaxToRecommended();
-        drawTPMGradient();
+        scaleChooser.getItems().addAll(SCALE_CHOOSER_LINEAR_OPTION, SCALE_CHOOSER_EXPONENTIAL_OPTION);
+        setTPMGradientToDefault();
     }
 
     /**
@@ -372,11 +428,6 @@ public class TPMGradientAdjusterController extends PopUpController implements In
             event.consume();
             window.hide();
         });
-    }
-
-    private void setUpScaleChooser() {
-        scaleChooser.setValue(SCALE_CHOOSER_LINEAR_OPTION);
-        scaleChooser.getItems().addAll(SCALE_CHOOSER_LINEAR_OPTION, SCALE_CHOOSER_EXPONENTIAL_OPTION);
     }
 
     private void setWindowSizeAndDisplay() {

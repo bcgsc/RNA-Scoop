@@ -7,6 +7,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextField;
 import mediator.ControllerMediator;
+import org.json.JSONObject;
+import persistance.SessionMaker;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -45,14 +47,24 @@ public class TSNESettingsController implements Initializable {
     }
 
     public void restoreSettingsToSaved() {
-        tempPerplexity = savedPerplexity;
-        tempMaxIterations = savedMaxIterations;
-        perplexityField.setText(Double.toString(tempPerplexity));
-        maxIterationsField.setText(Integer.toString(tempMaxIterations));
+        setTempPerplexity(savedPerplexity);
+        setTempMaxIterations(savedMaxIterations);
+    }
+
+    public void setSettingsToDefault() {
+        setTempPerplexity(DEFAULT_PERPLEXITY);
+        setTempMaxIterations(DEFAULT_MAX_ITERATIONS);
+        saveSettings();
+    }
+
+    public void restoreSettingsFromJSON(JSONObject settings) {
+        setTempPerplexity(settings.getDouble(SessionMaker.PERPLEXITY_KEY));
+        setTempMaxIterations(settings.getInt(SessionMaker.MAX_ITERATIONS_KEY));
+        saveSettings();
     }
 
     @FXML
-    private void handleChangedPerplexity() {
+    protected void handleChangedPerplexity() {
         try {
             updatePerplexity();
         } catch (RNAScoopException e) {
@@ -63,7 +75,7 @@ public class TSNESettingsController implements Initializable {
     }
 
     @FXML
-    private void handleChangedMaxIterations() {
+    protected void handleChangedMaxIterations() {
         try {
             updateMaxIterations();
         } catch (RNAScoopException e) {
@@ -71,6 +83,16 @@ public class TSNESettingsController implements Initializable {
             e.addToMessage(". Changed max iterations back to previous value");
             ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
         }
+    }
+
+    private void setTempPerplexity(double tempPerplexity) {
+        this.tempPerplexity = tempPerplexity;
+        perplexityField.setText(String.valueOf(tempPerplexity));
+    }
+
+    private void setTempMaxIterations(int tempMaxIterations) {
+        this.tempMaxIterations = tempMaxIterations;
+        maxIterationsField.setText(String.valueOf(tempMaxIterations));
     }
 
     private void updatePerplexity() throws InvalidPerplexityException {

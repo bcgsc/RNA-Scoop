@@ -5,6 +5,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextField;
 import mediator.ControllerMediator;
+import org.json.JSONObject;
+import persistance.SessionMaker;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -44,14 +46,24 @@ public class UMAPSettingsController implements Initializable {
     }
 
     public void restoreSettingsToSaved() {
-        tempMinDist = savedMinDist;
-        tempNearestNeighbors = savedNearestNeighbors;
-        minDistField.setText(Float.toString(tempMinDist));
-        nearestNeighborsField.setText(Integer.toString(tempNearestNeighbors));
+        setTempMinDist(savedMinDist);
+        setTempNearestNeighbors(savedNearestNeighbors);
+    }
+
+    public void setSettingsToDefault() {
+        setTempMinDist(DEFAULT_MIN_DIST);
+        setTempNearestNeighbors(DEFAULT_NEAREST_NEIGHBORS);
+        saveSettings();
+    }
+
+    public void restoreSettingsFromJSON(JSONObject settings) {
+        setTempMinDist(settings.getFloat(SessionMaker.MIN_DIST_KEY));
+        setTempNearestNeighbors(settings.getInt(SessionMaker.NEAREST_NEIGHBORS_KEY));
+        saveSettings();
     }
 
     @FXML
-    private void handleChangedMinDist() {
+    protected void handleChangedMinDist() {
         try {
             updateMinDist();
         } catch (RNAScoopException e) {
@@ -62,7 +74,7 @@ public class UMAPSettingsController implements Initializable {
     }
 
     @FXML
-    private void handleChangedNearestNeighbors() {
+    protected void handleChangedNearestNeighbors() {
         try {
             updateNearestNeighbors();
         } catch (RNAScoopException e) {
@@ -70,6 +82,16 @@ public class UMAPSettingsController implements Initializable {
             e.addToMessage(". Changed number of nearest neighbors back to previous value");
             ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
         }
+    }
+
+    private void setTempMinDist(float tempMinDist) {
+        this.tempMinDist = tempMinDist;
+        minDistField.setText(Float.toString(tempMinDist));
+    }
+
+    private void setTempNearestNeighbors(int tempNearestNeighbors) {
+        this.tempNearestNeighbors = tempNearestNeighbors;
+        nearestNeighborsField.setText(Integer.toString(tempNearestNeighbors));
     }
 
     private void updateMinDist() throws InvalidMinDistException{

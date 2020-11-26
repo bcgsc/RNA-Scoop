@@ -6,6 +6,8 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import persistance.SessionMaker;
 
 import java.net.URL;
@@ -85,7 +87,7 @@ public class ConsoleController implements Initializable{
         return consoleMessages;
     }
 
-    public void restoreConsoleFromJSON(Map settings) {
+    public void restoreConsoleFromJSON(JSONObject settings) {
         restoreConsoleMessagesFromJSON(settings);
     }
 
@@ -139,13 +141,13 @@ public class ConsoleController implements Initializable{
     /**
      * Restore all console messages from a previous session
      */
-    private void restoreConsoleMessagesFromJSON(Map settings) {
+    private void restoreConsoleMessagesFromJSON(JSONObject settings) {
         clearConsole();
-        ArrayList messages = (ArrayList) settings.get(SessionMaker.CONSOLE_MESSAGES_KEY);
+        JSONArray messages = settings.getJSONArray(SessionMaker.CONSOLE_MESSAGES_KEY);
         for (Object message : messages) {
-            HashMap messageJSON = (HashMap) message;
-            String messageType = (String) messageJSON.get(SessionMaker.MESSAGE_IS_ERROR_KEY);
-            String messageText = (String) messageJSON.get(SessionMaker.MESSAGE_TEXT_KEY);
+            JSONObject messageJSON = (JSONObject) message;
+            String messageType = messageJSON.getString(SessionMaker.MESSAGE_IS_ERROR_KEY);
+            String messageText = messageJSON.getString(SessionMaker.MESSAGE_TEXT_KEY);
             if (messageType.equals(MessageType.ERROR.toString()))
                 addConsoleErrorMessage(messageText);
             else

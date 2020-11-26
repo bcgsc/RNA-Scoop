@@ -15,6 +15,7 @@ import javafx.scene.paint.LinearGradient;
 import javafx.stage.Window;
 import labelset.Cluster;
 import labelset.LabelSet;
+import org.json.JSONObject;
 import ui.LabelSetManagerWindow;
 
 import java.util.*;
@@ -227,6 +228,14 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.updateGenesTableFilteringMethod();
     }
 
+    public void setGeneFilteringParamsToDefault() {
+        geneFiltererController.setGeneFilteringParamsToDefault();
+    }
+
+    public void setTPMGradientToDefault() {
+        tpmGradientAdjusterController.setTPMGradientToDefault();
+    }
+
     public boolean geneHasIsoformSwitches(Gene gene) {
         return geneFiltererController.geneHasIsoformSwitches(gene);
     }
@@ -329,6 +338,18 @@ public class ControllerMediator implements Mediator{
         tsneSettingsController.saveSettings();
     }
 
+    public void setClusterViewSettingsToDefault() {
+        clusterViewSettingsController.setSettingsToDefault();
+    }
+
+    public void setUMAPSettingsToDefault() {
+        umapSettingsController.setSettingsToDefault();
+    }
+
+    public void setTSNESettingsToDefault() {
+        tsneSettingsController.setSettingsToDefault();
+    }
+
     public void restoreUMAPSettingsToSaved() {
         umapSettingsController.restoreSettingsToSaved();
     }
@@ -411,18 +432,46 @@ public class ControllerMediator implements Mediator{
 
     //Load from JSON
 
-    public void restoreMainFromJSON(Map settings) {
+    public void restoreMainFromJSON(JSONObject settings) {
         mainController.restoreMainFromJSON(settings);
     }
 
-    public void restoreConsoleFromJSON(Map settings) {
+    public void restoreConsoleFromJSON(JSONObject settings) {
         consoleController.restoreConsoleFromJSON(settings);
+    }
+
+    public void restoreTPMGradientFromJSON(JSONObject settings) {
+        tpmGradientAdjusterController.restoreTPMGradientFromJSON(settings);
+    }
+
+    public void restoreGeneFiltererFromJSON(JSONObject settings) {
+        geneFiltererController.restoreGeneFiltererFromJSON(settings);
+    }
+
+    public void restoreUMAPSettingsFromJSON(JSONObject settings) {
+        umapSettingsController.restoreSettingsFromJSON(settings);
+    }
+
+    public void restoreTSNESettingsFromJSON(JSONObject settings) {
+        tsneSettingsController.restoreSettingsFromJSON(settings);
+    }
+
+    public void restoreClusterViewSettingsFromJSON(JSONObject settings) {
+        clusterViewSettingsController.restoreClusterViewSettingsFromJSON(settings);
     }
 
     // Export figures
 
     public void displayImageExporter() {
         imageExporterController.display();
+    }
+
+    public void setImageExporterSettingsToDefault() {
+        imageExporterController.setSettingsToDefault();
+    }
+
+    public void restoreImageExporterSettingsFromJSON(JSONObject settings) {
+        imageExporterController.restoreSettingsFromJSON(settings);
     }
 
     // Getters
@@ -474,6 +523,42 @@ public class ControllerMediator implements Mediator{
         return geneFiltererController.isFilteringByCategorySpecificExpression();
     }
 
+    public double getDISMinTPM() {
+        return geneFiltererController.getDISMinTPM();
+    }
+
+    public double getDISMinPercentExpressed() {
+        return geneFiltererController.getDISMinPercentExpressed();
+    }
+
+    public double getDEMinFoldChange() {
+        return geneFiltererController.getDEMinFoldChange();
+    }
+
+    public double getDEMinTPM() {
+        return geneFiltererController.getDEMinTPM();
+    }
+
+    public double getDEMinPercentExpressed() {
+        return geneFiltererController.getDEMinPercentExpressed();
+    }
+
+    public double getCSEMinTPM() {
+        return geneFiltererController.getCSEMinTPM();
+    }
+
+    public double getCSEMinPercentExpressed() {
+        return geneFiltererController.getCSEMinPercentExpressed();
+    }
+
+    public double getCSEMaxTPM() {
+        return geneFiltererController.getCSEMaxTPM();
+    }
+
+    public double getCSEMaxPercentExpressed() {
+        return geneFiltererController.getCSEMaxPercentExpressed();
+    }
+
     public Map<Integer, ClusterViewController.CellDataItem> getCellNumberCellMap() {
         return clusterViewController.getCellNumberCellMap();
     }
@@ -514,6 +599,18 @@ public class ControllerMediator implements Mediator{
         return tpmGradientAdjusterController.getColorFromTPMGradient(expression);
     }
 
+    public String getGradientMinColorCode() {
+        return tpmGradientAdjusterController.getGradientMinColorCode();
+    }
+
+    public String getGradientMidColorCode() {
+        return tpmGradientAdjusterController.getGradientMidColorCode();
+    }
+
+    public String getGradientMaxColorCode() {
+        return tpmGradientAdjusterController.getGradientMaxColorCode();
+    }
+
     public LinearGradient getTPMGradientFill() {
         return tpmGradientAdjusterController.getTPMGradientFill();
     }
@@ -536,6 +633,13 @@ public class ControllerMediator implements Mediator{
 
     public int getNumExpressingCells(String isoformID, Cluster cluster, boolean onlySelected) {
         return clusterViewController.getNumExpressingCells(isoformID, cluster, onlySelected);
+    }
+
+    public float getFigureScale() {
+        return imageExporterController.getFigureScale();
+    }
+    public String getFigureTypeExporting() {
+        return imageExporterController.getFigureTypeExporting();
     }
 
     public boolean isReverseComplementing() {

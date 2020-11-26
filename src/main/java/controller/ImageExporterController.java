@@ -15,9 +15,12 @@ import javafx.scene.transform.Transform;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
+import org.json.JSONObject;
+import persistance.SessionMaker;
 import ui.Main;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -27,7 +30,7 @@ import java.util.ResourceBundle;
 public class ImageExporterController extends PopUpController implements Initializable {
     private static final float IMAGE_EXPORTER_HEIGHT = 120;
     private static final float IMAGE_EXPORTER_WIDTH = 440;
-    private static final float DEFAULT_SCALE = 3.5f;
+    private static final float DEFAULT_SCALE = 1f;
     private static final String JUST_ISOFORM_VIEW_OPTION = "Isoform view";
     private static final String JUST_CELL_CLUSTER_PLOT_OPTION = "Cell cluster plot";
     private static final String BOTH_OPTION = "Isoform view and cell cluster plot";
@@ -48,6 +51,24 @@ public class ImageExporterController extends PopUpController implements Initiali
     public void display() {
         super.display();
         disableAssociatedFunctionality();
+    }
+
+    public void setSettingsToDefault() {
+        exportOptions.getSelectionModel().select(BOTH_OPTION);
+        setScale(DEFAULT_SCALE);
+    }
+
+    public void restoreSettingsFromJSON(JSONObject settings) {
+        exportOptions.getSelectionModel().select(settings.getString(SessionMaker.FIGURE_TYPE_EXPORTING_KEY));
+        setScale(settings.getFloat(SessionMaker.FIGURE_SCALE_KEY));
+    }
+
+    public float getFigureScale() {
+        return scale;
+    }
+
+    public String getFigureTypeExporting() {
+        return exportOptions.getSelectionModel().getSelectedItem();
     }
 
     /**
@@ -79,6 +100,11 @@ public class ImageExporterController extends PopUpController implements Initiali
         }
         enableAssociatedFunctionality();
         window.hide();
+    }
+
+    private void setScale(float scale) {
+        this.scale = scale;
+        scaleField.setText(Float.toString(scale));
     }
 
     private void enableAssociatedFunctionality() {
@@ -138,7 +164,7 @@ public class ImageExporterController extends PopUpController implements Initiali
     }
 
     private void setUpExportOptions() {
-        exportOptions.getItems().addAll(JUST_ISOFORM_VIEW_OPTION, JUST_CELL_CLUSTER_PLOT_OPTION, BOTH_OPTION);
+        exportOptions.getItems().addAll(BOTH_OPTION, JUST_ISOFORM_VIEW_OPTION, JUST_CELL_CLUSTER_PLOT_OPTION);
         exportOptions.getSelectionModel().select(0);
     }
 
@@ -147,7 +173,7 @@ public class ImageExporterController extends PopUpController implements Initiali
      * when new values are entered into the scale field
      */
     private void setUpScale() {
-        setScaleToDefault();
+        setScale(DEFAULT_SCALE);
         scaleField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
             if (!newValue) { //when focus lost
                 try {
@@ -158,11 +184,6 @@ public class ImageExporterController extends PopUpController implements Initiali
                 }
             }
         });
-    }
-
-    private void setScaleToDefault() {
-        this.scale = DEFAULT_SCALE;
-        scaleField.setText(Float.toString(scale));
     }
 
     /**

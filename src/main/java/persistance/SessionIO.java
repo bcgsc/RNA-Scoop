@@ -83,10 +83,13 @@ public class SessionIO {
     }
 
     private static void setSavedSettings(JSONObject prevSession) {
-        Map settings = prevSession.toMap();
         clearCurrentSessionData();
-        ControllerMediator.getInstance().restoreMainFromJSON(settings);
-        ControllerMediator.getInstance().restoreConsoleFromJSON(settings);
+        ControllerMediator.getInstance().restoreMainFromJSON(prevSession);
+        ControllerMediator.getInstance().restoreConsoleFromJSON(prevSession);
+        ControllerMediator.getInstance().restoreTPMGradientFromJSON(prevSession);
+        ControllerMediator.getInstance().restoreGeneFiltererFromJSON(prevSession);
+        ControllerMediator.getInstance().restoreClusterViewSettingsFromJSON(prevSession);
+        ControllerMediator.getInstance().restoreImageExporterSettingsFromJSON(prevSession);
     }
 
 }

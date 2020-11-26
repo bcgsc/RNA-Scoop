@@ -9,14 +9,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
+import org.json.JSONObject;
+import persistance.SessionMaker;
 import ui.Main;
 
 public class ClusterViewSettingsController extends PopUpController {
     private static final float CLUSTER_VIEW_SETTINGS_HEIGHT = 160;
     private static final float CLUSTER_VIEW_SETTINGS_WIDTH = 440;
+    private static final String UMAP_OPTION = "UMAP";
+    private static final String T_SNE_OPTION = "t-SNE";
 
     @FXML private ScrollPane clusterViewSettings;
     @FXML private ComboBox<String> algorithmComboBox;
@@ -31,7 +36,6 @@ public class ClusterViewSettingsController extends PopUpController {
     public void initializeClusterViewSettings(Parent tsneSettings, Parent umapSettings) {
         this.tsneSettings = tsneSettings;
         this.umapSettings = umapSettings;
-        useUMAPSettings();
         setUpAlgorithmComboBox();
         setUpWindow();
     }
@@ -52,6 +56,22 @@ public class ClusterViewSettingsController extends PopUpController {
         return usingUMAPSettings;
     }
 
+    public void setSettingsToDefault() {
+        useUMAPSettings();
+        ControllerMediator.getInstance().setUMAPSettingsToDefault();
+        ControllerMediator.getInstance().setTSNESettingsToDefault();
+    }
+
+    public void restoreClusterViewSettingsFromJSON(JSONObject settings) {
+        if (settings.getBoolean(SessionMaker.USING_UMAP_FOR_EMBEDDING_KEY))
+            useUMAPSettings();
+        else
+            useTSNESettings();
+
+        ControllerMediator.getInstance().restoreUMAPSettingsFromJSON(settings);
+        ControllerMediator.getInstance().restoreTSNESettingsFromJSON(settings);
+    }
+
     @FXML
     protected void handleClusterViewAlgorithmChange() {
         if (usingUMAPSettings) {
@@ -62,20 +82,27 @@ public class ClusterViewSettingsController extends PopUpController {
     }
 
     private void useUMAPSettings() {
+        SingleSelectionModel<String> selectionModel = algorithmComboBox.getSelectionModel();
+        if (!selectionModel.getSelectedItem().equals(UMAP_OPTION))
+            selectionModel.select(UMAP_OPTION);
         holder.getChildren().clear();
         holder.getChildren().add(umapSettings);
         usingUMAPSettings = true;
     }
 
     private void useTSNESettings() {
+        SingleSelectionModel<String> selectionModel = algorithmComboBox.getSelectionModel();
+        if (!selectionModel.getSelectedItem().equals(T_SNE_OPTION))
+            selectionModel.select(T_SNE_OPTION);
         holder.getChildren().clear();
         holder.getChildren().add(tsneSettings);
         usingUMAPSettings = false;
     }
 
     private void setUpAlgorithmComboBox() {
-        algorithmComboBox.getItems().addAll("UMAP", "t-SNE");
-        algorithmComboBox.setValue("UMAP");
+        algorithmComboBox.getItems().addAll(UMAP_OPTION, T_SNE_OPTION);
+        algorithmComboBox.setValue(UMAP_OPTION);
+        useUMAPSettings();
     }
 
     /**

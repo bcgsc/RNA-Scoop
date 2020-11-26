@@ -2,8 +2,6 @@ package controller;
 
 import annotation.Gene;
 import annotation.Isoform;
-import controller.labelsetmanager.AddLabelSetViewController;
-import controller.labelsetmanager.LabelSetManagerController;
 import exceptions.*;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -20,6 +18,8 @@ import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
 import org.controlsfx.control.CheckComboBox;
+import org.json.JSONObject;
+import persistance.SessionMaker;
 import ui.Main;
 
 
@@ -33,7 +33,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
     private static final int DEFAULT_DIS_MIN_TPM = 10;
     private static final int DEFAULT_DIS_MIN_PERCENT_EXPRESSED = 50;
     // Differential Expression (DE)
-    private static final int DEFAULT_DE_MIN_FOLD_CHANGE = 10;
+    private static final int DEFAULT_DE_MIN_FOLD_CHANGE = 2;
     private static final int DEFAULT_DE_MIN_TPM = 10;
     private static final int DEFAULT_DE_MIN_PERCENT_EXPRESSED = 50;
     // Category-specific expression (CSE)
@@ -83,7 +83,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUpFieldUpdating();
-        setFilteringParamsToDefault();
+        setGeneFilteringParamsToDefault();
         setUpWindow();
         disable();
     }
@@ -172,6 +172,39 @@ public class GeneFiltererController extends PopUpController implements Initializ
         disable();
     }
 
+    public void setGeneFilteringParamsToDefault() {
+        noneFilterOption.setSelected(true);
+        optionFilteringBy = noneFilterOption;
+
+        disMinTPMField.setText(Integer.toString(DEFAULT_DIS_MIN_TPM));
+        disMinTPM = new MutableDouble(DEFAULT_DIS_MIN_TPM);
+        disMinPercentExpressedField.setText(Integer.toString(DEFAULT_DIS_MIN_PERCENT_EXPRESSED));
+        disMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
+
+        deMinFoldChangeField.setText(Integer.toString(DEFAULT_DE_MIN_FOLD_CHANGE));
+        deMinFoldChange = new MutableDouble(DEFAULT_DE_MIN_FOLD_CHANGE);
+        deMinTPMField.setText(Integer.toString(DEFAULT_DE_MIN_TPM));
+        deMinTPM = new MutableDouble(DEFAULT_DE_MIN_TPM);
+        deMinPercentExpressedField.setText(Integer.toString(DEFAULT_DE_MIN_PERCENT_EXPRESSED));
+        deMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
+
+        cseMinTPMField.setText(Integer.toString(DEFAULT_CSE_MIN_TPM));
+        cseMinTPM = new MutableDouble(DEFAULT_CSE_MIN_TPM);
+        cseMinPercentExpressedField.setText(Integer.toString(DEFAULT_CSE_MIN_PERCENT_EXPRESSED));
+        cseMinPercentExpressed = new MutableDouble(DEFAULT_CSE_MIN_PERCENT_EXPRESSED);
+        cseMaxTPMField.setText(Integer.toString(DEFAULT_CSE_MAX_TPM));
+        cseMaxTPM = new MutableDouble(DEFAULT_CSE_MAX_TPM);
+        cseMaxPercentExpressedField.setText(Integer.toString(DEFAULT_CSE_MAX_PERCENT_EXPRESSED));
+        cseMaxPercentExpressed = new MutableDouble(DEFAULT_CSE_MAX_PERCENT_EXPRESSED);
+    }
+
+
+    public void restoreGeneFiltererFromJSON(JSONObject settings) {
+        restoreDISParamsFromJSON(settings);
+        restoreDEParamsFromJSON(settings);
+        restoreCSEParamsFromJSON(settings);
+    }
+
     public boolean notFilteringGenes() {
         return noneFilterOption.isSelected();
     }
@@ -187,7 +220,43 @@ public class GeneFiltererController extends PopUpController implements Initializ
     public boolean isFilteringByCategorySpecificExpression() {
         return cseFilterOption.isSelected();
     }
-    
+
+    public double getDISMinTPM() {
+        return disMinTPM.doubleValue();
+    }
+
+    public double getDISMinPercentExpressed() {
+        return disMinPercentExpressed.doubleValue();
+    }
+
+    public double getDEMinFoldChange() {
+        return deMinFoldChange.doubleValue();
+    }
+
+    public double getDEMinTPM() {
+        return deMinTPM.doubleValue();
+    }
+
+    public double getDEMinPercentExpressed() {
+        return deMinPercentExpressed.doubleValue();
+    }
+
+    public double getCSEMinTPM() {
+        return cseMinTPM.doubleValue();
+    }
+
+    public double getCSEMinPercentExpressed() {
+        return cseMinPercentExpressed.doubleValue();
+    }
+
+    public double getCSEMaxTPM() {
+        return cseMaxTPM.doubleValue();
+    }
+
+    public double getCSEMaxPercentExpressed() {
+        return cseMaxPercentExpressed.doubleValue();
+    }
+
     @FXML
     protected void handleFilterButton() {
         Toggle optionToFilterBy = filterToggles.getSelectedToggle();
@@ -274,6 +343,39 @@ public class GeneFiltererController extends PopUpController implements Initializ
         return true;
     }
 
+    private void restoreDISParamsFromJSON(JSONObject settings) {
+        disMinTPM.setValue(settings.getDouble(SessionMaker.DIS_MIN_TPM_KEY));
+        disMinTPMField.setText(Double.toString(disMinTPM.doubleValue()));
+
+        disMinPercentExpressed.setValue(settings.getDouble(SessionMaker.DIS_MIN_PERCENT_EXPRESSED_KEY));
+        disMinPercentExpressedField.setText(Double.toString(disMinPercentExpressed.doubleValue()));
+    }
+
+    private void restoreDEParamsFromJSON(JSONObject settings) {
+        deMinFoldChange.setValue(settings.getDouble(SessionMaker.DE_MIN_FOLD_CHANGE_KEY));
+        deMinFoldChangeField.setText(Double.toString(deMinFoldChange.doubleValue()));
+
+        deMinTPM.setValue(settings.getDouble(SessionMaker.DE_MIN_TPM_KEY));
+        deMinTPMField.setText(Double.toString(deMinTPM.doubleValue()));
+
+        deMinPercentExpressed.setValue(settings.getDouble(SessionMaker.DE_MIN_PERCENT_EXPRESSED_KEY));
+        deMinPercentExpressedField.setText(Double.toString(deMinPercentExpressed.doubleValue()));
+    }
+
+    private void restoreCSEParamsFromJSON(JSONObject settings) {
+        cseMinTPM.setValue(settings.getDouble(SessionMaker.CSE_MIN_TPM_KEY));
+        cseMinTPMField.setText(Double.toString(cseMinTPM.doubleValue()));
+
+        cseMinPercentExpressed.setValue(settings.getDouble(SessionMaker.CSE_MIN_PERCENT_EXPRESSED_KEY));
+        cseMinPercentExpressedField.setText(Double.toString(cseMinPercentExpressed.doubleValue()));
+
+        cseMaxTPM.setValue(settings.getDouble(SessionMaker.CSE_MAX_TPM_KEY));
+        cseMaxTPMField.setText(Double.toString(cseMaxTPM.doubleValue()));
+
+        cseMaxPercentExpressed.setValue(settings.getDouble(SessionMaker.CSE_MAX_PERCENT_EXPRESSED_KEY));
+        cseMaxPercentExpressedField.setText(Double.toString(cseMaxPercentExpressed.doubleValue()));
+    }
+
     private void enableAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableMain();
@@ -332,32 +434,6 @@ public class GeneFiltererController extends PopUpController implements Initializ
                 ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
             }
         }
-    }
-
-    private void setFilteringParamsToDefault() {
-        noneFilterOption.setSelected(true);
-        optionFilteringBy = noneFilterOption;
-
-        disMinTPMField.setText(Integer.toString(DEFAULT_DIS_MIN_TPM));
-        disMinTPM = new MutableDouble(DEFAULT_DIS_MIN_TPM);
-        disMinPercentExpressedField.setText(Integer.toString(DEFAULT_DIS_MIN_PERCENT_EXPRESSED));
-        disMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
-
-        deMinFoldChangeField.setText(Integer.toString(DEFAULT_DE_MIN_FOLD_CHANGE));
-        deMinFoldChange = new MutableDouble(DEFAULT_DE_MIN_FOLD_CHANGE);
-        deMinTPMField.setText(Integer.toString(DEFAULT_DE_MIN_TPM));
-        deMinTPM = new MutableDouble(DEFAULT_DE_MIN_TPM);
-        deMinPercentExpressedField.setText(Integer.toString(DEFAULT_DE_MIN_PERCENT_EXPRESSED));
-        deMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
-
-        cseMinTPMField.setText(Integer.toString(DEFAULT_CSE_MIN_TPM));
-        cseMinTPM = new MutableDouble(DEFAULT_CSE_MIN_TPM);
-        cseMinPercentExpressedField.setText(Integer.toString(DEFAULT_CSE_MIN_PERCENT_EXPRESSED));
-        cseMinPercentExpressed = new MutableDouble(DEFAULT_CSE_MIN_PERCENT_EXPRESSED);
-        cseMaxTPMField.setText(Integer.toString(DEFAULT_CSE_MAX_TPM));
-        cseMaxTPM = new MutableDouble(DEFAULT_CSE_MAX_TPM);
-        cseMaxPercentExpressedField.setText(Integer.toString(DEFAULT_CSE_MAX_PERCENT_EXPRESSED));
-        cseMaxPercentExpressed = new MutableDouble(DEFAULT_CSE_MAX_PERCENT_EXPRESSED);
     }
 
     /**
