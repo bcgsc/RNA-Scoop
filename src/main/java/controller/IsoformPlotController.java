@@ -29,7 +29,6 @@ import ui.CategoryLabelsLegend;
 import util.Util;
 import java.net.URL;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static util.Util.roundToOneDecimal;
 
@@ -895,29 +894,15 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         public static Node getDotLegend() {
-            double width = DOT_LEGEND_COLUMN_WIDTH * 4 + DOT_PLOT_COLUMN_SPACING * 3;
-            double height = DOT_PLOT_ROW_HEIGHT + DOT_LEGEND_TEXT_HEIGHT;
-            Canvas dotLegend = new Canvas(width, height);
-            GraphicsContext graphicsContext = dotLegend.getGraphicsContext2D();
-            double[] dotSizesToDraw = new double[]{QUARTER_EXPRESS_DOT_SIZE, HALF_EXPRESS_DOT_SIZE,
-                    THREE_QUARTERS_EXPRESS_DOT_SIZE, ALL_EXPRESS_DOT_SIZE};
+            VBox dotLegend = new VBox();
+            dotLegend.setAlignment(Pos.CENTER);
 
-            double dotX = DOT_LEGEND_COLUMN_WIDTH / 2;
-            double dotY = DOT_PLOT_ROW_HEIGHT / 2;
-            for (double dotSize : dotSizesToDraw) {
-                graphicsContext.setFill(Color.BLACK);
-                graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+            Canvas dotLegendCanvas = getDotLegendNoCaption();
+            VBox.setMargin(dotLegendCanvas, new Insets(0, 0, 5, 0));
+            Text caption = new Text("Cell Proportions");
+            caption.setFont(IsoformPlotLegend.LEGEND_FONT);
+            dotLegend.getChildren().addAll(dotLegendCanvas, caption);
 
-                graphicsContext.setFont(new Font("Verdana", 10));
-                String text;
-                if (dotSize == QUARTER_EXPRESS_DOT_SIZE) text = "≤ 25%";
-                else if (dotSize == HALF_EXPRESS_DOT_SIZE) text = "≤ 50%";
-                else if (dotSize == THREE_QUARTERS_EXPRESS_DOT_SIZE) text = "≤ 75%";
-                else text = "≤ 100%";
-
-                graphicsContext.fillText(text, dotX - DOT_LEGEND_COLUMN_WIDTH / 2, DOT_PLOT_ROW_HEIGHT + DOT_LEGEND_TEXT_HEIGHT);
-                dotX += DOT_LEGEND_COLUMN_WIDTH + DOT_PLOT_COLUMN_SPACING;
-            }
             return dotLegend;
         }
 
@@ -973,6 +958,33 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             return dotPlotRow;
         }
 
+        private static Canvas getDotLegendNoCaption() {
+            double width = DOT_LEGEND_COLUMN_WIDTH * 4 + DOT_PLOT_COLUMN_SPACING * 3;
+            double height = DOT_PLOT_ROW_HEIGHT + DOT_LEGEND_TEXT_HEIGHT;
+            Canvas dotLegendCanvas = new Canvas(width, height);
+            GraphicsContext graphicsContext = dotLegendCanvas.getGraphicsContext2D();
+            double[] dotSizesToDraw = new double[]{QUARTER_EXPRESS_DOT_SIZE, HALF_EXPRESS_DOT_SIZE,
+                    THREE_QUARTERS_EXPRESS_DOT_SIZE, ALL_EXPRESS_DOT_SIZE};
+
+            double dotX = DOT_LEGEND_COLUMN_WIDTH / 2;
+            double dotY = DOT_PLOT_ROW_HEIGHT / 2;
+            for (double dotSize : dotSizesToDraw) {
+                graphicsContext.setFill(Color.BLACK);
+                graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
+
+                graphicsContext.setFont(new Font("Verdana", 10));
+                String text;
+                if (dotSize == QUARTER_EXPRESS_DOT_SIZE) text = "≤ 25%";
+                else if (dotSize == HALF_EXPRESS_DOT_SIZE) text = "≤ 50%";
+                else if (dotSize == THREE_QUARTERS_EXPRESS_DOT_SIZE) text = "≤ 75%";
+                else text = "≤ 100%";
+
+                graphicsContext.fillText(text, dotX - DOT_LEGEND_COLUMN_WIDTH / 2, DOT_PLOT_ROW_HEIGHT + DOT_LEGEND_TEXT_HEIGHT);
+                dotX += DOT_LEGEND_COLUMN_WIDTH + DOT_PLOT_COLUMN_SPACING;
+            }
+            return dotLegendCanvas;
+        }
+
         private static double getIsoformExpressionInCluster(Cluster cluster, Isoform isoform, boolean onlySelected) {
             boolean showMedian = ControllerMediator.getInstance().isShowingMedian();
             if (showMedian)
@@ -1019,12 +1031,15 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
     }
 
-    private class IsoformPlotLegend extends HBox {
+    private static class IsoformPlotLegend extends HBox {
+        public static final Font LEGEND_FONT = Font.font("Verdana",11);
+
         private GradientLegend gradientLegend;
         private Node dotLegend;
 
         public IsoformPlotLegend() {
-            setAlignment(Pos.CENTER);
+            setAlignment(Pos.BOTTOM_CENTER);
+            setFillHeight(false);
             addGradientLegend();
             if (DotPlot.shouldDrawDotPlot())
                 addDotLegend();
@@ -1056,7 +1071,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         }
 
         private class GradientLegend extends VBox{
-            private final Font GRADIENT_LEGEND_FONT = Font.font("Verdana",11);
             private static final double GRADIENT_HEIGHT = DotPlot.ALL_EXPRESS_DOT_SIZE;
             private static final double GRADIENT_WIDTH = 200;
 
@@ -1091,18 +1105,18 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
             private void initializeGradientExpressionLabels() {
                 minText = new Text(getMinText());
-                minText.setFont(GRADIENT_LEGEND_FONT);
+                minText.setFont(LEGEND_FONT);
 
                 midText = new Text(getMidText());
-                midText.setFont(GRADIENT_LEGEND_FONT);
+                midText.setFont(LEGEND_FONT);
 
                 maxText = new Text(getMaxText());
-                maxText.setFont(GRADIENT_LEGEND_FONT);
+                maxText.setFont(LEGEND_FONT);
             }
 
             private void initializeGradientScale() {
                 scale = new Text(getScaleText());
-                scale.setFont(GRADIENT_LEGEND_FONT);
+                scale.setFont(LEGEND_FONT);
             }
 
             public void redraw() {
@@ -1126,7 +1140,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
 
             private String getScaleText() {
-                return ControllerMediator.getInstance().getScaleOptionInUse() + " scale";
+                String scaleText = "Expression Level";
+                if (ControllerMediator.getInstance().getScaleOptionInUse().equals(TPMGradientAdjusterController.LINEAR_SCALE_OPTION))
+                        return scaleText + " (Linear)";
+                else
+                    return scaleText + " (Log)";
             }
 
             /**

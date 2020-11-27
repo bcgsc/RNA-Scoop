@@ -27,12 +27,13 @@ import persistance.SessionMaker;
 import ui.Main;
 
 import java.net.URL;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import static util.Util.roundToOneDecimal;
 
 public class TPMGradientAdjusterController extends PopUpController implements Initializable, InteractiveElementController {
+    public static final String LINEAR_SCALE_OPTION = "Linear";
+    public static final String EXPONENTIAL_SCALE_OPTION = "Logarithmic";
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_HEIGHT_FACTOR = 0.25f;
     private static final float TPM_GRADIENT_ADJUSTER_SCALE_WIDTH_FACTOR = 0.4f;
     private static final Color DEFAULT_MIN_TPM_COLOR = Color.color(1.000, 1.000,1.000);
@@ -40,8 +41,6 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     private static final Color DEFAULT_MAX_TPM_COLOR = Color.color(0.263, 0.635,0.792);
     private static final int DEFAULT_RECOMMENDED_MIN_TPM = 1;
     private static final int DEFAULT_RECOMMENDED_MAX_TPM = 1000;
-    private static final String SCALE_CHOOSER_LINEAR_OPTION = "Linear";
-    private static final String SCALE_CHOOSER_EXPONENTIAL_OPTION = "Logarithmic";
     private static final double TPM_GRADIENT_GRID_PANE_ROW_PERCENT_HEIGHT = 40;
     private static final double TPM_GRADIENT_MIN_WIDTH = 250;
     private static final double TPM_GRADIENT_MIN_HEIGHT  = 60;
@@ -113,7 +112,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     }
 
     public void setTPMGradientToDefault() {
-        scaleChooser.setValue(SCALE_CHOOSER_LINEAR_OPTION);
+        scaleChooser.setValue(LINEAR_SCALE_OPTION);
         minTPMColorPicker.setValue(DEFAULT_MIN_TPM_COLOR);
         midTPMColorPicker.setValue(DEFAULT_MID_TPM_COLOR);
         maxTPMColorPicker.setValue(DEFAULT_MAX_TPM_COLOR);
@@ -175,7 +174,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     }
 
     public double getGradientMidTPM() {
-        if (getScaleOptionInUse().equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION)) {
+        if (getScaleOptionInUse().equals(TPMGradientAdjusterController.LINEAR_SCALE_OPTION)) {
            return gradientMinTPM + 0.5 * (gradientMaxTPM - gradientMinTPM);
         } else {
             double logMinTPM = Math.log10(gradientMinTPM + Double.MIN_VALUE);
@@ -289,7 +288,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
      */
     private double getTForExpressionBetweenMaxMin(double expression) {
         double t;
-        if (getScaleOptionInUse().equals(TPMGradientAdjusterController.SCALE_CHOOSER_LINEAR_OPTION)) {
+        if (getScaleOptionInUse().equals(TPMGradientAdjusterController.LINEAR_SCALE_OPTION)) {
             t = (expression - gradientMinTPM) / (gradientMaxTPM - gradientMinTPM);
         } else {
             double logIsoformExpression = Math.log10(expression + Double.MIN_VALUE);
@@ -372,7 +371,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
     private void setUpTPMGradientAndControls() {
         makeTPMGradientResizeToWindow();
         setUpHandlingChangedMinMaxFields();
-        scaleChooser.getItems().addAll(SCALE_CHOOSER_LINEAR_OPTION, SCALE_CHOOSER_EXPONENTIAL_OPTION);
+        scaleChooser.getItems().addAll(LINEAR_SCALE_OPTION, EXPONENTIAL_SCALE_OPTION);
         setTPMGradientToDefault();
     }
 

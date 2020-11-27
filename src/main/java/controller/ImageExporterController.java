@@ -80,6 +80,7 @@ public class ImageExporterController extends PopUpController implements Initiali
         FileChooser fileChooser = new FileChooser();
         FileChooser.ExtensionFilter imageFilter = new FileChooser.ExtensionFilter("Image Files", "*.png");
         fileChooser.getExtensionFilters().add(imageFilter);
+        fileChooser.setInitialFileName("figure.png");
         File imageFile = fileChooser.showSaveDialog(ControllerMediator.getInstance().getMainWindow());
         if (imageFile != null) {
             ControllerMediator.getInstance().addConsoleMessage("Exporting figure...");
