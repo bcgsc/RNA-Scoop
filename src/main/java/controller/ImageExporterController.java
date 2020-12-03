@@ -58,9 +58,9 @@ public class ImageExporterController extends PopUpController implements Initiali
         setScale(DEFAULT_SCALE);
     }
 
-    public void restoreSettingsFromJSON(JSONObject settings) {
-        exportOptions.getSelectionModel().select(settings.getString(SessionMaker.FIGURE_TYPE_EXPORTING_KEY));
-        setScale(settings.getFloat(SessionMaker.FIGURE_SCALE_KEY));
+    public void restoreImageExporterFromPrevSession(JSONObject prevSession) {
+        exportOptions.getSelectionModel().select(prevSession.getString(SessionMaker.FIGURE_TYPE_EXPORTING_KEY));
+        setScale(prevSession.getFloat(SessionMaker.FIGURE_SCALE_KEY));
     }
 
     public float getFigureScale() {

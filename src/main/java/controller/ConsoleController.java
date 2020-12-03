@@ -87,8 +87,8 @@ public class ConsoleController implements Initializable{
         return consoleMessages;
     }
 
-    public void restoreConsoleFromJSON(JSONObject settings) {
-        restoreConsoleMessagesFromJSON(settings);
+    public void restoreConsoleFromPrevSession(JSONObject prevSession) {
+        restoreConsoleMessagesFromPrevSession(prevSession);
     }
 
     /**
@@ -141,9 +141,9 @@ public class ConsoleController implements Initializable{
     /**
      * Restore all console messages from a previous session
      */
-    private void restoreConsoleMessagesFromJSON(JSONObject settings) {
+    private void restoreConsoleMessagesFromPrevSession(JSONObject prevSession) {
         clearConsole();
-        JSONArray messages = settings.getJSONArray(SessionMaker.CONSOLE_MESSAGES_KEY);
+        JSONArray messages = prevSession.getJSONArray(SessionMaker.CONSOLE_MESSAGES_KEY);
         for (Object message : messages) {
             JSONObject messageJSON = (JSONObject) message;
             String messageType = messageJSON.getString(SessionMaker.MESSAGE_IS_ERROR_KEY);

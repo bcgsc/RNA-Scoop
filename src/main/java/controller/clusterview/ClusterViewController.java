@@ -34,6 +34,9 @@ import org.jfree.data.extension.impl.XYDatasetSelectionExtension;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.json.JSONObject;
+import persistance.CurrentSession;
+import persistance.SessionMaker;
 import tagbio.umap.Umap;
 import ui.CategoryLabelsLegend;
 import util.Util;
@@ -50,6 +53,7 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static javafx.application.Platform.isFxApplicationThread;
 import static javafx.application.Platform.runLater;
 
 public class ClusterViewController implements Initializable, InteractiveElementController {
@@ -226,8 +230,8 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         }
     }
 
-    public void selectCluster(Cluster cluster, boolean unselectRest) {
-        cellSelectionManager.selectCluster(cluster, unselectRest);
+    public void selectCluster(Cluster cluster, boolean unselectRest, boolean updateIsoformView) {
+        cellSelectionManager.selectCluster(cluster, unselectRest, updateIsoformView);
     }
 
     public void unselectCluster(Cluster cluster) {
@@ -241,6 +245,26 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     public void redrawPlotSansLegend() {
         if (!isPlotCleared())
             plotRenderer.updateOutlineAndRedraw();
+    }
+
+    public void exportEmbeddingToFile(String pathToDir) {
+        if (!isPlotCleared() && !CurrentSession.isEmbeddingSaved())
+            exportEmbeddingToFile(new File(pathToDir + File.separator + "embedding.txt"));
+    }
+
+    /**
+     * Assumes cell plot has been cleared, and that current loaded matrix and embedding
+     * information corresponds to the previous session
+     */
+    public void restoreClusterViewFromPrevSession(JSONObject prevSession) {
+        if (!prevSession.getBoolean(SessionMaker.CELL_PLOT_CLEARED_KEY)) {
+            PlotMaker plotMaker = new PlotMaker();
+            plotMaker.drawPlotAndUpdateAssociatedComponents(false);
+            if (prevSession.getJSONArray(SessionMaker.CELL_CATEGORIES_SELECTED_KEY).length() == 0)
+                selectCellsSelectedInPrevSession(prevSession);
+            else
+                selectCategoriesSelectedInPrevSession(prevSession);
+        }
     }
 
     public Node getClusterView() {
@@ -263,6 +287,14 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         if (!isPlotCleared())
             return cellSelectionManager.getSelectedCells().size() > 0;
         return false;
+    }
+
+    public Collection<Integer> getSelectedCellNumbers() {
+        return getCells(true).stream().map(CellDataItem::getCellNumber).collect(Collectors.toList());
+    }
+
+    public Collection<String> getSelectedCellCategoryNames() {
+        return legend.getSelectedCategoryNames();
     }
 
     public int getNumCellsToPlot() {
@@ -380,6 +412,17 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().enableGeneFilterer();
     }
 
+    private void selectCategoriesSelectedInPrevSession(JSONObject prevSession) {
+        Collection<String> categoriesToSelect = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.CELL_CATEGORIES_SELECTED_KEY).toList();
+        for (String categoryToSelect : categoriesToSelect)
+            legend.selectCategoryWithGivenName(categoryToSelect, false, false);
+    }
+
+    private void selectCellsSelectedInPrevSession(JSONObject prevSession) {
+        Collection<Integer> cellsToSelect = (List<Integer>)(List<?>) prevSession.getJSONArray(SessionMaker.CELLS_SELECTED_KEY).toList();
+        cellSelectionManager.selectCellsWithGivenNumbers(cellsToSelect);
+    }
+
     /**
      * Writes embedding used to generate cell plot to given file
      */
@@ -393,6 +436,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             fileWriter.write(embedding.toString());
             fileWriter.close();
             ControllerMediator.getInstance().addConsoleMessage("Exported embedding to: " + embeddingFile.getPath());
+            CurrentSession.saveEmbeddingPath(embeddingFile.getAbsolutePath());
         } catch (IOException e) {
             ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
@@ -463,7 +507,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         public PlotRenderer() {
             super(false, true);
             setUseOutlinePaint(true);
-            setSeriesOutlineStroke(0, DEFAULT_BASIC_STROKE);
+            updateOutlineAndRedraw();
         }
 
         @Override
@@ -604,13 +648,14 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             redrawOnClear = true;
         }
 
-        public void selectCluster(Cluster cluster, boolean unselectRest) {
+        public void selectCluster(Cluster cluster, boolean unselectRest, boolean updateIsoformView) {
             if (unselectRest)
                 selectedCells.clear();
             for (CellDataItem cell : cluster.getCells())
                 select(cell);
             redrawPlotSansLegend();
-            runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
+            if (updateIsoformView)
+                runLater(() -> ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot());
         }
 
         public void unselectCluster(Cluster cluster) {
@@ -620,6 +665,11 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             }
         }
 
+        public void selectCellsWithGivenNumbers(Collection<Integer> cellNumbers) {
+            for (int cellNumber : cellNumbers) {
+                select(cellNumberCellMap.get(cellNumber));
+            }
+        }
 
         /**
          * Selects cell at given (x, y) coordinates (if cell exists there)
@@ -713,7 +763,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 clearedSelectedCells = true;
             }
 
-            legend.clearSelectedLegendElements();
+            legend.clearSelectedCategories();
 
             if (redrawOnClear && clearedSelectedCells) {
                 redrawPlotSansLegend();
@@ -774,21 +824,29 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         public void run() {
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing cell plot..."));
             try {
-                cellsInNewPlot = new XYSeriesCollection();
-                double[][] matrix = (embedding == null ? generatePlotMatrix() : embedding);
-                drawPlot(matrix);
-                ControllerMediator.getInstance().addCellsToLabelSetClusters();
-                setTPMGradientValues();
-                runLater(() -> ControllerMediator.getInstance().updateIsoformPlot(false));
-                ControllerMediator.getInstance().calculateAndSaveMaxFoldChange(ControllerMediator.getInstance().getLabelSets());
-                ControllerMediator.getInstance().updateGenesMaxFoldChange();
-                runLater(() -> ControllerMediator.getInstance().updateFilterCellCategories());
+                drawPlotAndUpdateAssociatedComponents(true);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing cell plot"));
            } catch (Exception e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
             } finally {
                 runLater(ClusterViewController.this::enableAssociatedFunctionality);
             }
+        }
+
+        public void drawPlotAndUpdateAssociatedComponents(boolean updateTPMGradientValues) {
+            cellsInNewPlot = new XYSeriesCollection();
+            double[][] matrix = (embedding == null ? generatePlotMatrix() : embedding);
+            drawPlot(matrix);
+            ControllerMediator.getInstance().addCellsToLabelSetClusters();
+            runLater(() -> ControllerMediator.getInstance().updateIsoformPlot(false));
+            ControllerMediator.getInstance().calculateAndSaveMaxFoldChange(ControllerMediator.getInstance().getLabelSets());
+            ControllerMediator.getInstance().updateGenesMaxFoldChange();
+            if (!Platform.isFxApplicationThread())
+                runLater(() -> ControllerMediator.getInstance().updateFilterCellCategories());
+            else
+                ControllerMediator.getInstance().updateFilterCellCategories();
+            if(updateTPMGradientValues)
+                setTPMGradientValues();
         }
 
         private double[][] generatePlotMatrix() {
@@ -816,7 +874,10 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             plot = panel;
             plot.setPreferredSize(new Dimension(500, Integer.MAX_VALUE));
             chart.removeLegend();
-            addLegend();
+            if (!isFxApplicationThread())
+                Platform.runLater(() -> addLegend());
+            else
+                addLegend();
 
             cellsInPlot = cellsInNewPlot;
             swingNode.setContent(plot);
@@ -918,7 +979,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         }
 
         private void addLegend() {
-            runLater(() -> {
+            //runLater(() -> {
                 legendHolder = new ScrollPane();
                 legend = new CategoryLabelsLegend(INCLUDE_LEGEND_LABELS, LEGEND_SELECTABLE, LEGEND_SHOW_ONLY_SELECTED,
                         LEGEND_SHOW_BACKGROUND, LEGEND_IS_VERTICAL, LEGEND_DOT_SIZE, LEGEND_DOT_CANVAS_WIDTH,
@@ -930,7 +991,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
                 legendHolder.setMaxHeight(Double.NEGATIVE_INFINITY);
                 plotHolder.getChildren().add(legendHolder);
                 legendHolder.setStyle("-fx-background-color: transparent;");
-            });
+            //});
         }
 
         private void addSelectionManager(DatasetSelectionExtension<XYCursor> datasetExtension, ChartPanel panel) {

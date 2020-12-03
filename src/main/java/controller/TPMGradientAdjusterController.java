@@ -137,32 +137,32 @@ public class TPMGradientAdjusterController extends PopUpController implements In
         gradientMaxTPM = recommendedMaxTPM;
     }
 
-    public void restoreTPMGradientFromJSON(JSONObject settings) {
-        restoreGradientMinTPMFromJSON(settings);
-        restoreGradientMaxTPMFromJSON(settings);
-        restoreGradientColorsFromJSON(settings);
-        restoreGradientScaleFromJSON(settings);
+    public void restoreTPMGradientFromPrevSession(JSONObject prevSession) {
+        restoreGradientMinTPMFromPrevSession(prevSession);
+        restoreGradientMaxTPMFromPrevSession(prevSession);
+        restoreGradientColorsFromPrevSession(prevSession);
+        restoreGradientScaleFromPrevSession(prevSession);
     }
 
-    private void restoreGradientMinTPMFromJSON(JSONObject settings) {
-        gradientMinTPM = settings.getDouble(SessionMaker.MIN_TPM_KEY);
+    private void restoreGradientMinTPMFromPrevSession(JSONObject prevSession) {
+        gradientMinTPM = prevSession.getDouble(SessionMaker.MIN_TPM_KEY);
         gradientMinTPMField.setText(Double.toString(gradientMinTPM));
     }
 
-    private void restoreGradientMaxTPMFromJSON(JSONObject settings) {
-        gradientMaxTPM = settings.getDouble(SessionMaker.MAX_TPM_KEY);
+    private void restoreGradientMaxTPMFromPrevSession(JSONObject prevSession) {
+        gradientMaxTPM = prevSession.getDouble(SessionMaker.MAX_TPM_KEY);
         gradientMaxTPMField.setText(Double.toString(gradientMaxTPM));
     }
 
-    private void restoreGradientColorsFromJSON(JSONObject settings) {
-        minTPMColorPicker.setValue(Color.web(settings.getString(SessionMaker.MIN_TPM_COLOR_KEY)));
-        midTPMColorPicker.setValue(Color.web(settings.getString(SessionMaker.MID_TPM_COLOR_KEY)));
-        maxTPMColorPicker.setValue(Color.web(settings.getString(SessionMaker.MAX_TPM_COLOR_KEY)));
+    private void restoreGradientColorsFromPrevSession(JSONObject prevSession) {
+        minTPMColorPicker.setValue(Color.web(prevSession.getString(SessionMaker.MIN_TPM_COLOR_KEY)));
+        midTPMColorPicker.setValue(Color.web(prevSession.getString(SessionMaker.MID_TPM_COLOR_KEY)));
+        maxTPMColorPicker.setValue(Color.web(prevSession.getString(SessionMaker.MAX_TPM_COLOR_KEY)));
     }
 
 
-    private void restoreGradientScaleFromJSON(JSONObject settings) {
-        scaleChooser.getSelectionModel().select(settings.getString(SessionMaker.TPM_SCALE_KEY));
+    private void restoreGradientScaleFromPrevSession(JSONObject prevSession) {
+        scaleChooser.getSelectionModel().select(prevSession.getString(SessionMaker.TPM_SCALE_KEY));
     }
 
     public double getGradientMinTPM() {

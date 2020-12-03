@@ -10,6 +10,8 @@ import labelset.LabelSet;
 import mediator.ControllerMediator;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import persistance.CurrentSession;
+import persistance.SessionMaker;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -19,14 +21,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import static javafx.application.Platform.isFxApplicationThread;
 import static javafx.application.Platform.runLater;
 
 public class Parser {
-    private static final String GTF_PATH_KEY = "gtf";
-    private static final String MATRIX_PATH_KEY = "matrix";
-    private static final String ISOFORM_LABELS_PATH_KEY = "isoform_ids";
-    private static final String CELL_LABELS_PATH_KEY = "cell_labels";
-    private static final String EMBEDDING_PATH_KEY = "embedding";
     private static final String GZIP_EXTENSION = ".gz";
 
     /**
@@ -44,17 +42,17 @@ public class Parser {
             // resolve relative paths in JSON
             String jsonParent = jsonPath.toAbsolutePath().getParent().toString();
             JSONObject jsonObj = new JSONObject(pathsString);
-            String gtf = resolveRelativePath((String) jsonObj.get(GTF_PATH_KEY), jsonParent);
-            String matrix = resolveRelativePath((String) jsonObj.get(MATRIX_PATH_KEY), jsonParent);
-            String isoformLabels = resolveRelativePath((String) jsonObj.get(ISOFORM_LABELS_PATH_KEY), jsonParent);
+            String gtf = resolveRelativePath((String) jsonObj.get(SessionMaker.GTF_PATH_KEY), jsonParent);
+            String matrix = resolveRelativePath((String) jsonObj.get(SessionMaker.MATRIX_PATH_KEY), jsonParent);
+            String isoformLabels = resolveRelativePath((String) jsonObj.get(SessionMaker.ISOFORM_LABELS_PATH_KEY), jsonParent);
 
             String embedding = null;
-            if (jsonObj.has(EMBEDDING_PATH_KEY)) {
-                embedding = resolveRelativePath((String) jsonObj.get(EMBEDDING_PATH_KEY), jsonParent);
+            if (jsonObj.has(SessionMaker.EMBEDDING_PATH_KEY)) {
+                embedding = resolveRelativePath((String) jsonObj.get(SessionMaker.EMBEDDING_PATH_KEY), jsonParent);
             }
 
             ArrayList<String> cellLabels = new ArrayList<>();
-            Object cellLabelsObj = jsonObj.get(CELL_LABELS_PATH_KEY);
+            Object cellLabelsObj = jsonObj.get(SessionMaker.CELL_LABELS_PATH_KEY);
             if (cellLabelsObj instanceof JSONArray) {
                 for (Object o : (JSONArray) cellLabelsObj) {
                     cellLabels.add(resolveRelativePath((String) o, jsonParent));
@@ -67,8 +65,9 @@ public class Parser {
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing GTF file..."));
             GTFLoader.loadGTF(gtf);
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing matrix files..."));
-            CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, cellLabels, embedding);
+            Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, cellLabels, embedding);
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + pathToPaths));
+            CurrentSession.saveLoadedPaths(gtf, matrix, isoformLabels, labelSetPathMap, embedding);
             return true;
         } catch (RNAScoopException e){
             runLater(Parser::clearLoadedData);
@@ -81,15 +80,24 @@ public class Parser {
         }
     }
 
-    private static String resolveRelativePath(String f, String parent) throws FileNotFoundException {
-        if (! new File(f).exists()) {
-            String newPath = parent + File.separator + f;
-            if (! new File(newPath).exists()) {
-                throw new FileNotFoundException("Cannot find file \"" + f + "\"");
-            }
-            return newPath;
+    public static boolean loadPreviousSessionData(String gtf, String matrix, String isoformLabels, Collection<String> cellLabels, String embedding) {
+        try {
+            runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing previous session GTF file..."));
+            GTFLoader.loadGTF(gtf);
+            runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing previous session matrix files..."));
+            Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, cellLabels, embedding);
+            CurrentSession.saveLoadedPaths(gtf, matrix, isoformLabels, labelSetPathMap, embedding);
+            runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Finished parsing previous session dataset files"));
+            return true;
+        } catch (RNAScoopException e){
+            runLater(Parser::clearLoadedData);
+            runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
+            return false;
+        } catch (Exception e) {
+            runLater(Parser::clearLoadedData);
+            runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
+            return false;
         }
-        return f;
     }
 
     /**
@@ -100,6 +108,7 @@ public class Parser {
             LabelSet labelSet = CellPlotInfoLoader.getLabelSet(labelSetFile);
             if (labelSet.getNumCellsInLabelSet() == ControllerMediator.getInstance().getNumCellsToPlot()) {
                 ControllerMediator.getInstance().addLabelSet(labelSet);
+                CurrentSession.saveLabelSetPath(labelSet, labelSetFile.getAbsolutePath());
                 return true;
             } else {
                 ControllerMediator.getInstance().addConsoleErrorMessage("Uploaded label set does not have the same number of cells as the expression matrix");
@@ -126,6 +135,17 @@ public class Parser {
         return genesToSelect;
     }
 
+    private static String resolveRelativePath(String f, String parent) throws FileNotFoundException {
+        if (! new File(f).exists()) {
+            String newPath = parent + File.separator + f;
+            if (! new File(newPath).exists()) {
+                throw new FileNotFoundException("Cannot find file \"" + f + "\"");
+            }
+            return newPath;
+        }
+        return f;
+    }
+
     /**
      * Clears gene selector, cell plot, clears t-SNE plot data, and label sets
      * (basically clears everything that should be cleared when loading a new dataset)
@@ -137,6 +157,7 @@ public class Parser {
         ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
         ControllerMediator.getInstance().setEmbedding(null);
         ControllerMediator.getInstance().clearLabelSets();
+        CurrentSession.clearSavedPaths();
     }
 
     private static void clearLoadedData() {
@@ -146,6 +167,7 @@ public class Parser {
         ControllerMediator.getInstance().setIsoformIndexMap(null);
         ControllerMediator.getInstance().setEmbedding(null);
         ControllerMediator.getInstance().clearLabelSets();
+        CurrentSession.clearSavedPaths();
     }
 
     private static class GTFLoader {
@@ -176,7 +198,10 @@ public class Parser {
                 }
             }
             ArrayList<Gene> geneList = new ArrayList<>(parsedGenes.values());
-            runLater(() -> ControllerMediator.getInstance().updateGenesTable(geneList));
+            if (!isFxApplicationThread())
+                runLater(() -> ControllerMediator.getInstance().updateGenesTable(geneList));
+            else
+                ControllerMediator.getInstance().updateGenesTable(geneList);
             removeParsedGenes();
             reader.close();
         }
@@ -334,11 +359,15 @@ public class Parser {
 
     private static class CellPlotInfoLoader {
 
-        public static void loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, ArrayList<String> pathsToLabelSets, String pathToEmbedding) throws IOException, RNAScoopException {
+        /**
+         * Loads cell plot info (matrix, isoform labels, label sets, embedding), and returns map containing the loaded
+         * label sets and their respective paths
+         */
+        public static Map<LabelSet, String> loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, Collection<String> pathsToLabelSets, String pathToEmbedding) throws IOException, RNAScoopException {
             HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap(pathToIsoformLabels);
             int numIsoforms = isoformIndexMap.size();
-
             List<LabelSet> labelSets = new ArrayList<>();
+            Map<LabelSet, String> labelSetPathMap =  new HashMap<>();
             int numCells = -1;
             for (String pathToLabelSet : pathsToLabelSets) {
                 LabelSet labelSet = getLabelSet(new File(pathToLabelSet));
@@ -350,6 +379,7 @@ public class Parser {
                     throw new RowLabelsLengthException();
                 }
                 labelSets.add(labelSet);
+                labelSetPathMap.put(labelSet, pathToLabelSet);
             }
 
             double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix(pathToMatrix, numCells, numIsoforms);
@@ -364,7 +394,11 @@ public class Parser {
 
             ControllerMediator.getInstance().setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
             ControllerMediator.getInstance().setIsoformIndexMap(isoformIndexMap);
-            Platform.runLater(() -> ControllerMediator.getInstance().addLabelSets(labelSets));
+            if (!isFxApplicationThread())
+                Platform.runLater(() -> ControllerMediator.getInstance().addLabelSets(labelSets));
+            else
+                ControllerMediator.getInstance().addLabelSets(labelSets);
+            return labelSetPathMap;
         }
 
         /**

@@ -12,7 +12,10 @@ import javafx.stage.FileChooser;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
+import org.json.JSONObject;
 import parser.Parser;
+import persistance.CurrentSession;
+import persistance.SessionMaker;
 import ui.LabelSetManagerWindow;
 
 import java.io.File;
@@ -115,6 +118,17 @@ public class LabelSetManagerController extends PopUpController {
         }
     }
 
+    public void exportLabelSetsToFiles(String pathToDir) {
+        for (LabelSet labelSet : labelSets) {
+            if (!CurrentSession.isLabelSetPathSaved(labelSet)) {
+                String name = labelSet.getName();
+                String extension = (name.lastIndexOf(".") != -1) ? ".txt" : "";
+                File labelSetFile = new File(pathToDir + File.separator + name + extension);
+                exportLabelSetToFile(labelSetFile, labelSet);
+            }
+        }
+    }
+
     /**
      * Clears cells in each cluster in each label set
      */
@@ -122,6 +136,17 @@ public class LabelSetManagerController extends PopUpController {
         for (LabelSet labelSet : labelSets) {
             for (Cluster cluster : labelSet.getClusters())
                 cluster.clearCells();
+        }
+    }
+
+    public void restoreLabelSetManagerFromPrevSession(JSONObject prevSession) {
+        String prevLabelSetInUseName = prevSession.getString(SessionMaker.LABEL_SET_IN_USE_KEY);
+        for (LabelSet labelSet : labelSets) {
+            if (labelSet.getName().equals(prevLabelSetInUseName)) {
+                labelSetsListView.getSelectionModel().select(labelSet);
+                labelSetInUse = labelSet;
+                break;
+            }
         }
     }
 
@@ -208,7 +233,7 @@ public class LabelSetManagerController extends PopUpController {
             FileChooser fileChooser = new FileChooser();
             File labelSetFile = fileChooser.showSaveDialog(window);
             if (labelSetFile != null)
-                exportLabelSetInUseToFile(labelSetFile);
+                exportLabelSetToFile(labelSetFile, labelSetInUse);
 
             ControllerMediator.getInstance().enableMain();
         } else {
@@ -234,12 +259,13 @@ public class LabelSetManagerController extends PopUpController {
         ControllerMediator.getInstance().disableGeneFilterer();
     }
 
-    private void exportLabelSetInUseToFile(File labelSetFile) {
+    private void exportLabelSetToFile(File labelSetFile, LabelSet labelSet) {
         try {
             FileWriter fileWriter = new FileWriter(labelSetFile);
-            fileWriter.write(labelSetInUse.toString());
+            fileWriter.write(labelSet.toString());
             fileWriter.close();
             ControllerMediator.getInstance().addConsoleMessage("Exported label set to: " + labelSetFile.getPath());
+            CurrentSession.saveLabelSetPath(labelSet, labelSetFile.getAbsolutePath());
         } catch (Exception e) {
             ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }

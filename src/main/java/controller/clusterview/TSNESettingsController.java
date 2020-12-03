@@ -57,9 +57,9 @@ public class TSNESettingsController implements Initializable {
         saveSettings();
     }
 
-    public void restoreSettingsFromJSON(JSONObject settings) {
-        setTempPerplexity(settings.getDouble(SessionMaker.PERPLEXITY_KEY));
-        setTempMaxIterations(settings.getInt(SessionMaker.MAX_ITERATIONS_KEY));
+    public void restoreSettingsFromPrevSession(JSONObject prevSession) {
+        setTempPerplexity(prevSession.getDouble(SessionMaker.PERPLEXITY_KEY));
+        setTempMaxIterations(prevSession.getInt(SessionMaker.MAX_ITERATIONS_KEY));
         saveSettings();
     }
 

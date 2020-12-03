@@ -11,10 +11,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.FileChooser;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
-import javafx.stage.Window;
+import javafx.stage.*;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
 import parser.Parser;
@@ -59,14 +56,12 @@ public class MainController implements InteractiveElementController {
     @FXML private CheckMenuItem colorCellPlotByIsoformToggle;
 
     private Stage window;
-    private FileChooser fileChooser;
     private boolean clusterViewIsOpen;
     private boolean consoleIsOpen;
     private boolean isoformPlotIsOpen;
     private String currentLoadedPath;
 
     public void initializeMain(Parent console, Parent isoformPlot, Parent clusterView) {
-        fileChooser = new FileChooser();
         setUpWindow();
         addPanels(console, isoformPlot, clusterView);
         setViewTogglesToDefault();
@@ -152,12 +147,11 @@ public class MainController implements InteractiveElementController {
         pathComboBox.setValue(null);
     }
 
-    public void restoreMainFromJSON(JSONObject settings) {
-        restoreIsoformPlotFromJSON(settings);
-        restoreClusterViewFromJSON(settings);
-        restoreConsoleFromJSON(settings);
-        restorePathComboBoxFromJSON(settings);
-        restoreViewTogglesFromJSON(settings);
+    public void restoreMainFromPrevSession(JSONObject prevSession) {
+        restoreIsoformPlotFromPrevSession(prevSession);
+        restoreClusterViewFromPrevSession(prevSession);
+        restoreConsoleFromPrevSession(prevSession);
+        restoreViewTogglesFromPrevSession(prevSession);
     }
 
     public boolean isClusterViewOpen() {
@@ -241,10 +235,11 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleSaveSessionButton() {
-        File file = fileChooser.showSaveDialog(window);
-        if (file != null) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File folder = directoryChooser.showDialog(window);
+        if (folder != null) {
             try {
-                SessionIO.saveSessionAtPath(file.getPath());
+                SessionIO.saveSessionAtPath(folder.getPath());
                 ControllerMediator.getInstance().addConsoleMessage("Successfully saved session");
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
@@ -258,10 +253,11 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleLoadSessionButton() {
-        File file = fileChooser.showOpenDialog(window);
-        if (file != null) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File folder = directoryChooser.showDialog(window);
+        if (folder != null) {
             try {
-                SessionIO.loadSessionAtPath(file.getPath());
+                SessionIO.loadSessionAtPath(folder.getPath());
                 ControllerMediator.getInstance().addConsoleMessage("Successfully loaded session");
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
@@ -428,6 +424,7 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleOpenFileChooserButton() {
+        FileChooser fileChooser = new FileChooser();
         File file = fileChooser.showOpenDialog(window);
         if (file != null) {
             pathComboBox.setValue(file.getAbsolutePath());
@@ -439,8 +436,8 @@ public class MainController implements InteractiveElementController {
      * If the isoform plot was closed in the previous session, closes the isoform plot,
      * otherwise opens it
      */
-    private void restoreIsoformPlotFromJSON(JSONObject settings) {
-        boolean prevIsoformPlotOpen = settings.getBoolean(SessionMaker.ISOFORM_PLOT_OPEN_KEY);
+    private void restoreIsoformPlotFromPrevSession(JSONObject prevSession) {
+        boolean prevIsoformPlotOpen = prevSession.getBoolean(SessionMaker.ISOFORM_PLOT_OPEN_KEY);
         if (prevIsoformPlotOpen)
             openIsoformPlot();
         else
@@ -451,8 +448,8 @@ public class MainController implements InteractiveElementController {
      * If the cluster view was closed in the previous session, closes the cluster view,
      * otherwise opens it
      */
-    private void restoreClusterViewFromJSON(JSONObject settings) {
-        boolean prevClusterViewOpen = settings.getBoolean(SessionMaker.CLUSTER_VIEW_OPEN_KEY);
+    private void restoreClusterViewFromPrevSession(JSONObject prevSession) {
+        boolean prevClusterViewOpen = prevSession.getBoolean(SessionMaker.CLUSTER_VIEW_OPEN_KEY);
         if (prevClusterViewOpen)
             openClusterView();
         else
@@ -463,8 +460,8 @@ public class MainController implements InteractiveElementController {
      * If the console was closed in the previous session, closes the console,
      * otherwise opens it
      */
-    private void restoreConsoleFromJSON(JSONObject settings) {
-        boolean prevConsolePlotOpen = settings.getBoolean(SessionMaker.CONSOLE_OPEN_KEY);
+    private void restoreConsoleFromPrevSession(JSONObject prevSession) {
+        boolean prevConsolePlotOpen = prevSession.getBoolean(SessionMaker.CONSOLE_OPEN_KEY);
         if (prevConsolePlotOpen)
             openConsole();
         else
@@ -474,35 +471,24 @@ public class MainController implements InteractiveElementController {
     /**
      * Restores view menu toggles to what they were in the previous session
      */
-    private void restoreViewTogglesFromJSON(JSONObject settings) {
-        restoreReverseComplementToggle(settings);
-        restoreHideSingleExonIsoformsToggle(settings);
-        restoreHideDotPlotToggle(settings);
-        restoreExpressionToggles(settings);
-        restoreShowGeneNameIDToggles(settings);
-        restoreShowIsoformNameToggle(settings);
-        restoreShowIsoformIDToggle(settings);
-        restoreShowIsoformPlotLegendToggle(settings);
-        restoreColorCellPlotByIsoformToggle(settings);
-    }
-
-    /**
-     * Clears path combo box, then if the loaded path from the previous session has been saved,
-     * sets the path combo box's value and saved current loaded path to it
-     */
-    private void restorePathComboBoxFromJSON(JSONObject settings) {
-        if(settings.has(SessionMaker.PATH_KEY)) {
-            currentLoadedPath = settings.getString(SessionMaker.PATH_KEY);
-            pathComboBox.setValue(currentLoadedPath);
-        }
+    private void restoreViewTogglesFromPrevSession(JSONObject prevSession) {
+        restoreReverseComplementToggle(prevSession);
+        restoreHideSingleExonIsoformsToggle(prevSession);
+        restoreHideDotPlotToggle(prevSession);
+        restoreExpressionToggles(prevSession);
+        restoreShowGeneNameIDToggles(prevSession);
+        restoreShowIsoformNameToggle(prevSession);
+        restoreShowIsoformIDToggle(prevSession);
+        restoreShowIsoformPlotLegendToggle(prevSession);
+        restoreColorCellPlotByIsoformToggle(prevSession);
     }
 
     /**
      * If the reverse complement toggle was selected in the previous session, selects it, else
      * deselects it
      */
-    private void restoreReverseComplementToggle(JSONObject settings) {
-        boolean wasReverseComplementing = settings.getBoolean(SessionMaker.REVERSE_COMPLEMENT_KEY);
+    private void restoreReverseComplementToggle(JSONObject prevSession) {
+        boolean wasReverseComplementing = prevSession.getBoolean(SessionMaker.REVERSE_COMPLEMENT_KEY);
         revComplementToggle.setSelected(wasReverseComplementing);
     }
 
@@ -510,8 +496,8 @@ public class MainController implements InteractiveElementController {
      * If the hide single-exon isoforms toggle was selected in the previous session, selects it,
      * else deselects it
      */
-    private void restoreHideSingleExonIsoformsToggle(JSONObject settings) {
-        boolean wasHidingSingleExonIsoforms = settings.getBoolean(SessionMaker.HIDE_SINGLE_EXON_ISOFORMS_KEY);
+    private void restoreHideSingleExonIsoformsToggle(JSONObject prevSession) {
+        boolean wasHidingSingleExonIsoforms = prevSession.getBoolean(SessionMaker.HIDE_SINGLE_EXON_ISOFORMS_KEY);
         hideSingleExonIsoformsToggle.setSelected(wasHidingSingleExonIsoforms);
     }
 
@@ -519,8 +505,8 @@ public class MainController implements InteractiveElementController {
      * If the hide dot plot toggle was selected in the previous session, selects it,
      * else deselects it
      */
-    private void restoreHideDotPlotToggle(JSONObject settings) {
-        boolean wasHidingDotPlot = settings.getBoolean(SessionMaker.HIDE_DOT_PLOT_KEY);
+    private void restoreHideDotPlotToggle(JSONObject prevSession) {
+        boolean wasHidingDotPlot = prevSession.getBoolean(SessionMaker.HIDE_DOT_PLOT_KEY);
         hideDotPlotToggle.setSelected(wasHidingDotPlot);
     }
 
@@ -528,9 +514,9 @@ public class MainController implements InteractiveElementController {
      * Selects the expression toggles that were selected in the previous session, deselects the
      * rest
      */
-    private void restoreExpressionToggles(JSONObject settings) {
-        boolean wasShowingMedian = settings.getBoolean(SessionMaker.SHOW_MEDIAN_KEY);
-        boolean wasIncludingZeros = settings.getBoolean(SessionMaker.INCLUDE_ZEROS_KEY);
+    private void restoreExpressionToggles(JSONObject prevSession) {
+        boolean wasShowingMedian = prevSession.getBoolean(SessionMaker.SHOW_MEDIAN_KEY);
+        boolean wasIncludingZeros = prevSession.getBoolean(SessionMaker.INCLUDE_ZEROS_KEY);
 
         if (wasShowingMedian)
             showMedianToggle.setSelected(true);
@@ -544,9 +530,9 @@ public class MainController implements InteractiveElementController {
      * Selects the show gene name/ID toggle that was selected in the previous session, deselects the
      * rest
      */
-    private void restoreShowGeneNameIDToggles(JSONObject settings) {
-        boolean wasShowingGeneNameAndID = settings.getBoolean(SessionMaker.SHOW_GENE_NAME_AND_ID_KEY);
-        boolean wasShowingGeneName = settings.getBoolean(SessionMaker.SHOW_GENE_NAME_KEY);
+    private void restoreShowGeneNameIDToggles(JSONObject prevSession) {
+        boolean wasShowingGeneNameAndID = prevSession.getBoolean(SessionMaker.SHOW_GENE_NAME_AND_ID_KEY);
+        boolean wasShowingGeneName = prevSession.getBoolean(SessionMaker.SHOW_GENE_NAME_KEY);
         if (wasShowingGeneNameAndID)
             showGeneNameAndIDToggle.setSelected(true);
         else if (wasShowingGeneName)
@@ -559,8 +545,8 @@ public class MainController implements InteractiveElementController {
      * If the show isoform name toggle was selected in the previous session, selects it, else
      * deselects it
      */
-    private void restoreShowIsoformNameToggle(JSONObject settings) {
-        boolean wasShowingIsoformName = settings.getBoolean(SessionMaker.SHOW_ISOFORM_NAME_KEY);
+    private void restoreShowIsoformNameToggle(JSONObject prevSession) {
+        boolean wasShowingIsoformName = prevSession.getBoolean(SessionMaker.SHOW_ISOFORM_NAME_KEY);
         showIsoformNameToggle.setSelected(wasShowingIsoformName);
     }
 
@@ -568,8 +554,8 @@ public class MainController implements InteractiveElementController {
      * If the show isoform ID toggle was selected in the previous session, selects it, else
      * deselects it
      */
-    private void restoreShowIsoformIDToggle(JSONObject settings) {
-        boolean wasShowingIsoformID = settings.getBoolean(SessionMaker.SHOW_ISOFORM_ID_KEY);
+    private void restoreShowIsoformIDToggle(JSONObject prevSession) {
+        boolean wasShowingIsoformID = prevSession.getBoolean(SessionMaker.SHOW_ISOFORM_ID_KEY);
         showIsoformIDToggle.setSelected(wasShowingIsoformID);
     }
 
@@ -577,8 +563,8 @@ public class MainController implements InteractiveElementController {
      * If the show isoform plot legend toggle was selected in the previous session, selects it,
      * else deselects it
      */
-    private void restoreShowIsoformPlotLegendToggle(JSONObject settings) {
-        boolean wasShowingIsoformPlotLegend = settings.getBoolean(SessionMaker.SHOW_ISOFORM_PLOT_LEGEND_KEY);
+    private void restoreShowIsoformPlotLegendToggle(JSONObject prevSession) {
+        boolean wasShowingIsoformPlotLegend = prevSession.getBoolean(SessionMaker.SHOW_ISOFORM_PLOT_LEGEND_KEY);
         showIsoformPlotLegendToggle.setSelected(wasShowingIsoformPlotLegend);
     }
 
@@ -586,8 +572,8 @@ public class MainController implements InteractiveElementController {
      * If the color cell plot by isoform toggle was selected in the previous session, selects it, else
      * deselects it
      */
-    private void restoreColorCellPlotByIsoformToggle(JSONObject settings) {
-        boolean wasColoringCellPlotByIsoform = settings.getBoolean(SessionMaker.COLOR_CELL_PLOT_BY_ISOFORM_KEY);
+    private void restoreColorCellPlotByIsoformToggle(JSONObject prevSession) {
+        boolean wasColoringCellPlotByIsoform = prevSession.getBoolean(SessionMaker.COLOR_CELL_PLOT_BY_ISOFORM_KEY);
         colorCellPlotByIsoformToggle.setSelected(wasColoringCellPlotByIsoform);
     }
 

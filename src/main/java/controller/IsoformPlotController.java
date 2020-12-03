@@ -25,6 +25,8 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import labelset.Cluster;
 import mediator.ControllerMediator;
+import org.json.JSONObject;
+import persistance.SessionMaker;
 import ui.CategoryLabelsLegend;
 import util.Util;
 import java.net.URL;
@@ -253,6 +255,15 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             isoformPlot.getChildren().remove(isoformPlotLegend);
             isoformPlotLegend = null;
         }
+    }
+
+    /**
+     * Only re-selects selected isoforms, assumes isoforms from previous session are already in
+     * the view
+     */
+    public void restoreIsoformPlotFromPrevSession(JSONObject prevSession) {
+        Collection<String> isoformsToSelectIDs = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.ISOFORMS_SELECTED_KEY).toList();
+        selectionModel.selectIsoformsWithGivenIDs(isoformsToSelectIDs);
     }
 
     public static Collection<GeneGroup> getGeneGroups() {
@@ -1207,6 +1218,13 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 removeSelectedIsoformGraphic(selection.keySet().iterator().next());
         }
 
+        public void selectIsoformsWithGivenIDs(Collection<String> isoformIDs) {
+            for (String isoformID : isoformIDs) {
+                IsoformGroup.IsoformGraphic isoformGraphic = rectangularSelection.getSelectableIsoformGraphic(isoformID);
+                addSelectedIsoformGraphic(isoformGraphic, isoformID);
+            }
+        }
+
         public boolean isIsoformGraphicSelected(IsoformGroup.IsoformGraphic isoformGraphic) {
             return selection.containsKey(isoformGraphic);
         }
@@ -1217,10 +1235,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         public Collection<String> getSelectedIsoformIDs() {
             return selection.values();
-        }
-
-        public Collection<IsoformGroup.IsoformGraphic> getSelectedIsoformGraphics() {
-            return selection.keySet();
         }
     }
 
@@ -1247,6 +1261,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
         public void removeSelectableIsoformGraphic(IsoformGroup.IsoformGraphic isoformGraphic) {
             selectableIsoformGraphics.remove(isoformGraphic);
+        }
+
+        public IsoformGroup.IsoformGraphic getSelectableIsoformGraphic(String isoformID) {
+            for (Map.Entry<IsoformGroup.IsoformGraphic, String> entry : selectableIsoformGraphics.entrySet()) {
+                if (entry.getValue().equals(isoformID))
+                    return entry.getKey();
+            }
+            return null;
         }
 
         private void setUpSelectionBox() {

@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import ui.LabelSetManagerWindow;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ControllerMediator implements Mediator{
     private MainController mainController;
@@ -297,6 +298,10 @@ public class ControllerMediator implements Mediator{
         labelSetManagerController.clearLabelSets();
     }
 
+    public void exportLabelSetsToFiles(String pathToDir) {
+        labelSetManagerController.exportLabelSetsToFiles(pathToDir);
+    }
+
     public void clearLabelSetClusterCells() {
         labelSetManagerController.clearLabelSetClusterCells();
     }
@@ -356,6 +361,10 @@ public class ControllerMediator implements Mediator{
 
     public void restoreTSNESettingsToSaved() {
         tsneSettingsController.restoreSettingsToSaved();
+    }
+
+    public void exportEmbeddingToFile(String pathToDir) {
+        clusterViewController.exportEmbeddingToFile(pathToDir);
     }
 
     public float getMinDist() {
@@ -422,8 +431,8 @@ public class ControllerMediator implements Mediator{
         clusterViewController.redrawLegend();
     }
 
-    public void selectCluster(Cluster cluster, boolean unselectRest) {
-        clusterViewController.selectCluster(cluster, unselectRest);
+    public void selectCluster(Cluster cluster, boolean unselectRest, boolean updateIsoformView) {
+        clusterViewController.selectCluster(cluster, unselectRest, updateIsoformView);
     }
 
     public void unselectCluster(Cluster cluster) {
@@ -432,32 +441,48 @@ public class ControllerMediator implements Mediator{
 
     //Load from JSON
 
-    public void restoreMainFromJSON(JSONObject settings) {
-        mainController.restoreMainFromJSON(settings);
+    public void restoreMainFromPrevSession(JSONObject prevSession) {
+        mainController.restoreMainFromPrevSession(prevSession);
     }
 
-    public void restoreConsoleFromJSON(JSONObject settings) {
-        consoleController.restoreConsoleFromJSON(settings);
+    public void restoreConsoleFromPrevSession(JSONObject prevSession) {
+        consoleController.restoreConsoleFromPrevSession(prevSession);
     }
 
-    public void restoreTPMGradientFromJSON(JSONObject settings) {
-        tpmGradientAdjusterController.restoreTPMGradientFromJSON(settings);
+    public void restoreTPMGradientFromPrevSession(JSONObject prevSession) {
+        tpmGradientAdjusterController.restoreTPMGradientFromPrevSession(prevSession);
     }
 
-    public void restoreGeneFiltererFromJSON(JSONObject settings) {
-        geneFiltererController.restoreGeneFiltererFromJSON(settings);
+    public void restoreUMAPSettingsFromPrevSession(JSONObject prevSession) {
+        umapSettingsController.restoreSettingsFromPrevSession(prevSession);
     }
 
-    public void restoreUMAPSettingsFromJSON(JSONObject settings) {
-        umapSettingsController.restoreSettingsFromJSON(settings);
+    public void restoreTSNESettingsFromPrevSession(JSONObject prevSession) {
+        tsneSettingsController.restoreSettingsFromPrevSession(prevSession);
     }
 
-    public void restoreTSNESettingsFromJSON(JSONObject settings) {
-        tsneSettingsController.restoreSettingsFromJSON(settings);
+    public void restoreClusterViewSettingsFromPrevSession(JSONObject prevSession) {
+        clusterViewSettingsController.restoreClusterViewSettingsFromPrevSession(prevSession);
     }
 
-    public void restoreClusterViewSettingsFromJSON(JSONObject settings) {
-        clusterViewSettingsController.restoreClusterViewSettingsFromJSON(settings);
+    public void restoreLabelSetManagerFromPrevSession(JSONObject prevSession) {
+        labelSetManagerController.restoreLabelSetManagerFromPrevSession(prevSession);
+    }
+
+    public void restoreClusterViewFromPrevSession(JSONObject prevSession) {
+        clusterViewController.restoreClusterViewFromPrevSession(prevSession);
+    }
+
+    public void restoreGeneFiltererFromPrevSession(JSONObject prevSession) {
+        geneFiltererController.restoreGeneFiltererFromPrevSession(prevSession);
+    }
+
+    public void restoreGeneSelectorFromPrevSession(JSONObject prevSession) {
+        geneSelectorController.restoreGeneSelectorFromPrevSession(prevSession);
+    }
+
+    public void restoreIsoformViewFromPrevSession(JSONObject prevSession) {
+        isoformPlotController.restoreIsoformPlotFromPrevSession(prevSession);
     }
 
     // Export figures
@@ -470,8 +495,8 @@ public class ControllerMediator implements Mediator{
         imageExporterController.setSettingsToDefault();
     }
 
-    public void restoreImageExporterSettingsFromJSON(JSONObject settings) {
-        imageExporterController.restoreSettingsFromJSON(settings);
+    public void restoreImageExporterFromPrevSession(JSONObject prevSession) {
+        imageExporterController.restoreImageExporterFromPrevSession(prevSession);
     }
 
     // Getters
@@ -507,8 +532,12 @@ public class ControllerMediator implements Mediator{
         return geneSelectorController.getShownGenes();
     }
 
-    public boolean notFilteringGenes() {
-        return geneFiltererController.notFilteringGenes();
+    public Collection<String> getShownGeneIDs() {
+        return geneSelectorController.getShownGeneIDs();
+    }
+
+    public GeneFiltererController.FilterOption getOptionFilteringBy() {
+        return geneFiltererController.getOptionFilteringBy();
     }
 
     public boolean isFilteringByDominantIsoformSwitching() {
@@ -529,6 +558,14 @@ public class ControllerMediator implements Mediator{
 
     public double getDISMinPercentExpressed() {
         return geneFiltererController.getDISMinPercentExpressed();
+    }
+
+    public Collection<String> getDESelectedCategories() {
+        return geneFiltererController.getDESelectedCategories();
+    }
+
+    public Collection<String> getCSESelectedCategories() {
+        return geneFiltererController.getCSESelectedCategories();
     }
 
     public double getDEMinFoldChange() {
@@ -621,6 +658,14 @@ public class ControllerMediator implements Mediator{
 
     public int getNumCellsToPlot() {
         return clusterViewController.getNumCellsToPlot();
+    }
+
+    public Collection<Integer> getSelectedCellNumbers() {
+        return clusterViewController.getSelectedCellNumbers();
+    }
+
+    public Collection<String> getSelectedCellCategoryNames() {
+        return clusterViewController.getSelectedCellCategoryNames();
     }
 
     public List<Cluster> getClusters(boolean onlySelected) {

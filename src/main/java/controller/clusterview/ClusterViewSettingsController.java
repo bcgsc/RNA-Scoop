@@ -1,8 +1,6 @@
 package controller.clusterview;
 
-import controller.ConsoleController;
 import controller.PopUpController;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -62,14 +60,14 @@ public class ClusterViewSettingsController extends PopUpController {
         ControllerMediator.getInstance().setTSNESettingsToDefault();
     }
 
-    public void restoreClusterViewSettingsFromJSON(JSONObject settings) {
-        if (settings.getBoolean(SessionMaker.USING_UMAP_FOR_EMBEDDING_KEY))
+    public void restoreClusterViewSettingsFromPrevSession(JSONObject prevSession) {
+        if (prevSession.getBoolean(SessionMaker.USING_UMAP_FOR_EMBEDDING_KEY))
             useUMAPSettings();
         else
             useTSNESettings();
 
-        ControllerMediator.getInstance().restoreUMAPSettingsFromJSON(settings);
-        ControllerMediator.getInstance().restoreTSNESettingsFromJSON(settings);
+        ControllerMediator.getInstance().restoreUMAPSettingsFromPrevSession(prevSession);
+        ControllerMediator.getInstance().restoreTSNESettingsFromPrevSession(prevSession);
     }
 
     @FXML

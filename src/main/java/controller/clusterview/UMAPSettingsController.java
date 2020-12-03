@@ -56,9 +56,9 @@ public class UMAPSettingsController implements Initializable {
         saveSettings();
     }
 
-    public void restoreSettingsFromJSON(JSONObject settings) {
-        setTempMinDist(settings.getFloat(SessionMaker.MIN_DIST_KEY));
-        setTempNearestNeighbors(settings.getInt(SessionMaker.NEAREST_NEIGHBORS_KEY));
+    public void restoreSettingsFromPrevSession(JSONObject prevSession) {
+        setTempMinDist(prevSession.getFloat(SessionMaker.MIN_DIST_KEY));
+        setTempNearestNeighbors(prevSession.getInt(SessionMaker.NEAREST_NEIGHBORS_KEY));
         saveSettings();
     }
 

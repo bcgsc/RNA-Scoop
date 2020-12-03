@@ -1,6 +1,5 @@
 package persistance;
 
-import controller.GeneFiltererController;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -9,7 +8,17 @@ import mediator.ControllerMediator;
 import java.util.ArrayList;
 
 public class SessionMaker {
-    public static final String PATH_KEY = "path";
+    public static final String GTF_PATH_KEY = "gtf";
+    public static final String MATRIX_PATH_KEY = "matrix";
+    public static final String ISOFORM_LABELS_PATH_KEY = "isoform_ids";
+    public static final String CELL_LABELS_PATH_KEY = "cell_labels";
+    public static final String EMBEDDING_PATH_KEY = "embedding";
+    public static final String CELL_PLOT_CLEARED_KEY = "cell_plot_cleared";
+    public static final String CELLS_SELECTED_KEY = "cells_selected";
+    public static final String CELL_CATEGORIES_SELECTED_KEY = "cell_categories_selected";
+    public static final String LABEL_SET_IN_USE_KEY = "label_set_in_use";
+    public static final String GENES_SHOWN_KEY = "genes_shown";
+    public static final String ISOFORMS_SELECTED_KEY = "isoforms_selected";
     public static final String ISOFORM_PLOT_OPEN_KEY = "isoform_open";
     public static final String CLUSTER_VIEW_OPEN_KEY = "cluster_view_open";
     public static final String CONSOLE_OPEN_KEY = "console_open";
@@ -32,11 +41,14 @@ public class SessionMaker {
     public static final String MID_TPM_COLOR_KEY = "mid_tpm_color_key";
     public static final String MAX_TPM_COLOR_KEY = "max_tpm_color_key";
     public static final String TPM_SCALE_KEY = "tpm_scale_key";
+    public static final String OPTION_FILTERING_BY_KEY = "option_filtering_by";
     public static final String DIS_MIN_TPM_KEY = "dis_min_tpm_key";
     public static final String DIS_MIN_PERCENT_EXPRESSED_KEY = "dis_min_percent_expressed_key";
+    public static final String DE_SELECTED_CATEGORIES_KEY = "de_selected_categories_key";
     public static final String DE_MIN_FOLD_CHANGE_KEY = "de_min_fold_change_key";
     public static final String DE_MIN_TPM_KEY = "de_min_tpm_key";
     public static final String DE_MIN_PERCENT_EXPRESSED_KEY = "de_min_percent_expressed_key";
+    public static final String CSE_SELECTED_CATEGORIES_KEY = "cse_selected_categories_key";
     public static final String CSE_MIN_TPM_KEY = "cse_min_tpm_key";
     public static final String CSE_MIN_PERCENT_EXPRESSED_KEY = "cse_min_percent_expressed_key";
     public static final String CSE_MAX_TPM_KEY = "cse_max_tpm_key";
@@ -59,9 +71,23 @@ public class SessionMaker {
      *   - the current isoform plot settings
      *   - the console messages
      */
-    public static JSONObject makeSession() {
+    public static JSONObject makeSession(String pathToDir) {
+        ControllerMediator.getInstance().exportEmbeddingToFile(pathToDir);
+        ControllerMediator.getInstance().exportLabelSetsToFiles(pathToDir);
         JSONObject session = new JSONObject();
-        session.put(PATH_KEY, ControllerMediator.getInstance().getCurrentLoadedPath());
+        session.put(GTF_PATH_KEY, CurrentSession.getGTFPath());
+        session.put(MATRIX_PATH_KEY, CurrentSession.getMatrixPath());
+        session.put(ISOFORM_LABELS_PATH_KEY, CurrentSession.getIsoformIDsPath());
+        session.put(CELL_LABELS_PATH_KEY, CurrentSession.getLabelSetPaths());
+        session.put(EMBEDDING_PATH_KEY, CurrentSession.getEmbeddingPath());
+        session.put(CELL_PLOT_CLEARED_KEY, ControllerMediator.getInstance().isCellPlotCleared());
+        session.put(CELLS_SELECTED_KEY, ControllerMediator.getInstance().getSelectedCellNumbers());
+        session.put(CELL_CATEGORIES_SELECTED_KEY, ControllerMediator.getInstance().getSelectedCellCategoryNames());
+        session.put(CELLS_SELECTED_KEY, ControllerMediator.getInstance().getSelectedCellNumbers());
+        session.put(CELL_CATEGORIES_SELECTED_KEY, ControllerMediator.getInstance().getSelectedCellCategoryNames());
+        session.put(LABEL_SET_IN_USE_KEY, ControllerMediator.getInstance().getLabelSetInUse().getName());
+        session.put(GENES_SHOWN_KEY, ControllerMediator.getInstance().getShownGeneIDs());
+        session.put(ISOFORMS_SELECTED_KEY, ControllerMediator.getInstance().getSelectedIsoformIDs());
         session.put(ISOFORM_PLOT_OPEN_KEY, ControllerMediator.getInstance().isIsoformPlotOpen());
         session.put(CLUSTER_VIEW_OPEN_KEY, ControllerMediator.getInstance().isClusterViewOpen());
         session.put(CONSOLE_OPEN_KEY, ControllerMediator.getInstance().isConsoleOpen());
@@ -84,11 +110,14 @@ public class SessionMaker {
         session.put(MID_TPM_COLOR_KEY, ControllerMediator.getInstance().getGradientMidColorCode());
         session.put(MAX_TPM_COLOR_KEY, ControllerMediator.getInstance().getGradientMaxColorCode());
         session.put(TPM_SCALE_KEY, ControllerMediator.getInstance().getScaleOptionInUse());
+        session.put(OPTION_FILTERING_BY_KEY, ControllerMediator.getInstance().getOptionFilteringBy());
         session.put(DIS_MIN_TPM_KEY, ControllerMediator.getInstance().getDISMinTPM());
         session.put(DIS_MIN_PERCENT_EXPRESSED_KEY, ControllerMediator.getInstance().getDISMinPercentExpressed());
+        session.put(DE_SELECTED_CATEGORIES_KEY, ControllerMediator.getInstance().getDESelectedCategories());
         session.put(DE_MIN_FOLD_CHANGE_KEY, ControllerMediator.getInstance().getDEMinFoldChange());
         session.put(DE_MIN_TPM_KEY, ControllerMediator.getInstance().getDEMinTPM());
         session.put(DE_MIN_PERCENT_EXPRESSED_KEY, ControllerMediator.getInstance().getDEMinPercentExpressed());
+        session.put(CSE_SELECTED_CATEGORIES_KEY, ControllerMediator.getInstance().getCSESelectedCategories());
         session.put(CSE_MIN_TPM_KEY, ControllerMediator.getInstance().getCSEMinTPM());
         session.put(CSE_MIN_PERCENT_EXPRESSED_KEY, ControllerMediator.getInstance().getCSEMinPercentExpressed());
         session.put(CSE_MAX_TPM_KEY, ControllerMediator.getInstance().getCSEMaxTPM());

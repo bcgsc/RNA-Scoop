@@ -14,33 +14,34 @@ import javafx.scene.text.Text;
 import labelset.Cluster;
 import mediator.ControllerMediator;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class CategoryLabelsLegend {
-    public static final double LIGHT_COLOR_LUMINENCE_LIMIT = 0.69;
+    public static final double LIGHT_COLOR_LUMINANCE_LIMIT = 0.69;
     public static final int LEGEND_CIRCLE_LABEL_SPACING = 2;
 
     private Pane legendGraphic;
     private SelectionModel selectionModel;
+    private Map<String, Category> categories;
 
     public CategoryLabelsLegend(boolean includeLabels, boolean selectable, boolean onlySelected, boolean includeBackground, boolean vertical,
                                 double dotSize, double circleCanvasWidth, double circleCanvasHeight, double elementSpacing) {
-        if (selectable)
-            selectionModel = new SelectionModel();
-
         if (vertical)
             legendGraphic = new VBox();
         else
             legendGraphic = new HBox();
+
+        if (selectable)
+            selectionModel = new SelectionModel();
+
+        categories = new HashMap<>();
 
         List<Cluster> clusters = ControllerMediator.getInstance().getClusters(onlySelected);
 
         Iterator<Cluster> iterator = clusters.iterator();
         while(iterator.hasNext()) {
             Cluster cluster= iterator.next();
-            LegendElement legendElement = new LegendElement(includeLabels, selectable, dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
+            Category legendElement = new Category(includeLabels, selectable, dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
 
             if (iterator.hasNext() && vertical)
                 VBox.setMargin(legendElement, new Insets(0, 0, elementSpacing, 0));
@@ -48,14 +49,28 @@ public class CategoryLabelsLegend {
                 HBox.setMargin(legendElement, new Insets(0,  elementSpacing, 0, 0));
 
             legendGraphic.getChildren().add(legendElement);
+            categories.put(cluster.getName(), legendElement);
         }
         if (includeBackground)
             addBackground();
 
     }
 
-    public void clearSelectedLegendElements() {
-        selectionModel.clearSansNotifyingTSNE();
+    public void clearSelectedCategories() {
+        selectionModel.clearSansNotifyingClusterView();
+    }
+
+    public void selectCategoryWithGivenName(String name, boolean unselectRest, boolean updateIsoformView) {
+        selectionModel.add(categories.get(name), unselectRest, updateIsoformView);
+    }
+
+    public Collection<String> getSelectedCategoryNames() {
+        Collection<String> selectedCategoryNames = new HashSet<>();
+        for (Map.Entry<String, Category> entry : categories.entrySet()) {
+            if (selectionModel.isSelected(entry.getValue()))
+                selectedCategoryNames.add(entry.getKey());
+        }
+        return selectedCategoryNames;
     }
 
     public Pane getLegendGraphic() {
@@ -71,13 +86,13 @@ public class CategoryLabelsLegend {
                                "-fx-border-color: transparent transparent rgba(173, 173, 173, 0.65) rgba(173, 173, 173, 0.65);");
     }
 
-    private class LegendElement extends HBox{
+    private class Category extends HBox{
         private Cluster cluster;
         private Canvas legendCircle;
         private Text label;
 
-        public LegendElement(boolean includeLabels, boolean selectable, double dotSize, double circleCanvasWidth,
-                             double circleCanvasHeight, Cluster cluster){
+        public Category(boolean includeLabels, boolean selectable, double dotSize, double circleCanvasWidth,
+                        double circleCanvasHeight, Cluster cluster){
             this.cluster = cluster;
             legendCircle = createLegendCircle(selectable, dotSize, circleCanvasWidth, circleCanvasHeight);
             getChildren().add(legendCircle);
@@ -96,14 +111,14 @@ public class CategoryLabelsLegend {
                                           double circleCanvasHeight) {
             Canvas legendCircle = drawLegendCircleShape(dotSize, circleCanvasWidth, circleCanvasHeight);
             if (selectable)
-                legendCircle.setOnMouseClicked(new LegendElementMouseHandler(this));
+                legendCircle.setOnMouseClicked(new CategoryMouseHandler(this));
             return legendCircle;
         }
 
         private Text createLabel(boolean selectable) {
             Text label = new Text(cluster.getName());
             if (selectable)
-                label.setOnMouseClicked(new LegendElementMouseHandler(this));
+                label.setOnMouseClicked(new CategoryMouseHandler(this));
             return label;
         }
 
@@ -130,13 +145,13 @@ public class CategoryLabelsLegend {
         }
 
         private Paint getLegendCircleLabelColor(Color circleColor) {
-            if (getLuminence(circleColor) >= LIGHT_COLOR_LUMINENCE_LIMIT)
+            if (getLuminance(circleColor) >= LIGHT_COLOR_LUMINANCE_LIMIT)
                 return Color.BLACK;
             else
                 return Color.WHITE;
         }
 
-        private double getLuminence(Color color) {
+        private double getLuminance(Color color) {
             double r = color.getRed();
             double g = color.getGreen();
             double b = color.getBlue();
@@ -150,54 +165,58 @@ public class CategoryLabelsLegend {
     }
 
     private class SelectionModel {
-        private HashSet<LegendElement> selected;
+        private HashSet<Category> selected;
 
         public SelectionModel() {
             selected = new HashSet<>();
         }
 
-        public void add(LegendElement legendElement, boolean unselectRest) {
+        public void add(Category category, boolean unselectRest, boolean updateIsoformView) {
             boolean realUnselectRest = unselectRest || selected.isEmpty(); // shouldn't unselect anything, if nothing to unselect
             if (realUnselectRest)
-                clearSansNotifyingTSNE();
+                clearSansNotifyingClusterView();
             ControllerMediator.getInstance().deselectAllIsoforms();
-            ControllerMediator.getInstance().selectCluster(legendElement.getCluster(), realUnselectRest);
-            legendElement.setStyle("-fx-effect: dropshadow(one-pass-box, #ffafff, 7, 7, 0, 0);");
-            selected.add(legendElement);
+            ControllerMediator.getInstance().selectCluster(category.getCluster(), realUnselectRest, updateIsoformView);
+            category.setStyle("-fx-effect: dropshadow(one-pass-box, #ffafff, 7, 7, 0, 0);");
+            selected.add(category);
         }
 
-        public void remove(LegendElement legendElement) {
-            if (selected.contains(legendElement)) {
-                removeSansNotifyingTSNE(legendElement);
-                ControllerMediator.getInstance().unselectCluster(legendElement.getCluster());
+        public void remove(Category category) {
+            if (selected.contains(category)) {
+                removeSansNotifyingClusterView(category);
+                ControllerMediator.getInstance().unselectCluster(category.getCluster());
             }
         }
 
-        public void clearSansNotifyingTSNE() {
+        public void clearSansNotifyingClusterView() {
             while (!selected.isEmpty())
-                removeSansNotifyingTSNE(selected.iterator().next());
+                removeSansNotifyingClusterView(selected.iterator().next());
         }
 
-        private void removeSansNotifyingTSNE(LegendElement legendElement) {
-            legendElement.setStyle("-fx-effect: null");
-            selected.remove(legendElement);
+        public boolean isSelected(Category category) {
+            return selected.contains(category);
+        }
+
+        private void removeSansNotifyingClusterView(Category category) {
+            category.setStyle("-fx-effect: null");
+            selected.remove(category);
         }
 
     }
 
-    private class LegendElementMouseHandler implements EventHandler<MouseEvent> {
-        LegendElement legendElement;
+    private class CategoryMouseHandler implements EventHandler<MouseEvent> {
+        Category category;
 
-        public LegendElementMouseHandler(LegendElement legendElement) {
-            this.legendElement = legendElement;
+        public CategoryMouseHandler(Category category) {
+            this.category = category;
         }
 
         @Override
         public void handle(MouseEvent event) {
             if (event.isControlDown())
-                selectionModel.remove(legendElement);
+                selectionModel.remove(category);
             else
-                selectionModel.add(legendElement, !event.isShiftDown());
+                selectionModel.add(category, !event.isShiftDown(), true);
         }
     }
 }

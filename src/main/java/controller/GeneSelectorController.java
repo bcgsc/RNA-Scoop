@@ -3,7 +3,6 @@ package controller;
 import annotation.Gene;
 import annotation.GeneMaxFoldChange;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -20,12 +19,15 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
+import org.json.JSONObject;
 import parser.Parser;
+import persistance.SessionMaker;
 import ui.Main;
 
 import java.io.File;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static javafx.application.Platform.runLater;
 
@@ -115,8 +117,20 @@ public class GeneSelectorController extends PopUpController implements Initializ
         shownGenes.clear();
     }
 
+    /**
+     * Only restores shown genes, doesn't filter genes table if was filtered in previous session
+     */
+    public void restoreGeneSelectorFromPrevSession(JSONObject prevSession) {
+        Collection<String> genesShown = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.GENES_SHOWN_KEY).toList();
+        addGenesWithGivenIDsAndNames(genesShown);
+    }
+
     public Collection<Gene> getShownGenes() {
         return shownGenes;
+    }
+
+    public Collection<String> getShownGeneIDs() {
+        return shownGenes.stream().map(Gene::getId).collect(Collectors.toList());
     }
 
     /**
@@ -203,13 +217,17 @@ public class GeneSelectorController extends PopUpController implements Initializ
         clearShownGenes();
         if (file != null) {
             Set<String> genesToSelect = Parser.loadGeneSelectionFile(file);
-            List<Gene> genesToAdd = new ArrayList<>();
-            for (Gene gene : genes) {
-                if (genesToSelect.contains(gene.getId()) || genesToSelect.contains(gene.getName()))
-                    genesToAdd.add(gene);
-            }
-            addGenesToShownGenes(genesToAdd);
+            addGenesWithGivenIDsAndNames(genesToSelect);
         }
+    }
+
+    private void addGenesWithGivenIDsAndNames(Collection<String> genesToAddIDAndNames) {
+        List<Gene> genesToAdd = new ArrayList<>();
+        for (Gene gene : genes) {
+            if (genesToAddIDAndNames.contains(gene.getId()) || genesToAddIDAndNames.contains(gene.getName()))
+                genesToAdd.add(gene);
+        }
+        addGenesToShownGenes(genesToAdd);
     }
 
     private void addGenesToShownGenes(List<Gene> genesToAdd) {

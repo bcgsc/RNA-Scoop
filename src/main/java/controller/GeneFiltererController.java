@@ -25,6 +25,7 @@ import ui.Main;
 
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class GeneFiltererController extends PopUpController implements Initializable, InteractiveElementController{
     private static final double GENE_FILTERER_WIDTH = 550;
@@ -199,26 +200,42 @@ public class GeneFiltererController extends PopUpController implements Initializ
     }
 
 
-    public void restoreGeneFiltererFromJSON(JSONObject settings) {
-        restoreDISParamsFromJSON(settings);
-        restoreDEParamsFromJSON(settings);
-        restoreCSEParamsFromJSON(settings);
+    public void restoreGeneFiltererFromPrevSession(JSONObject prevSession) {
+        restoreDISParamsFromPrevSession(prevSession);
+        restoreDEParamsFromPrevSession(prevSession);
+        restoreCSEParamsFromPrevSession(prevSession);
+        filterGenesAsInPreviousSession(prevSession);
     }
 
-    public boolean notFilteringGenes() {
-        return noneFilterOption.isSelected();
+    public FilterOption getOptionFilteringBy() {
+        if (optionFilteringBy == noneFilterOption)
+            return FilterOption.NONE;
+        else if (optionFilteringBy == disFilterOption)
+            return FilterOption.DIS;
+        else if (optionFilteringBy == deFilterOption)
+            return FilterOption.DE;
+        else
+            return FilterOption.CSE;
+    }
+
+    public Collection<String> getDESelectedCategories() {
+        return deCategories.getCheckModel().getCheckedItems().stream().map(Cluster::getName).collect(Collectors.toList());
+    }
+
+    public Collection<String> getCSESelectedCategories() {
+        return cseCategories.getCheckModel().getCheckedItems().stream().map(Cluster::getName).collect(Collectors.toList());
     }
 
     public boolean isFilteringByDominantIsoformSwitching() {
-        return disFilterOption.isSelected();
+        return disFilterOption == optionFilteringBy;
     }
 
     public boolean isFilteringByDifferentialExpression() {
-        return deFilterOption.isSelected();
+        return deFilterOption == optionFilteringBy;
     }
 
     public boolean isFilteringByCategorySpecificExpression() {
-        return cseFilterOption.isSelected();
+        return cseFilterOption == optionFilteringBy;
     }
 
     public double getDISMinTPM() {
@@ -343,37 +360,77 @@ public class GeneFiltererController extends PopUpController implements Initializ
         return true;
     }
 
-    private void restoreDISParamsFromJSON(JSONObject settings) {
-        disMinTPM.setValue(settings.getDouble(SessionMaker.DIS_MIN_TPM_KEY));
+    private void restoreDISParamsFromPrevSession(JSONObject prevSession) {
+        disMinTPM.setValue(prevSession.getDouble(SessionMaker.DIS_MIN_TPM_KEY));
         disMinTPMField.setText(Double.toString(disMinTPM.doubleValue()));
 
-        disMinPercentExpressed.setValue(settings.getDouble(SessionMaker.DIS_MIN_PERCENT_EXPRESSED_KEY));
+        disMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.DIS_MIN_PERCENT_EXPRESSED_KEY));
         disMinPercentExpressedField.setText(Double.toString(disMinPercentExpressed.doubleValue()));
     }
 
-    private void restoreDEParamsFromJSON(JSONObject settings) {
-        deMinFoldChange.setValue(settings.getDouble(SessionMaker.DE_MIN_FOLD_CHANGE_KEY));
+    private void restoreDEParamsFromPrevSession(JSONObject prevSession) {
+        Collection<String> catagoriesToSelect = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.DE_SELECTED_CATEGORIES_KEY).toList();
+
+        for (Cluster category : deCategories.getItems()) {
+            for (String categoryToSelect : catagoriesToSelect) {
+                if (category.getName().equals(categoryToSelect)) {
+                    deCategories.getCheckModel().check(category);
+                    break;
+                }
+            }
+        }
+
+        deMinFoldChange.setValue(prevSession.getDouble(SessionMaker.DE_MIN_FOLD_CHANGE_KEY));
         deMinFoldChangeField.setText(Double.toString(deMinFoldChange.doubleValue()));
 
-        deMinTPM.setValue(settings.getDouble(SessionMaker.DE_MIN_TPM_KEY));
+        deMinTPM.setValue(prevSession.getDouble(SessionMaker.DE_MIN_TPM_KEY));
         deMinTPMField.setText(Double.toString(deMinTPM.doubleValue()));
 
-        deMinPercentExpressed.setValue(settings.getDouble(SessionMaker.DE_MIN_PERCENT_EXPRESSED_KEY));
+        deMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.DE_MIN_PERCENT_EXPRESSED_KEY));
         deMinPercentExpressedField.setText(Double.toString(deMinPercentExpressed.doubleValue()));
     }
 
-    private void restoreCSEParamsFromJSON(JSONObject settings) {
-        cseMinTPM.setValue(settings.getDouble(SessionMaker.CSE_MIN_TPM_KEY));
+    private void restoreCSEParamsFromPrevSession(JSONObject prevSession) {
+        Collection<String> catagoriesToSelect = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.CSE_SELECTED_CATEGORIES_KEY).toList();
+        for (Cluster category : cseCategories.getItems()) {
+            for (String categoryToSelect : catagoriesToSelect) {
+                if (category.getName().equals(categoryToSelect)) {
+                    cseCategories.getCheckModel().check(category);
+                    break;
+                }
+            }
+        }
+
+        cseMinTPM.setValue(prevSession.getDouble(SessionMaker.CSE_MIN_TPM_KEY));
         cseMinTPMField.setText(Double.toString(cseMinTPM.doubleValue()));
 
-        cseMinPercentExpressed.setValue(settings.getDouble(SessionMaker.CSE_MIN_PERCENT_EXPRESSED_KEY));
+        cseMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.CSE_MIN_PERCENT_EXPRESSED_KEY));
         cseMinPercentExpressedField.setText(Double.toString(cseMinPercentExpressed.doubleValue()));
 
-        cseMaxTPM.setValue(settings.getDouble(SessionMaker.CSE_MAX_TPM_KEY));
+        cseMaxTPM.setValue(prevSession.getDouble(SessionMaker.CSE_MAX_TPM_KEY));
         cseMaxTPMField.setText(Double.toString(cseMaxTPM.doubleValue()));
 
-        cseMaxPercentExpressed.setValue(settings.getDouble(SessionMaker.CSE_MAX_PERCENT_EXPRESSED_KEY));
+        cseMaxPercentExpressed.setValue(prevSession.getDouble(SessionMaker.CSE_MAX_PERCENT_EXPRESSED_KEY));
         cseMaxPercentExpressedField.setText(Double.toString(cseMaxPercentExpressed.doubleValue()));
+    }
+    private void filterGenesAsInPreviousSession(JSONObject prevSession) {
+        String optionToFilterBy = prevSession.getString(SessionMaker.OPTION_FILTERING_BY_KEY);
+        if (optionToFilterBy.equals(FilterOption.NONE.toString())) {
+            noneFilterOption.setSelected(true);
+            optionFilteringBy = noneFilterOption;
+        } else if (optionToFilterBy.equals(FilterOption.DIS.toString())) {
+            disFilterOption.setSelected(true);
+            optionFilteringBy = disFilterOption;
+        } else if (optionToFilterBy.equals(FilterOption.DE.toString())) {
+            deFilterOption.setSelected(true);
+            optionFilteringBy = deFilterOption;
+        } else {
+            cseFilterOption.setSelected(true);
+            optionFilteringBy = cseFilterOption;
+        }
+        ControllerMediator.getInstance().addConsoleMessage("Filtering genes as did in previous session...");
+        ControllerMediator.getInstance().updateGenesTableFilteringMethod();
+        ControllerMediator.getInstance().addConsoleMessage("Finished filtering genes");
     }
 
     private void enableAssociatedFunctionality() {
@@ -491,6 +548,9 @@ public class GeneFiltererController extends PopUpController implements Initializ
         window.setScene(new Scene(geneFilterer, GENE_FILTERER_WIDTH, GENE_FILTERER_HEIGHT));
     }
 
+    public enum FilterOption {
+        NONE, DIS, DE, CSE
+    }
 
     private class FilterGenesThread implements Runnable {
 

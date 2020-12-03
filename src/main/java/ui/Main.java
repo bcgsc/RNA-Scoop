@@ -1,6 +1,5 @@
 package ui;
 
-import com.sun.javafx.geom.transform.GeneralTransform3D;
 import controller.*;
 import controller.clusterview.ClusterViewController;
 import controller.clusterview.ClusterViewSettingsController;
@@ -14,9 +13,6 @@ import javafx.scene.Parent;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
-import persistance.SessionIO;
-
-import java.io.IOException;
 
 
 public class Main extends Application {
@@ -62,15 +58,6 @@ public class Main extends Application {
         ControllerMediator.getInstance().initializeMain(console, isoformPlot, clusterView);
         ControllerMediator.getInstance().initializeClusterViewSettings(tSNESettings, umapSettings);
         setUpLabelSetManagerPopUp(labelSetManager, addLabelSetView);
-        loadPreviousSession();
-    }
-
-    /**
-     * When program ends, current session is saved
-     */
-    @Override
-    public void stop() throws Exception {
-        SessionIO.saveSession();
     }
 
     /**
@@ -104,18 +91,6 @@ public class Main extends Application {
         LabelSetManagerWindow labelSetManagerWindow = new LabelSetManagerWindow(labelSetManager, addLabelSetView);
         ControllerMediator.getInstance().initializeAddLabelSetView(labelSetManagerWindow);
         ControllerMediator.getInstance().initializeLabelSetManager(labelSetManagerWindow);
-    }
-
-    /**
-     * Attempts to load a saved previous session; if can't the default view is displayed
-     */
-    private void loadPreviousSession() {
-        try {
-            SessionIO.loadSession();
-        } catch (IOException e) {
-            System.err.println("An error occurred while loading a saved session");
-            e.printStackTrace();
-        }
     }
 
     public static void main(String[] args) {
