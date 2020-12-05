@@ -25,7 +25,6 @@ public class ConsoleController implements Initializable{
     @FXML private ScrollPane console;
 
     //List of messages that have been added to the console
-    private ArrayList<Message> consoleMessages;
     private boolean lastMessageIsError;
     private boolean consoleIsCleared;
 
@@ -34,7 +33,6 @@ public class ConsoleController implements Initializable{
         consoleTextFlow.setStyle("-fx-line-spacing: 0.85em;");
         lastMessageIsError = false;
         consoleIsCleared = true;
-        consoleMessages = new ArrayList<>();
         addConsoleMessage("Welcome to RNA-Scoop!");
     }
 
@@ -44,7 +42,6 @@ public class ConsoleController implements Initializable{
         scrollToBottom();
         lastMessageIsError = false;
         consoleIsCleared = false;
-        consoleMessages.add(new Message(message, MessageType.NORMAL));
     }
 
     public void addConsoleErrorMessage(String message) {
@@ -53,7 +50,6 @@ public class ConsoleController implements Initializable{
         scrollToBottom();
         lastMessageIsError = true;
         consoleIsCleared = false;
-        consoleMessages.add(new Message(message, MessageType.ERROR));
     }
 
     /**
@@ -68,7 +64,6 @@ public class ConsoleController implements Initializable{
         scrollToBottom();
         lastMessageIsError = true;
         consoleIsCleared = false;
-        consoleMessages.add(new Message(message, MessageType.ERROR));
         e.printStackTrace();
     }
 
@@ -76,19 +71,10 @@ public class ConsoleController implements Initializable{
         consoleTextFlow.getChildren().clear();
         lastMessageIsError = false;
         consoleIsCleared = true;
-        consoleMessages.clear();
     }
 
     public Node getConsole() {
         return console;
-    }
-
-    public ArrayList<Message> getConsoleMessages() {
-        return consoleMessages;
-    }
-
-    public void restoreConsoleFromPrevSession(JSONObject prevSession) {
-        restoreConsoleMessagesFromPrevSession(prevSession);
     }
 
     /**
@@ -136,50 +122,5 @@ public class ConsoleController implements Initializable{
         console.layout();
 
         console.setVvalue(1);
-    }
-
-    /**
-     * Restore all console messages from a previous session
-     */
-    private void restoreConsoleMessagesFromPrevSession(JSONObject prevSession) {
-        clearConsole();
-        JSONArray messages = prevSession.getJSONArray(SessionMaker.CONSOLE_MESSAGES_KEY);
-        for (Object message : messages) {
-            JSONObject messageJSON = (JSONObject) message;
-            String messageType = messageJSON.getString(SessionMaker.MESSAGE_IS_ERROR_KEY);
-            String messageText = messageJSON.getString(SessionMaker.MESSAGE_TEXT_KEY);
-            if (messageType.equals(MessageType.ERROR.toString()))
-                addConsoleErrorMessage(messageText);
-            else
-                addConsoleMessage(messageText);
-        }
-    }
-
-    /**
-     * Messages that have been added to the console
-     */
-    public class Message {
-        String messageText;
-        MessageType messageType;
-
-        private Message(String messageText, MessageType messageType) {
-            this.messageText = messageText;
-            this.messageType = messageType;
-        }
-
-        public String getMessageText() {
-            return messageText;
-        }
-
-        public MessageType getMessageType() {
-            return messageType;
-        }
-    }
-
-    /**
-     * Types of messages that can be added to the console
-     */
-    public enum MessageType {
-        NORMAL, ERROR, WARNING
     }
 }

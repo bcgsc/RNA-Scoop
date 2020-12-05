@@ -11,6 +11,7 @@ import mediator.ControllerMediator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import persistance.CurrentSession;
+import persistance.SessionIO;
 import persistance.SessionMaker;
 
 import java.io.*;
@@ -32,7 +33,7 @@ public class Parser {
      * GTF and cell plot info. Loads both from it
      */
     public static boolean loadJSONFile(String pathToPaths)  {
-        runLater(Parser::clearProgram);
+        runLater(SessionIO::clearCurrentSessionData);
         try {
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + pathToPaths));
             Path jsonPath = Paths.get(pathToPaths);
@@ -144,20 +145,6 @@ public class Parser {
             return newPath;
         }
         return f;
-    }
-
-    /**
-     * Clears gene selector, cell plot, clears t-SNE plot data, and label sets
-     * (basically clears everything that should be cleared when loading a new dataset)
-     */
-    private static void clearProgram() {
-        ControllerMediator.getInstance().clearGeneSelector();
-        ControllerMediator.getInstance().clearCellPlot();
-        ControllerMediator.getInstance().setIsoformIndexMap(null);
-        ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
-        ControllerMediator.getInstance().setEmbedding(null);
-        ControllerMediator.getInstance().clearLabelSets();
-        CurrentSession.clearSavedPaths();
     }
 
     private static void clearLoadedData() {
@@ -394,10 +381,7 @@ public class Parser {
 
             ControllerMediator.getInstance().setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
             ControllerMediator.getInstance().setIsoformIndexMap(isoformIndexMap);
-            if (!isFxApplicationThread())
-                Platform.runLater(() -> ControllerMediator.getInstance().addLabelSets(labelSets));
-            else
-                ControllerMediator.getInstance().addLabelSets(labelSets);
+            ControllerMediator.getInstance().addLabelSets(labelSets);
             return labelSetPathMap;
         }
 

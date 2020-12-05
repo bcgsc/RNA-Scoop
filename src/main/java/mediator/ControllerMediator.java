@@ -119,10 +119,6 @@ public class ControllerMediator implements Mediator{
         aboutController.display();
     }
 
-    public void clearPathComboBox() {
-        mainController.clearPathComboBox();
-    }
-
     // Console Functions
     public void addConsoleErrorMessage(String message) {
         consoleController.addConsoleErrorMessage(message);
@@ -445,10 +441,6 @@ public class ControllerMediator implements Mediator{
         mainController.restoreMainFromPrevSession(prevSession);
     }
 
-    public void restoreConsoleFromPrevSession(JSONObject prevSession) {
-        consoleController.restoreConsoleFromPrevSession(prevSession);
-    }
-
     public void restoreTPMGradientFromPrevSession(JSONObject prevSession) {
         tpmGradientAdjusterController.restoreTPMGradientFromPrevSession(prevSession);
     }
@@ -518,14 +510,6 @@ public class ControllerMediator implements Mediator{
 
     public Node getIsoformPlot() {
         return isoformPlotController.getIsoformPlot();
-    }
-
-    public String getCurrentLoadedPath() {
-        return mainController.getCurrentLoadedPath();
-    }
-
-    public ArrayList<ConsoleController.Message> getConsoleMessages() {
-        return consoleController.getConsoleMessages();
     }
 
     public Collection<Gene> getShownGenes() {
@@ -807,6 +791,10 @@ public class ControllerMediator implements Mediator{
 
     public void disableClusterView() {
         clusterViewController.disable();
+    }
+
+    public void disableClusterView(boolean disableCellSelection) {
+        clusterViewController.disable(disableCellSelection);
     }
 
     public void disableClusterViewSettings() {

@@ -1,6 +1,8 @@
 package persistance;
 
+import controller.ConsoleController;
 import controller.clusterview.ClusterViewController;
+import javafx.application.Platform;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
 import parser.Parser;
@@ -40,13 +42,20 @@ public class SessionIO {
     public static void loadSessionAtPath(String path) throws IOException {
         if (new File(path + File.separator + SESSION_FILE_NAME).exists()) {
             disableAssociatedFunctionality();
+            clearCurrentSessionData();
+            ControllerMediator.getInstance().addConsoleMessage("Loading session...");
             byte[] encoded = Files.readAllBytes(Paths.get(path + File.separator + SESSION_FILE_NAME));
             String prevSessionString = new String(encoded, Charset.defaultCharset());
             JSONObject prevSession = new JSONObject(prevSessionString);
-            clearCurrentSessionData();
-            loadPreviousSessionData(prevSession);
-            restoreSession(prevSession);
-            enableAssociatedFunctionality();
+            try {
+                Thread sessionLoader = new Thread(new SessionLoader(prevSession));
+                sessionLoader.start();
+            } catch (Exception e) {
+                enableAssociatedFunctionality();
+                ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
+            }
+        } else {
+            ControllerMediator.getInstance().addConsoleErrorMessage("Could not find file with name " + SESSION_FILE_NAME + " in selected directory");
         }
     }
 
@@ -57,41 +66,18 @@ public class SessionIO {
     public static void clearCurrentSessionData() {
         ControllerMediator.getInstance().clearGeneSelector();
         ControllerMediator.getInstance().clearCellPlot();
-        ControllerMediator.getInstance().clearConsole();
         ControllerMediator.getInstance().clearLabelSets();
-        ControllerMediator.getInstance().clearPathComboBox();
         ControllerMediator.getInstance().setIsoformIndexMap(null);
         ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
         ControllerMediator.getInstance().setEmbedding(null);
-    }
-
-    private static void loadPreviousSessionData(JSONObject prevSession) {
-        String gtf = prevSession.getString(SessionMaker.GTF_PATH_KEY);
-        String matrix = prevSession.getString(SessionMaker.MATRIX_PATH_KEY);
-        String isoformLabels = prevSession.getString(SessionMaker.ISOFORM_LABELS_PATH_KEY);
-        Collection<String> cellLabels = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.CELL_LABELS_PATH_KEY).toList();
-        String embedding = (prevSession.has(SessionMaker.EMBEDDING_PATH_KEY))? prevSession.getString(SessionMaker.EMBEDDING_PATH_KEY) : null;
-        Parser.loadPreviousSessionData(gtf, matrix, isoformLabels, cellLabels, embedding);
-    }
-
-    private static void restoreSession(JSONObject prevSession) {
-        ControllerMediator.getInstance().restoreMainFromPrevSession(prevSession);
-        ControllerMediator.getInstance().restoreConsoleFromPrevSession(prevSession);
-        ControllerMediator.getInstance().restoreTPMGradientFromPrevSession(prevSession);
-        ControllerMediator.getInstance().restoreClusterViewSettingsFromPrevSession(prevSession);
-        ControllerMediator.getInstance().restoreImageExporterFromPrevSession(prevSession);
-        ControllerMediator.getInstance().restoreLabelSetManagerFromPrevSession(prevSession);
-        ControllerMediator.getInstance().restoreGeneSelectorFromPrevSession(prevSession);
-        ControllerMediator.getInstance().restoreIsoformViewFromPrevSession(prevSession);
-        ControllerMediator.getInstance().restoreClusterViewFromPrevSession(prevSession);
-        ControllerMediator.getInstance().restoreGeneFiltererFromPrevSession(prevSession);
+        CurrentSession.clearSavedPaths();
     }
 
     private static void disableAssociatedFunctionality() {
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
-        ControllerMediator.getInstance().disableClusterView();
+        ControllerMediator.getInstance().disableClusterView(true);
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableTPMGradientAdjuster();
         ControllerMediator.getInstance().disableLabelSetManager();
@@ -113,9 +99,11 @@ public class SessionIO {
 
     private static class SessionLoader implements Runnable {
         private JSONObject prevSession;
+        private boolean restoredIsoformView;
 
         public SessionLoader(JSONObject prevSession) {
             this.prevSession = prevSession;
+            restoredIsoformView = false;
         }
 
         @Override
@@ -136,15 +124,18 @@ public class SessionIO {
 
         private void restoreSession() {
             ControllerMediator.getInstance().restoreMainFromPrevSession(prevSession);
-            ControllerMediator.getInstance().restoreConsoleFromPrevSession(prevSession);
             ControllerMediator.getInstance().restoreTPMGradientFromPrevSession(prevSession);
             ControllerMediator.getInstance().restoreClusterViewSettingsFromPrevSession(prevSession);
             ControllerMediator.getInstance().restoreImageExporterFromPrevSession(prevSession);
             ControllerMediator.getInstance().restoreLabelSetManagerFromPrevSession(prevSession);
+            Platform.runLater(() -> {
+                ControllerMediator.getInstance().restoreGeneSelectorFromPrevSession(prevSession);
+                ControllerMediator.getInstance().restoreIsoformViewFromPrevSession(prevSession);
+                restoredIsoformView = true;
+            });
+            while (!restoredIsoformView)
             ControllerMediator.getInstance().restoreClusterViewFromPrevSession(prevSession);
             ControllerMediator.getInstance().restoreGeneFiltererFromPrevSession(prevSession);
-            ControllerMediator.getInstance().restoreGeneSelectorFromPrevSession(prevSession);
-            ControllerMediator.getInstance().restoreIsoformViewFromPrevSession(prevSession);
         }
     }
 }

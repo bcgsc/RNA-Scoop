@@ -53,7 +53,6 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static javafx.application.Platform.isFxApplicationThread;
 import static javafx.application.Platform.runLater;
 
 public class ClusterViewController implements Initializable, InteractiveElementController {
@@ -106,20 +105,29 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         cellNumberCellMap = new HashMap<>();
     }
 
+    public void disable() {
+        disable(false);
+    }
+
     /**
      * Disables all functionality
      */
-    public void disable() {
-        drawPlotButton.setDisable(true);
-        changeClusterLabelsButton.setDisable(true);
-        clusterViewSettingsButton.setDisable(true);
-        exportEmbeddingButton.setDisable(true);
+    public void disable(boolean disableCellSelection) {
+        if (disableCellSelection) {
+            clusterView.setDisable(true);
+        } else {
+            drawPlotButton.setDisable(true);
+            changeClusterLabelsButton.setDisable(true);
+            clusterViewSettingsButton.setDisable(true);
+            exportEmbeddingButton.setDisable(true);
+        }
     }
 
     /**
      * Enables all functionality
      */
     public void enable() {
+        clusterView.setDisable(false);
         drawPlotButton.setDisable(false);
         changeClusterLabelsButton.setDisable(false);
         clusterViewSettingsButton.setDisable(false);
@@ -160,6 +168,8 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             ControllerMediator.getInstance().clearLabelSetClusterCells();
             ControllerMediator.getInstance().labelSetManagerHandleClearedCellPlot();
             ControllerMediator.getInstance().geneFiltererHandleClearedCellPlot();
+            if (embedding == null)
+                CurrentSession.clearEmbeddingPath();
         }
     }
 
@@ -258,12 +268,15 @@ public class ClusterViewController implements Initializable, InteractiveElementC
      */
     public void restoreClusterViewFromPrevSession(JSONObject prevSession) {
         if (!prevSession.getBoolean(SessionMaker.CELL_PLOT_CLEARED_KEY)) {
+            Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing previous session cell plot"));
             PlotMaker plotMaker = new PlotMaker();
-            plotMaker.drawPlotAndUpdateAssociatedComponents(false);
+            plotMaker.drawPlotAndUpdateAssociatedComponents(false, false);
             if (prevSession.getJSONArray(SessionMaker.CELL_CATEGORIES_SELECTED_KEY).length() == 0)
                 selectCellsSelectedInPrevSession(prevSession);
             else
                 selectCategoriesSelectedInPrevSession(prevSession);
+            Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing cell plot"));
+            Platform.runLater(() -> ControllerMediator.getInstance().updateIsoformPlot(false));
         }
     }
 
@@ -669,6 +682,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             for (int cellNumber : cellNumbers) {
                 select(cellNumberCellMap.get(cellNumber));
             }
+            redrawPlotSansLegend();
         }
 
         /**
@@ -824,7 +838,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         public void run() {
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Drawing cell plot..."));
             try {
-                drawPlotAndUpdateAssociatedComponents(true);
+                drawPlotAndUpdateAssociatedComponents(true, true);
                 runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished drawing cell plot"));
            } catch (Exception e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
@@ -833,18 +847,16 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             }
         }
 
-        public void drawPlotAndUpdateAssociatedComponents(boolean updateTPMGradientValues) {
+        public void drawPlotAndUpdateAssociatedComponents(boolean updateIsoformPlot, boolean updateTPMGradientValues) {
             cellsInNewPlot = new XYSeriesCollection();
             double[][] matrix = (embedding == null ? generatePlotMatrix() : embedding);
             drawPlot(matrix);
             ControllerMediator.getInstance().addCellsToLabelSetClusters();
-            runLater(() -> ControllerMediator.getInstance().updateIsoformPlot(false));
             ControllerMediator.getInstance().calculateAndSaveMaxFoldChange(ControllerMediator.getInstance().getLabelSets());
             ControllerMediator.getInstance().updateGenesMaxFoldChange();
-            if (!Platform.isFxApplicationThread())
-                runLater(() -> ControllerMediator.getInstance().updateFilterCellCategories());
-            else
-                ControllerMediator.getInstance().updateFilterCellCategories();
+            ControllerMediator.getInstance().updateFilterCellCategories();
+            if(updateIsoformPlot)
+                runLater(() -> ControllerMediator.getInstance().updateIsoformPlot(false));
             if(updateTPMGradientValues)
                 setTPMGradientValues();
         }
@@ -874,10 +886,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             plot = panel;
             plot.setPreferredSize(new Dimension(500, Integer.MAX_VALUE));
             chart.removeLegend();
-            if (!isFxApplicationThread())
-                Platform.runLater(() -> addLegend());
-            else
-                addLegend();
+            Platform.runLater(() -> addLegend());
 
             cellsInPlot = cellsInNewPlot;
             swingNode.setContent(plot);

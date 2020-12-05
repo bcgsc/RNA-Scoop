@@ -166,10 +166,6 @@ public class MainController implements InteractiveElementController {
         return isoformPlotIsOpen;
     }
 
-    public String getCurrentLoadedPath() {
-        return currentLoadedPath;
-    }
-
     public boolean isReverseComplementing() {
         return revComplementToggle.isSelected();
     }
@@ -258,7 +254,6 @@ public class MainController implements InteractiveElementController {
         if (folder != null) {
             try {
                 SessionIO.loadSessionAtPath(folder.getPath());
-                ControllerMediator.getInstance().addConsoleMessage("Successfully loaded session");
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
             }
@@ -281,6 +276,8 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().setClusterViewSettingsToDefault();
         ControllerMediator.getInstance().setImageExporterSettingsToDefault();
         SessionIO.clearCurrentSessionData();
+        ControllerMediator.getInstance().clearConsole();
+        clearPathComboBox();
     }
 
     @FXML

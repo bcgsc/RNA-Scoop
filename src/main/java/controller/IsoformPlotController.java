@@ -3,6 +3,7 @@ package controller;
 import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -51,6 +52,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     private static RectangularSelection rectangularSelection;
     private static HashMap<Gene, GeneGroup> geneGeneGroupMap;
     private double scrollPaneWidthSpacing;
+    private boolean disabledIsoformSelection;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -63,20 +65,19 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         setGeneGroupsStyling();
     }
 
+
     /**
      * Disables all functionality
      */
     public void disable() {
-        selectGenesButton.setDisable(true);
-        setTPMGradientButton.setDisable(true);
+        isoformPlotPanel.setDisable(true);
     }
 
     /**
      * Enables all functionality
      */
     public void enable() {
-        selectGenesButton.setDisable(false);
-        setTPMGradientButton.setDisable(false);
+        isoformPlotPanel.setDisable(false);
     }
 
     /**
@@ -259,7 +260,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     /**
      * Only re-selects selected isoforms, assumes isoforms from previous session are already in
-     * the view
+     * the view.
      */
     public void restoreIsoformPlotFromPrevSession(JSONObject prevSession) {
         Collection<String> isoformsToSelectIDs = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.ISOFORMS_SELECTED_KEY).toList();

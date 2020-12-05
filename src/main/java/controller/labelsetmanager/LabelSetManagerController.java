@@ -111,6 +111,7 @@ public class LabelSetManagerController extends PopUpController {
         if (labelSets.size() > 1) {
             int labelSetToRemoveIndex = labelSets.lastIndexOf(labelSet);
             labelSets.remove(labelSetToRemoveIndex);
+            CurrentSession.removeLabelSetPath(labelSet);
             ControllerMediator.getInstance().geneSelectorHandleRemovedLabelSet(labelSet);
             labelSetsListView.getSelectionModel().select((labelSetToRemoveIndex == 0) ? labelSets.get(0) : labelSets.get(labelSetToRemoveIndex - 1));
         } else {
@@ -122,7 +123,7 @@ public class LabelSetManagerController extends PopUpController {
         for (LabelSet labelSet : labelSets) {
             if (!CurrentSession.isLabelSetPathSaved(labelSet)) {
                 String name = labelSet.getName();
-                String extension = (name.lastIndexOf(".") != -1) ? ".txt" : "";
+                String extension = (name.lastIndexOf(".") != -1) ? "" : ".txt";
                 File labelSetFile = new File(pathToDir + File.separator + name + extension);
                 exportLabelSetToFile(labelSetFile, labelSet);
             }

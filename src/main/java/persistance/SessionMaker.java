@@ -60,9 +60,6 @@ public class SessionMaker {
     public static final String NEAREST_NEIGHBORS_KEY = "nearest_neighbors_key";
     public static final String FIGURE_SCALE_KEY = "figure_scale";
     public static final String FIGURE_TYPE_EXPORTING_KEY = "figure_type_exporting";
-    public static final String CONSOLE_MESSAGES_KEY = "console_messages";
-    public static final String MESSAGE_TEXT_KEY = "message_text";
-    public static final String MESSAGE_IS_ERROR_KEY = "message_is_error";
 
     /**
      * Creates a session containing:
@@ -129,22 +126,6 @@ public class SessionMaker {
         session.put(NEAREST_NEIGHBORS_KEY, ControllerMediator.getInstance().getNearestNeighbors());
         session.put(FIGURE_SCALE_KEY, ControllerMediator.getInstance().getFigureScale());
         session.put(FIGURE_TYPE_EXPORTING_KEY, ControllerMediator.getInstance().getFigureTypeExporting());
-        addConsoleMessagesToSession(session);
         return session;
-    }
-
-    /**
-     * Saves the current console messages to the given session
-     */
-    private static void addConsoleMessagesToSession(JSONObject session) {
-        ArrayList<ConsoleController.Message> consoleMessages = ControllerMediator.getInstance().getConsoleMessages();
-        JSONArray messagesArray = new JSONArray();
-        for(ConsoleController.Message message : consoleMessages) {
-            JSONObject messageJSON = new JSONObject();
-            messageJSON.put(MESSAGE_TEXT_KEY, message.getMessageText());
-            messageJSON.put(MESSAGE_IS_ERROR_KEY, message.getMessageType());
-            messagesArray.put(messageJSON);
-        }
-        session.put(CONSOLE_MESSAGES_KEY, messagesArray);
     }
 }

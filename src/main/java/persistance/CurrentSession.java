@@ -46,6 +46,14 @@ public class CurrentSession {
         labelSetPaths.put(labelSet, labelSetPath);
     }
 
+    public static void clearEmbeddingPath() {
+        embeddingPath = null;
+    }
+
+    public static void removeLabelSetPath(LabelSet labelSet) {
+        labelSetPaths.remove(labelSet);
+    }
+
     public static boolean isLabelSetPathSaved(LabelSet labelSet) {
         return labelSetPaths.containsKey(labelSet);
     }
