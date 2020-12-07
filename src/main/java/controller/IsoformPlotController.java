@@ -3,7 +3,6 @@ package controller;
 import annotation.Exon;
 import annotation.Gene;
 import annotation.Isoform;
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -40,8 +39,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     @FXML private VBox isoformPlot;
     @FXML private VBox isoformPlotPanel;
-    @FXML private Button selectGenesButton;
-    @FXML private Button setTPMGradientButton;
     @FXML private ScrollPane scrollPane;
     @FXML private Pane isoformPlotPane;
     @FXML private VBox geneGroups;
@@ -52,7 +49,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     private static RectangularSelection rectangularSelection;
     private static HashMap<Gene, GeneGroup> geneGeneGroupMap;
     private double scrollPaneWidthSpacing;
-    private boolean disabledIsoformSelection;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {

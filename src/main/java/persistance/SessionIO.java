@@ -1,7 +1,5 @@
 package persistance;
 
-import controller.ConsoleController;
-import controller.clusterview.ClusterViewController;
 import javafx.application.Platform;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
@@ -99,11 +97,11 @@ public class SessionIO {
 
     private static class SessionLoader implements Runnable {
         private JSONObject prevSession;
-        private boolean restoredIsoformView;
+        private boolean restoredAllButCellPlotAndFiltering;
 
         public SessionLoader(JSONObject prevSession) {
             this.prevSession = prevSession;
-            restoredIsoformView = false;
+            restoredAllButCellPlotAndFiltering = false;
         }
 
         @Override
@@ -123,17 +121,17 @@ public class SessionIO {
         }
 
         private void restoreSession() {
-            ControllerMediator.getInstance().restoreMainFromPrevSession(prevSession);
-            ControllerMediator.getInstance().restoreTPMGradientFromPrevSession(prevSession);
-            ControllerMediator.getInstance().restoreClusterViewSettingsFromPrevSession(prevSession);
-            ControllerMediator.getInstance().restoreImageExporterFromPrevSession(prevSession);
-            ControllerMediator.getInstance().restoreLabelSetManagerFromPrevSession(prevSession);
             Platform.runLater(() -> {
+                ControllerMediator.getInstance().restoreMainFromPrevSession(prevSession);
+                ControllerMediator.getInstance().restoreTPMGradientFromPrevSession(prevSession);
+                ControllerMediator.getInstance().restoreClusterViewSettingsFromPrevSession(prevSession);
+                ControllerMediator.getInstance().restoreImageExporterFromPrevSession(prevSession);
+                ControllerMediator.getInstance().restoreLabelSetManagerFromPrevSession(prevSession);
                 ControllerMediator.getInstance().restoreGeneSelectorFromPrevSession(prevSession);
                 ControllerMediator.getInstance().restoreIsoformViewFromPrevSession(prevSession);
-                restoredIsoformView = true;
+                restoredAllButCellPlotAndFiltering = true;
             });
-            while (!restoredIsoformView)
+            while (!restoredAllButCellPlotAndFiltering)
             ControllerMediator.getInstance().restoreClusterViewFromPrevSession(prevSession);
             ControllerMediator.getInstance().restoreGeneFiltererFromPrevSession(prevSession);
         }

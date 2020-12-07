@@ -25,6 +25,7 @@ import ui.Main;
 
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class GeneFiltererController extends PopUpController implements Initializable, InteractiveElementController{
@@ -201,9 +202,14 @@ public class GeneFiltererController extends PopUpController implements Initializ
 
 
     public void restoreGeneFiltererFromPrevSession(JSONObject prevSession) {
-        restoreDISParamsFromPrevSession(prevSession);
-        restoreDEParamsFromPrevSession(prevSession);
-        restoreCSEParamsFromPrevSession(prevSession);
+        AtomicBoolean restoredFilteringParams = new AtomicBoolean(false);
+        Platform.runLater(() -> {
+            restoreDISParamsFromPrevSession(prevSession);
+            restoreDEParamsFromPrevSession(prevSession);
+            restoreCSEParamsFromPrevSession(prevSession);
+            restoredFilteringParams.set(true);
+        });
+        while (!restoredFilteringParams.get());
         filterGenesAsInPreviousSession(prevSession);
     }
 

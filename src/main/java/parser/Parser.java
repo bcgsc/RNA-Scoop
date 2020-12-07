@@ -18,6 +18,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -381,7 +382,12 @@ public class Parser {
 
             ControllerMediator.getInstance().setCellIsoformExpressionMatrix(cellIsoformExpressionMatrix);
             ControllerMediator.getInstance().setIsoformIndexMap(isoformIndexMap);
-            ControllerMediator.getInstance().addLabelSets(labelSets);
+            AtomicBoolean addedLabelSets = new AtomicBoolean(false);
+            Platform.runLater(() -> {
+                ControllerMediator.getInstance().addLabelSets(labelSets);
+                addedLabelSets.set(true);
+            });
+            while (!addedLabelSets.get());
             return labelSetPathMap;
         }
 

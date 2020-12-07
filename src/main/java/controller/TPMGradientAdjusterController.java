@@ -158,6 +158,7 @@ public class TPMGradientAdjusterController extends PopUpController implements In
         minTPMColorPicker.setValue(Color.web(prevSession.getString(SessionMaker.MIN_TPM_COLOR_KEY)));
         midTPMColorPicker.setValue(Color.web(prevSession.getString(SessionMaker.MID_TPM_COLOR_KEY)));
         maxTPMColorPicker.setValue(Color.web(prevSession.getString(SessionMaker.MAX_TPM_COLOR_KEY)));
+        drawTPMGradient();
     }
 
 
