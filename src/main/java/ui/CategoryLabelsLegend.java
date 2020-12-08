@@ -21,8 +21,8 @@ import java.util.*;
 public class CategoryLabelsLegend {
     public static final double LIGHT_COLOR_LUMINANCE_LIMIT = 0.69;
     public static final int LEGEND_CIRCLE_LABEL_SPACING = 2;
-    private static final Font LABEL_FONT = Font.font("Verdana", 12);
-    private static final Font LEGEND_CIRCLE_NUMBER_FONT = Font.font("Arial", 11.5);
+    private static final Font LABEL_FONT = Font.loadFont(CategoryLabelsLegend.class.getResource("/fonts/verdana.ttf").toExternalForm(), 12);
+    private static final Font LEGEND_CIRCLE_NUMBER_FONT = Font.loadFont(CategoryLabelsLegend.class.getResource("/fonts/arial.ttf").toExternalForm(), 11.5);
 
     private Pane legendGraphic;
     private SelectionModel selectionModel;

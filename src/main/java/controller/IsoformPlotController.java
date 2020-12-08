@@ -391,7 +391,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * A gene in the isoform plot with all its isoforms
      */
     private class GeneGroup extends VBox {
-        private final Font GENE_FONT = Font.font("Verdana", FontWeight.BOLD, 15);
+        private final Font GENE_FONT = Font.loadFont(getClass().getResource("/fonts/verdanab.ttf").toExternalForm(), 15);
 
         private Gene gene;
         private SelectableText label;
@@ -555,7 +555,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     private static class IsoformGroup extends VBox {
         public static final int ISOFORM_GROUP_OFFSET = 10;
-        private static final Font ISOFORM_FONT = Font.font("Verdana",12);
+        private static final Font ISOFORM_FONT = Font.loadFont(IsoformGroup.class.getResource("/fonts/verdana.ttf").toExternalForm(), 12);
         private static final int ISOFORM_GRAPHIC_DOT_PLOT_SPACING = 5;
 
         private Isoform isoform;
@@ -980,7 +980,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 graphicsContext.setFill(Color.BLACK);
                 graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
 
-                graphicsContext.setFont(new Font("Verdana", 10));
+                graphicsContext.setFont(Font.loadFont(DotPlot.class.getResource("/fonts/verdana.ttf").toExternalForm(), 10));
                 String text;
                 if (dotSize == QUARTER_EXPRESS_DOT_SIZE) text = "≤ 25%";
                 else if (dotSize == HALF_EXPRESS_DOT_SIZE) text = "≤ 50%";
@@ -1040,7 +1040,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     private static class IsoformPlotLegend extends HBox {
-        public static final Font LEGEND_FONT = Font.font("Verdana",11);
+        public static final Font LEGEND_FONT = Font.loadFont(IsoformPlotLegend.class.getResource("/fonts/verdana.ttf").toExternalForm(), 11);
 
         private GradientLegend gradientLegend;
         private Node dotLegend;
