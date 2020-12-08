@@ -2,6 +2,7 @@ package ui;
 
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
@@ -10,6 +11,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import labelset.Cluster;
 import mediator.ControllerMediator;
@@ -19,6 +21,8 @@ import java.util.*;
 public class CategoryLabelsLegend {
     public static final double LIGHT_COLOR_LUMINANCE_LIMIT = 0.69;
     public static final int LEGEND_CIRCLE_LABEL_SPACING = 2;
+    private static final Font LABEL_FONT = Font.font("Verdana", 12);
+    private static final Font LEGEND_CIRCLE_NUMBER_FONT = Font.font("Arial", 11.5);
 
     private Pane legendGraphic;
     private SelectionModel selectionModel;
@@ -41,15 +45,15 @@ public class CategoryLabelsLegend {
         Iterator<Cluster> iterator = clusters.iterator();
         while(iterator.hasNext()) {
             Cluster cluster= iterator.next();
-            Category legendElement = new Category(includeLabels, selectable, dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
+            Category category = new Category(includeLabels, selectable, dotSize, circleCanvasWidth, circleCanvasHeight, cluster);
 
             if (iterator.hasNext() && vertical)
-                VBox.setMargin(legendElement, new Insets(0, 0, elementSpacing, 0));
+                VBox.setMargin(category, new Insets(0, 0, elementSpacing, 0));
             else if (iterator.hasNext())
-                HBox.setMargin(legendElement, new Insets(0,  elementSpacing, 0, 0));
+                HBox.setMargin(category, new Insets(0,  elementSpacing, 0, 0));
 
-            legendGraphic.getChildren().add(legendElement);
-            categories.put(cluster.getName(), legendElement);
+            legendGraphic.getChildren().add(category);
+            categories.put(cluster.getName(), category);
         }
         if (includeBackground)
             addBackground();
@@ -93,6 +97,7 @@ public class CategoryLabelsLegend {
 
         public Category(boolean includeLabels, boolean selectable, double dotSize, double circleCanvasWidth,
                         double circleCanvasHeight, Cluster cluster){
+            setAlignment(Pos.CENTER_LEFT);
             this.cluster = cluster;
             legendCircle = createLegendCircle(selectable, dotSize, circleCanvasWidth, circleCanvasHeight);
             getChildren().add(legendCircle);
@@ -117,6 +122,7 @@ public class CategoryLabelsLegend {
 
         private Text createLabel(boolean selectable) {
             Text label = new Text(cluster.getName());
+            label.setFont(LABEL_FONT);
             if (selectable)
                 label.setOnMouseClicked(new CategoryMouseHandler(this));
             return label;
@@ -137,6 +143,7 @@ public class CategoryLabelsLegend {
             // add circle label
             graphicsContext.setFill(getLegendCircleLabelColor(circleColor));
             int number = cluster.getNumber();
+            graphicsContext.setFont(LEGEND_CIRCLE_NUMBER_FONT);
             if (number < 10)
                 graphicsContext.fillText(String.valueOf(number), circleX - 3, circleY + 4);
             else
