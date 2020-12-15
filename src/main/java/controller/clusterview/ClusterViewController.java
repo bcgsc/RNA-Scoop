@@ -73,7 +73,6 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     private static final boolean LEGEND_SHOW_ONLY_SELECTED = false;
     private static final boolean LEGEND_SHOW_BACKGROUND = true;
     private static final boolean LEGEND_IS_VERTICAL = true;
-    private static final Font FIGURE_AXIS_LABEL_FONT = Font.loadFont(ClusterViewController.class.getResource("/fonts/verdana.ttf").toExternalForm(), 12);
 
     @FXML private VBox clusterView;
     @FXML private Button drawPlotButton;

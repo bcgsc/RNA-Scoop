@@ -39,7 +39,7 @@ public class ImageExporterController extends PopUpController implements Initiali
     private static final String BOTH_OPTION = "Isoform view and cell cluster plot";
     private static final String DEFAULT_CELL_PLOT_X_AXIS_LABEL = "Dimension 1";
     private static final String DEFAULT_CELL_PLOT_Y_AXIS_LABEL = "Dimension 2";
-    private static final int CELL_PLOT_AXIS_FONT_BASE_SIZE = 20;
+    private static final int CELL_PLOT_AXIS_FONT_BASE_SIZE = 16;
     private static final int CELL_PLOT_BASE_BORDER_SPACING = 10;
 
     @FXML private Parent imageExporter;
@@ -153,7 +153,7 @@ public class ImageExporterController extends PopUpController implements Initiali
         return exportToImage(ControllerMediator.getInstance().getIsoformPlot());
     }
 
-    private BufferedImage getCellClusterPlotImage() throws IOException, FontFormatException {
+    private BufferedImage getCellClusterPlotImage() {
         Font axisFont = getCellPlotAxisFont();
         String xAxisText = cellPlotFigureXAxisLabelField.getText();
         String yAxisText = cellPlotFigureYAxisLabelField.getText();
@@ -191,7 +191,7 @@ public class ImageExporterController extends PopUpController implements Initiali
         return image;
     }
 
-    private BufferedImage getIsoformViewAndCellClusterPlotImage() throws IOException, FontFormatException {
+    private BufferedImage getIsoformViewAndCellClusterPlotImage() {
         BufferedImage image;
         BufferedImage isoformView = getIsoformPlotImage();
         BufferedImage cellClusterPlot = getCellClusterPlotImage();
@@ -212,11 +212,8 @@ public class ImageExporterController extends PopUpController implements Initiali
         return SwingFXUtils.fromFXImage(image, null);
     }
 
-    private Font getCellPlotAxisFont() throws FontFormatException, IOException {
-        File fontFile = new File(getClass().getResource("/fonts/verdana.ttf").getPath());
-        Font axisFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
-        axisFont = axisFont.deriveFont(CELL_PLOT_AXIS_FONT_BASE_SIZE * scale);
-        return axisFont;
+    private Font getCellPlotAxisFont() {
+        return new Font("Open Sans", Font.PLAIN, (int) (CELL_PLOT_AXIS_FONT_BASE_SIZE * scale));
     }
 
     private double getTextHeight(Font font, String text) {

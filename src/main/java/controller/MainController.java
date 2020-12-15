@@ -672,12 +672,13 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Sets size of window and scene it displays, adds important styling for all scroll-panes
+     * Sets size of window and scene it displays, adds fonts and important styling for all scroll-panes
      * in the scene
      */
     private void setWindowSizeAndDisplay() {
         Rectangle2D screen = Screen.getPrimary().getBounds();
         Scene scene = new Scene(borderPane, screen.getWidth() * MAIN_SCALE_FACTOR, screen.getHeight() * MAIN_SCALE_FACTOR);
+        scene.getStylesheets().add("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap");
         scene.getStylesheets().add("/css/scrollpane.css");
         window.setScene(scene);
     }

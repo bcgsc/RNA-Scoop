@@ -389,7 +389,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * A gene in the isoform plot with all its isoforms
      */
     private class GeneGroup extends VBox {
-        private final Font GENE_FONT = Font.loadFont(getClass().getResource("/fonts/verdanab.ttf").toExternalForm(), 15);
+        private final Font GENE_FONT = new Font("Open Sans Bold", 16);
 
         private Gene gene;
         private SelectableText label;
@@ -553,7 +553,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     private static class IsoformGroup extends VBox {
         public static final int ISOFORM_GROUP_OFFSET = 10;
-        private static final Font ISOFORM_FONT = Font.loadFont(IsoformGroup.class.getResource("/fonts/verdana.ttf").toExternalForm(), 12);
+        private static final Font ISOFORM_FONT = new Font("Open Sans", 12);
         private static final int ISOFORM_GRAPHIC_DOT_PLOT_SPACING = 5;
 
         private Isoform isoform;
@@ -978,14 +978,15 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 graphicsContext.setFill(Color.BLACK);
                 graphicsContext.strokeOval(dotX - dotSize / 2, dotY - dotSize / 2, dotSize, dotSize);
 
-                graphicsContext.setFont(Font.loadFont(DotPlot.class.getResource("/fonts/verdana.ttf").toExternalForm(), 10));
+                graphicsContext.setFont(IsoformPlotLegend.LEGEND_FONT);
                 String text;
                 if (dotSize == QUARTER_EXPRESS_DOT_SIZE) text = "≤ 25%";
                 else if (dotSize == HALF_EXPRESS_DOT_SIZE) text = "≤ 50%";
                 else if (dotSize == THREE_QUARTERS_EXPRESS_DOT_SIZE) text = "≤ 75%";
                 else text = "≤ 100%";
 
-                graphicsContext.fillText(text, dotX - DOT_LEGEND_COLUMN_WIDTH / 2, DOT_PLOT_ROW_HEIGHT + DOT_LEGEND_TEXT_HEIGHT);
+                double offset = new Text(text).getLayoutBounds().getWidth() / 2;
+                graphicsContext.fillText(text, dotX -offset, DOT_PLOT_ROW_HEIGHT + DOT_LEGEND_TEXT_HEIGHT);
                 dotX += DOT_LEGEND_COLUMN_WIDTH + DOT_PLOT_COLUMN_SPACING;
             }
             return dotLegendCanvas;
@@ -1038,7 +1039,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     private static class IsoformPlotLegend extends HBox {
-        public static final Font LEGEND_FONT = Font.loadFont(IsoformPlotLegend.class.getResource("/fonts/verdana.ttf").toExternalForm(), 11);
+        public static final Font LEGEND_FONT = new Font("Open Sans", 11);
 
         private GradientLegend gradientLegend;
         private Node dotLegend;
