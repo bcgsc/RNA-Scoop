@@ -13,29 +13,71 @@
             <VBox.margin>
                 <Insets topRightBottomLeft="10"/>
             </VBox.margin>
-            <HBox>
-                <VBox.margin>
-                    <Insets top="10" right="10" left="10" bottom="15"/>
-                </VBox.margin>
-                <Text text="Figure: " textAlignment="RIGHT">
-                    <HBox.margin>
-                        <Insets right="5" top="2"/>
-                    </HBox.margin>
-                </Text>
-                <ComboBox fx:id="exportOptions"/>
-                <Text text="Scale (increase if blurry):" textAlignment="RIGHT">
-                    <HBox.margin>
-                        <Insets left="50" right="5" top="2"/>
-                    </HBox.margin>
-                </Text>
-                <TextField fx:id="scaleField" prefWidth="35" minWidth="35"/>
-            </HBox>
-            <HBox alignment="CENTER">
+            <VBox>
                 <VBox.margin>
                     <Insets topRightBottomLeft="10"/>
                 </VBox.margin>
-                <Button text="Export" onAction="#handleExportButton"/>
-            </HBox>
+                <Text text="Figure Settings" style="-fx-font-size: 13;">
+                    <VBox.margin>
+                        <Insets bottom="5"/>
+                    </VBox.margin>
+                </Text>
+                <Separator>
+                    <VBox.margin>
+                        <Insets bottom="10"/>
+                    </VBox.margin>
+                </Separator>
+                <GridPane hgap="50" vgap="10">
+                    <VBox.margin>
+                        <Insets bottom="15"/>
+                    </VBox.margin>
+                    <HBox GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS" >
+                        <Text text="Figure: " textAlignment="RIGHT">
+                            <HBox.margin>
+                                <Insets right="5" top="2"/>
+                            </HBox.margin>
+                        </Text>
+                        <ComboBox fx:id="exportOptions"/>
+                    </HBox>
+                    <HBox GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <Text text="Scale (increase if blurry):" textAlignment="RIGHT">
+                            <HBox.margin>
+                                <Insets right="5" top="2"/>
+                            </HBox.margin>
+                        </Text>
+                        <TextField fx:id="scaleField" prefWidth="35" minWidth="35"/>
+                    </HBox>
+                    <Text GridPane.rowIndex="1" text="Cell cluster plot axis labels: ">
+                        <GridPane.margin>
+                            <Insets top="10"/>
+                        </GridPane.margin>
+                    </Text>
+                    <HBox GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
+                        <Text text="x: " textAlignment="RIGHT">
+                            <HBox.margin>
+                                <Insets right="5" top="2"/>
+                            </HBox.margin>
+                        </Text>
+                        <TextField fx:id="cellPlotFigureXAxisLabelField" prefWidth="135" minWidth="135"/>
+                    </HBox>
+                    <HBox GridPane.rowIndex="2" GridPane.columnIndex="1">
+                        <Text text="y:" >
+                            <HBox.margin>
+                                <Insets right="5" top="2"/>
+                            </HBox.margin>
+                        </Text>
+                        <TextField fx:id="cellPlotFigureYAxisLabelField" prefWidth="135" minWidth="135"/>
+                    </HBox>
+                </GridPane>
+                <Separator>
+                    <VBox.margin>
+                        <Insets top="5" bottom="10"/>
+                    </VBox.margin>
+                </Separator>
+                <HBox alignment="CENTER">
+                    <Button text="Export" style="-fx-font-size: 13;" onAction="#handleExportButton"/>
+                </HBox>
+            </VBox>
         </VBox>
     </VBox>
 </ScrollPane>

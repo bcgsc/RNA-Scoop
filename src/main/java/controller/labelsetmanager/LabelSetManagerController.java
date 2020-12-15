@@ -20,6 +20,9 @@ import ui.LabelSetManagerWindow;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static javafx.application.Platform.runLater;
@@ -119,12 +122,12 @@ public class LabelSetManagerController extends PopUpController {
         }
     }
 
-    public void exportLabelSetsToFiles(String pathToDir) {
+    public void exportLabelSetsToFiles(String pathToDir) throws IOException {
         for (LabelSet labelSet : labelSets) {
             if (!CurrentSession.isLabelSetPathSaved(labelSet)) {
+                Files.createDirectories(Paths.get(pathToDir));
                 String name = labelSet.getName();
-                String extension = (name.lastIndexOf(".") != -1) ? "" : ".txt";
-                File labelSetFile = new File(pathToDir + File.separator + name + extension);
+                File labelSetFile = new File(pathToDir + File.separator + name + ".txt");
                 exportLabelSetToFile(labelSetFile, labelSet);
             }
         }
@@ -141,12 +144,14 @@ public class LabelSetManagerController extends PopUpController {
     }
 
     public void restoreLabelSetManagerFromPrevSession(JSONObject prevSession) {
-        String prevLabelSetInUseName = prevSession.getString(SessionMaker.LABEL_SET_IN_USE_KEY);
-        for (LabelSet labelSet : labelSets) {
-            if (labelSet.getName().equals(prevLabelSetInUseName)) {
-                labelSetsListView.getSelectionModel().select(labelSet);
-                labelSetInUse = labelSet;
-                break;
+        if (prevSession.has(SessionMaker.LABEL_SET_IN_USE_KEY)) { // if no label set was selected in prev session, no label sets were loaded
+            String prevLabelSetInUseName = prevSession.getString(SessionMaker.LABEL_SET_IN_USE_KEY);
+            for (LabelSet labelSet : labelSets) {
+                if (labelSet.getName().equals(prevLabelSetInUseName)) {
+                    labelSetsListView.getSelectionModel().select(labelSet);
+                    labelSetInUse = labelSet;
+                    break;
+                }
             }
         }
     }

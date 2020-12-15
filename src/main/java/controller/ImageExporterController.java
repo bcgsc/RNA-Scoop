@@ -20,24 +20,33 @@ import persistance.SessionMaker;
 import ui.Main;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class ImageExporterController extends PopUpController implements Initializable {
-    private static final float IMAGE_EXPORTER_HEIGHT = 120;
-    private static final float IMAGE_EXPORTER_WIDTH = 440;
+    private static final float IMAGE_EXPORTER_HEIGHT = 250;
+    private static final float IMAGE_EXPORTER_WIDTH = 450;
     private static final float DEFAULT_SCALE = 1f;
     private static final String JUST_ISOFORM_VIEW_OPTION = "Isoform view";
     private static final String JUST_CELL_CLUSTER_PLOT_OPTION = "Cell cluster plot";
     private static final String BOTH_OPTION = "Isoform view and cell cluster plot";
+    private static final String DEFAULT_CELL_PLOT_X_AXIS_LABEL = "Dimension 1";
+    private static final String DEFAULT_CELL_PLOT_Y_AXIS_LABEL = "Dimension 2";
+    private static final int CELL_PLOT_AXIS_FONT_BASE_SIZE = 20;
+    private static final int CELL_PLOT_BASE_BORDER_SPACING = 10;
 
     @FXML private Parent imageExporter;
     @FXML private ComboBox<String> exportOptions;
     @FXML private TextField scaleField;
+    @FXML private TextField cellPlotFigureXAxisLabelField;
+    @FXML private TextField cellPlotFigureYAxisLabelField;
     private float scale;
 
     @Override
@@ -45,6 +54,8 @@ public class ImageExporterController extends PopUpController implements Initiali
         setUpWindow();
         setUpExportOptions();
         setUpScale();
+        cellPlotFigureXAxisLabelField.setText(DEFAULT_CELL_PLOT_X_AXIS_LABEL);
+        cellPlotFigureYAxisLabelField.setText(DEFAULT_CELL_PLOT_Y_AXIS_LABEL);
     }
 
     @Override
@@ -56,11 +67,15 @@ public class ImageExporterController extends PopUpController implements Initiali
     public void setSettingsToDefault() {
         exportOptions.getSelectionModel().select(BOTH_OPTION);
         setScale(DEFAULT_SCALE);
+        cellPlotFigureXAxisLabelField.setText(DEFAULT_CELL_PLOT_X_AXIS_LABEL);
+        cellPlotFigureYAxisLabelField.setText(DEFAULT_CELL_PLOT_Y_AXIS_LABEL);
     }
 
     public void restoreImageExporterFromPrevSession(JSONObject prevSession) {
         exportOptions.getSelectionModel().select(prevSession.getString(SessionMaker.FIGURE_TYPE_EXPORTING_KEY));
         setScale(prevSession.getFloat(SessionMaker.FIGURE_SCALE_KEY));
+        cellPlotFigureXAxisLabelField.setText(prevSession.getString(SessionMaker.FIGURE_CELL_PLOT_X_AXIS_LABEL_KEY));
+        cellPlotFigureYAxisLabelField.setText(prevSession.getString(SessionMaker.FIGURE_CELL_PLOT_Y_AXIS_LABEL_KEY));
     }
 
     public float getFigureScale() {
@@ -69,6 +84,14 @@ public class ImageExporterController extends PopUpController implements Initiali
 
     public String getFigureTypeExporting() {
         return exportOptions.getSelectionModel().getSelectedItem();
+    }
+
+    public String getCellPlotFigureXAxisLabel() {
+        return cellPlotFigureXAxisLabelField.getText();
+    }
+
+    public String getCellPlotFigureYAxisLabel() {
+        return cellPlotFigureYAxisLabelField.getText();
     }
 
     /**
@@ -88,9 +111,9 @@ public class ImageExporterController extends PopUpController implements Initiali
                 BufferedImage image;
                 String selectedOption = exportOptions.getSelectionModel().getSelectedItem();
                 if (selectedOption.equals(JUST_ISOFORM_VIEW_OPTION))
-                    image = exportToImage(ControllerMediator.getInstance().getIsoformPlot());
+                    image = getIsoformPlotImage();
                 else if (selectedOption.equals(JUST_CELL_CLUSTER_PLOT_OPTION))
-                    image = exportToImage(ControllerMediator.getInstance().getCellClusterPlot());
+                    image = getCellClusterPlotImage();
                 else
                     image = getIsoformViewAndCellClusterPlotImage();
                 ImageIO.write(image, "png", imageFile);
@@ -126,17 +149,52 @@ public class ImageExporterController extends PopUpController implements Initiali
         ControllerMediator.getInstance().disableLabelSetManager();
     }
 
-    private BufferedImage exportToImage(Node node) {
-        SnapshotParameters spa = new SnapshotParameters();
-        spa.setTransform(Transform.scale(scale, scale));
-        WritableImage image = node.snapshot(spa, null);
-        return SwingFXUtils.fromFXImage(image, null);
+    private BufferedImage getIsoformPlotImage() {
+        return exportToImage(ControllerMediator.getInstance().getIsoformPlot());
     }
 
-    private BufferedImage getIsoformViewAndCellClusterPlotImage() {
+    private BufferedImage getCellClusterPlotImage() throws IOException, FontFormatException {
+        Font axisFont = getCellPlotAxisFont();
+        String xAxisText = cellPlotFigureXAxisLabelField.getText();
+        String yAxisText = cellPlotFigureYAxisLabelField.getText();
+
+        double horizAxisTextWidth = getTextWidth(axisFont, xAxisText);
+        double horizxAxisTextHeight = getTextHeight(axisFont, xAxisText);
+        double vertAxisTextWidth = getTextWidth(axisFont, yAxisText);
+        double vertxAxisTextHeight = getTextHeight(axisFont, yAxisText);
+        double maxAxisTextHeight = Math.max(horizxAxisTextHeight, vertxAxisTextHeight);
+
+        double borderSpacing = CELL_PLOT_BASE_BORDER_SPACING * scale;
+
         BufferedImage image;
-        BufferedImage isoformView = exportToImage(ControllerMediator.getInstance().getIsoformPlot());
         BufferedImage cellClusterPlot = exportToImage(ControllerMediator.getInstance().getCellClusterPlot());
+        int imageWidth = (int) ((maxAxisTextHeight + borderSpacing) * 2 + cellClusterPlot.getWidth());
+        int imageHeight = (int) ((maxAxisTextHeight + borderSpacing) * 2  + cellClusterPlot.getHeight());
+        image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB);
+
+        Graphics2D graphics = image.createGraphics();
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0, 0, imageWidth, imageHeight);
+
+        graphics.drawImage(cellClusterPlot, (int) (maxAxisTextHeight + borderSpacing), (int) (maxAxisTextHeight + borderSpacing), null);
+
+        graphics.setFont(axisFont);
+        graphics.setColor(Color.BLACK);
+
+        Rectangle xAxisLabelStringBounds = getTextBounds(axisFont, xAxisText, 0, imageHeight, graphics);
+        float xAxisLabelXCoord = (float) (imageWidth / 2 - horizAxisTextWidth / 2);
+        float xAxisLabelYCoord = (float) (2 * imageHeight - borderSpacing / 2 - maxAxisTextHeight - xAxisLabelStringBounds.getY());
+        graphics.drawString(xAxisText, xAxisLabelXCoord, xAxisLabelYCoord);
+
+        graphics.rotate(Math.toRadians(-90),  maxAxisTextHeight + borderSpacing/2, (imageHeight /2 + vertAxisTextWidth/2));
+        graphics.drawString(yAxisText,  (float) (maxAxisTextHeight + borderSpacing/2), (float) (imageHeight /2 + vertAxisTextWidth/2));
+        return image;
+    }
+
+    private BufferedImage getIsoformViewAndCellClusterPlotImage() throws IOException, FontFormatException {
+        BufferedImage image;
+        BufferedImage isoformView = getIsoformPlotImage();
+        BufferedImage cellClusterPlot = getCellClusterPlotImage();
         image = new BufferedImage(isoformView.getWidth() + cellClusterPlot.getWidth(),
                 Math.max(isoformView.getHeight(), cellClusterPlot.getHeight()), BufferedImage.TYPE_INT_RGB);
         Graphics graphics = image.getGraphics();
@@ -145,6 +203,38 @@ public class ImageExporterController extends PopUpController implements Initiali
         graphics.drawImage(isoformView, 0, 0, null);
         graphics.drawImage(cellClusterPlot, isoformView.getWidth(), 0, null);
         return image;
+    }
+
+    private BufferedImage exportToImage(Node node) {
+        SnapshotParameters spa = new SnapshotParameters();
+        spa.setTransform(Transform.scale(scale, scale));
+        WritableImage image = node.snapshot(spa, null);
+        return SwingFXUtils.fromFXImage(image, null);
+    }
+
+    private Font getCellPlotAxisFont() throws FontFormatException, IOException {
+        File fontFile = new File(getClass().getResource("/fonts/verdana.ttf").getPath());
+        Font axisFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+        axisFont = axisFont.deriveFont(CELL_PLOT_AXIS_FONT_BASE_SIZE * scale);
+        return axisFont;
+    }
+
+    private double getTextHeight(Font font, String text) {
+        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        Rectangle textBounds = getTextBounds(font, text, 0, 0, image.createGraphics());
+        return textBounds.getHeight();
+    }
+
+    private Rectangle getTextBounds(Font font, String xAxisText, float x, float y, Graphics2D graphics) {
+        FontRenderContext frc = graphics.getFontRenderContext();
+        GlyphVector gv = font.createGlyphVector(frc, xAxisText);
+        return gv.getPixelBounds(null, x, y);
+    }
+
+    private double getTextWidth(Font font, String text) {
+        AffineTransform affinetransform = new AffineTransform();
+        FontRenderContext frc = new FontRenderContext(affinetransform,true,true);
+        return font.getStringBounds(text, frc).getWidth();
     }
 
     /**

@@ -10,10 +10,15 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import labelset.Cluster;
 import mediator.ControllerMediator;
@@ -49,6 +54,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -66,6 +73,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     private static final boolean LEGEND_SHOW_ONLY_SELECTED = false;
     private static final boolean LEGEND_SHOW_BACKGROUND = true;
     private static final boolean LEGEND_IS_VERTICAL = true;
+    private static final Font FIGURE_AXIS_LABEL_FONT = Font.loadFont(ClusterViewController.class.getResource("/fonts/verdana.ttf").toExternalForm(), 12);
 
     @FXML private VBox clusterView;
     @FXML private Button drawPlotButton;
@@ -257,9 +265,11 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             plotRenderer.updateOutlineAndRedraw();
     }
 
-    public void exportEmbeddingToFile(String pathToDir) {
-        if (!isPlotCleared() && !CurrentSession.isEmbeddingSaved())
+    public void exportEmbeddingToFile(String pathToDir) throws IOException {
+        if (!isPlotCleared() && !CurrentSession.isEmbeddingSaved()) {
+            Files.createDirectories(Paths.get(pathToDir));
             exportEmbeddingToFile(new File(pathToDir + File.separator + "embedding.txt"));
+        }
     }
 
     /**
@@ -284,7 +294,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         return clusterView;
     }
 
-    public Node getCellClusterPlot() {
+    public Pane getCellClusterPlot() {
         return plotHolder;
     }
 
@@ -307,7 +317,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     }
 
     public Collection<String> getSelectedCellCategoryNames() {
-        return legend.getSelectedCategoryNames();
+        return !isPlotCleared()? legend.getSelectedCategoryNames() : new ArrayList<>();
     }
 
     public int getNumCellsToPlot() {
@@ -886,7 +896,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             plot = panel;
             plot.setPreferredSize(new Dimension(500, Integer.MAX_VALUE));
             chart.removeLegend();
-            Platform.runLater(() -> addLegend());
+            Platform.runLater(this::addLegend);
 
             cellsInPlot = cellsInNewPlot;
             swingNode.setContent(plot);

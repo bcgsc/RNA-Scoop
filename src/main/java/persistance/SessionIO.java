@@ -20,15 +20,15 @@ import java.util.List;
  */
 public class SessionIO {
 
-    public static final String SESSION_FILE_NAME = "session.json";
-
     /**
      * Saves information about the user's current session to a JSON file at
      * given path
      */
-    public static void saveSessionAtPath(String pathToDir) throws IOException {
+    public static void saveSessionAtPath(String path) throws IOException {
+        int extensionIndex = path.lastIndexOf(".");
+        String pathToDir = path.substring(0, (extensionIndex == -1)? path.length() : extensionIndex) + "_files";
         JSONObject session = SessionMaker.makeSession(pathToDir);
-        FileWriter fileWriter = new FileWriter(pathToDir + File.separator + SESSION_FILE_NAME);
+        FileWriter fileWriter = new FileWriter(path);
         fileWriter.write(session.toString());
         fileWriter.close();
     }
@@ -38,22 +38,18 @@ public class SessionIO {
      * JSON file at given path and restores the saved settings
      */
     public static void loadSessionAtPath(String path) throws IOException {
-        if (new File(path + File.separator + SESSION_FILE_NAME).exists()) {
-            disableAssociatedFunctionality();
-            clearCurrentSessionData();
-            ControllerMediator.getInstance().addConsoleMessage("Loading session...");
-            byte[] encoded = Files.readAllBytes(Paths.get(path + File.separator + SESSION_FILE_NAME));
-            String prevSessionString = new String(encoded, Charset.defaultCharset());
-            JSONObject prevSession = new JSONObject(prevSessionString);
-            try {
-                Thread sessionLoader = new Thread(new SessionLoader(prevSession));
-                sessionLoader.start();
-            } catch (Exception e) {
-                enableAssociatedFunctionality();
-                ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
-            }
-        } else {
-            ControllerMediator.getInstance().addConsoleErrorMessage("Could not find file with name " + SESSION_FILE_NAME + " in selected directory");
+        disableAssociatedFunctionality();
+        clearCurrentSessionData();
+        ControllerMediator.getInstance().addConsoleMessage("Loading session...");
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        String prevSessionString = new String(encoded, Charset.defaultCharset());
+        JSONObject prevSession = new JSONObject(prevSessionString);
+        try {
+            Thread sessionLoader = new Thread(new SessionLoader(prevSession));
+            sessionLoader.start();
+        } catch (Exception e) {
+            enableAssociatedFunctionality();
+            ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
     }
 
@@ -106,8 +102,10 @@ public class SessionIO {
 
         @Override
         public void run() {
-            loadPreviousSessionData();
+            if (prevSession.has(SessionMaker.GTF_PATH_KEY)) // if there is no loaded gtf file in the prev session, no data was loaded
+                loadPreviousSessionData();
             restoreSession();
+            Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded session"));
             enableAssociatedFunctionality();
         }
 

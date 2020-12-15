@@ -1,10 +1,13 @@
 package persistance;
 
+import labelset.LabelSet;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import controller.ConsoleController;
 import mediator.ControllerMediator;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class SessionMaker {
@@ -60,6 +63,8 @@ public class SessionMaker {
     public static final String NEAREST_NEIGHBORS_KEY = "nearest_neighbors_key";
     public static final String FIGURE_SCALE_KEY = "figure_scale";
     public static final String FIGURE_TYPE_EXPORTING_KEY = "figure_type_exporting";
+    public static final String FIGURE_CELL_PLOT_X_AXIS_LABEL_KEY = "figure_cell_plot_x_axis_label";
+    public static final String FIGURE_CELL_PLOT_Y_AXIS_LABEL_KEY = "figure_cell_plot_y_axis_label";
 
     /**
      * Creates a session containing:
@@ -68,7 +73,7 @@ public class SessionMaker {
      *   - the current isoform plot settings
      *   - the console messages
      */
-    public static JSONObject makeSession(String pathToDir) {
+    public static JSONObject makeSession(String pathToDir) throws IOException {
         ControllerMediator.getInstance().exportEmbeddingToFile(pathToDir);
         ControllerMediator.getInstance().exportLabelSetsToFiles(pathToDir);
         JSONObject session = new JSONObject();
@@ -82,7 +87,6 @@ public class SessionMaker {
         session.put(CELL_CATEGORIES_SELECTED_KEY, ControllerMediator.getInstance().getSelectedCellCategoryNames());
         session.put(CELLS_SELECTED_KEY, ControllerMediator.getInstance().getSelectedCellNumbers());
         session.put(CELL_CATEGORIES_SELECTED_KEY, ControllerMediator.getInstance().getSelectedCellCategoryNames());
-        session.put(LABEL_SET_IN_USE_KEY, ControllerMediator.getInstance().getLabelSetInUse().getName());
         session.put(GENES_SHOWN_KEY, ControllerMediator.getInstance().getShownGeneIDs());
         session.put(ISOFORMS_SELECTED_KEY, ControllerMediator.getInstance().getSelectedIsoformIDs());
         session.put(ISOFORM_PLOT_OPEN_KEY, ControllerMediator.getInstance().isIsoformPlotOpen());
@@ -126,6 +130,11 @@ public class SessionMaker {
         session.put(NEAREST_NEIGHBORS_KEY, ControllerMediator.getInstance().getNearestNeighbors());
         session.put(FIGURE_SCALE_KEY, ControllerMediator.getInstance().getFigureScale());
         session.put(FIGURE_TYPE_EXPORTING_KEY, ControllerMediator.getInstance().getFigureTypeExporting());
+        session.put(FIGURE_CELL_PLOT_X_AXIS_LABEL_KEY, ControllerMediator.getInstance().getCellPlotFigureXAxisLabel());
+        session.put(FIGURE_CELL_PLOT_Y_AXIS_LABEL_KEY, ControllerMediator.getInstance().getCellPlotFigureYAxisLabel());
+        LabelSet labelSetInUse = ControllerMediator.getInstance().getLabelSetInUse();
+        if (labelSetInUse != null)
+            session.put(LABEL_SET_IN_USE_KEY, labelSetInUse.getName());
         return session;
     }
 }

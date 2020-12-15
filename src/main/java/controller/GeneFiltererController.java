@@ -434,9 +434,11 @@ public class GeneFiltererController extends PopUpController implements Initializ
             cseFilterOption.setSelected(true);
             optionFilteringBy = cseFilterOption;
         }
-        Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Filtering genes as did in previous session..."));
+        if (optionFilteringBy != noneFilterOption)
+            Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Filtering genes as did in previous session..."));
         ControllerMediator.getInstance().updateGenesTableFilteringMethod();
-        Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished filtering genes"));
+        if (optionFilteringBy != noneFilterOption)
+            Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished filtering genes"));
     }
 
     private void enableAssociatedFunctionality() {

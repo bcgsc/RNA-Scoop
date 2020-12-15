@@ -75,7 +75,7 @@ public class CurrentSession {
     }
 
     public static Collection<String> getLabelSetPaths() {
-        return labelSetPaths.values();
+        return (labelSetPaths == null)? null : labelSetPaths.values();
     }
 
     public static String getEmbeddingPath() {

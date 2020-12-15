@@ -12,7 +12,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -21,7 +20,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import labelset.Cluster;
 import mediator.ControllerMediator;
@@ -279,7 +277,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         return isoformPlotPanel;
     }
 
-    public Node getIsoformPlot() {
+    public Pane getIsoformPlot() {
         return isoformPlot;
     }
 

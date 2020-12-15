@@ -10,6 +10,7 @@ import controller.labelsetmanager.AddLabelSetViewController;
 import controller.labelsetmanager.LabelSetManagerController;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.LinearGradient;
 import javafx.stage.Window;
@@ -18,8 +19,8 @@ import labelset.LabelSet;
 import org.json.JSONObject;
 import ui.LabelSetManagerWindow;
 
+import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ControllerMediator implements Mediator{
     private MainController mainController;
@@ -294,7 +295,7 @@ public class ControllerMediator implements Mediator{
         labelSetManagerController.clearLabelSets();
     }
 
-    public void exportLabelSetsToFiles(String pathToDir) {
+    public void exportLabelSetsToFiles(String pathToDir) throws IOException {
         labelSetManagerController.exportLabelSetsToFiles(pathToDir);
     }
 
@@ -359,7 +360,7 @@ public class ControllerMediator implements Mediator{
         tsneSettingsController.restoreSettingsToSaved();
     }
 
-    public void exportEmbeddingToFile(String pathToDir) {
+    public void exportEmbeddingToFile(String pathToDir) throws IOException {
         clusterViewController.exportEmbeddingToFile(pathToDir);
     }
 
@@ -496,7 +497,7 @@ public class ControllerMediator implements Mediator{
         return clusterViewController.getClusterView();
     }
 
-    public Node getCellClusterPlot() {
+    public Pane getCellClusterPlot() {
         return clusterViewController.getCellClusterPlot();
     }
 
@@ -508,7 +509,7 @@ public class ControllerMediator implements Mediator{
         return isoformPlotController.getIsoformPlotPanel();
     }
 
-    public Node getIsoformPlot() {
+    public Pane getIsoformPlot() {
         return isoformPlotController.getIsoformPlot();
     }
 
@@ -667,8 +668,17 @@ public class ControllerMediator implements Mediator{
     public float getFigureScale() {
         return imageExporterController.getFigureScale();
     }
+
     public String getFigureTypeExporting() {
         return imageExporterController.getFigureTypeExporting();
+    }
+
+    public String getCellPlotFigureXAxisLabel() {
+        return imageExporterController.getCellPlotFigureXAxisLabel();
+    }
+
+    public String getCellPlotFigureYAxisLabel() {
+        return imageExporterController.getCellPlotFigureYAxisLabel();
     }
 
     public boolean isReverseComplementing() {

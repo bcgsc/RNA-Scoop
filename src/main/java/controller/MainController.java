@@ -20,6 +20,7 @@ import persistance.SessionMaker;
 import ui.Main;
 
 import java.io.File;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -231,12 +232,18 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleSaveSessionButton() {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        File folder = directoryChooser.showDialog(window);
-        if (folder != null) {
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter jsonFilter = new FileChooser.ExtensionFilter("JSON Files", "*.json");
+        fileChooser.getExtensionFilters().add(jsonFilter);
+        fileChooser.setInitialFileName("session.json");
+        File file = fileChooser.showSaveDialog(window);
+        if (file != null) {
             try {
-                SessionIO.saveSessionAtPath(folder.getPath());
+                SessionIO.saveSessionAtPath(file.getPath());
                 ControllerMediator.getInstance().addConsoleMessage("Successfully saved session");
+            } catch (FileAlreadyExistsException e) {
+                ControllerMediator.getInstance().addConsoleErrorMessage("Could not create directory named " + e.getFile() +
+                        " as a file with that name already exists. Either rename the file, or use another name for the session");
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
             }
@@ -249,11 +256,11 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleLoadSessionButton() {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        File folder = directoryChooser.showDialog(window);
-        if (folder != null) {
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showOpenDialog(window);
+        if (file != null) {
             try {
-                SessionIO.loadSessionAtPath(folder.getPath());
+                SessionIO.loadSessionAtPath(file.getPath());
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
             }
