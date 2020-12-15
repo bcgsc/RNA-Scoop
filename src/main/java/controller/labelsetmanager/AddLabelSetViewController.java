@@ -1,5 +1,6 @@
 package controller.labelsetmanager;
 
+import exceptions.AddClusterWhenNoCellsSelectedException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -73,14 +74,18 @@ public class AddLabelSetViewController {
     }
 
     /**
-     * Adds new cluster from the select cells to the label set user is customizing,
-     * alerts the cluster view of the change, and updates the isoform plot
+     * Adds new cluster from the selected cells to the label set user is customizing,
+     * alerts the cluster view of the change, and updates the isoform plot.
      */
     @FXML
     protected void handleMakeClusterButton() {
-        labelSet.addClusterFromSelectedCells();
-        ControllerMediator.getInstance().clusterViewHandleClusterAddedFromSelectedCells();
-        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+        try {
+            labelSet.addClusterFromSelectedCells();
+            ControllerMediator.getInstance().clusterViewHandleClusterAddedFromSelectedCells();
+            ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+        } catch (AddClusterWhenNoCellsSelectedException e) {
+            ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
+        }
     }
 
     /**

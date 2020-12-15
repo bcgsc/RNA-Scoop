@@ -960,7 +960,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             float minDist = ControllerMediator.getInstance().getMinDist();
             int nearestNeighbors = ControllerMediator.getInstance().getNearestNeighbors();
             final Umap umap = new Umap();
-            umap.setNumberComponents(2);         // number of dimensions in result
+            umap.setNumberComponents(2); // number of dimensions in generated matrix
             umap.setMinDist(minDist);
             umap.setNumberNearestNeighbours(nearestNeighbors);
             umap.setThreads(Runtime.getRuntime().availableProcessors());

@@ -1,6 +1,7 @@
 package labelset;
 
 import controller.clusterview.ClusterViewController;
+import exceptions.AddClusterWhenNoCellsSelectedException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import mediator.ControllerMediator;
@@ -45,8 +46,10 @@ public class LabelSet {
     /**
      * Adds new cluster to label set containing the selected cells in the t-SNE plot
      */
-    public void addClusterFromSelectedCells() {
+    public void addClusterFromSelectedCells() throws AddClusterWhenNoCellsSelectedException {
         Set<ClusterViewController.CellDataItem> selectedCells = (Set<ClusterViewController.CellDataItem>) ControllerMediator.getInstance().getCells(true);
+        if (selectedCells.size() == 0)
+            throw new AddClusterWhenNoCellsSelectedException();
         int clusterNumber = clusters.size() + 1;
         Cluster newCluster = new Cluster("Cluster " + clusterNumber, this, selectedCells);
         for (ClusterViewController.CellDataItem selectedCell : selectedCells) {
