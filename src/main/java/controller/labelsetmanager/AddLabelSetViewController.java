@@ -1,6 +1,7 @@
 package controller.labelsetmanager;
 
 import exceptions.AddClusterWhenNoCellsSelectedException;
+import exceptions.RNAScoopException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -9,6 +10,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.util.converter.DefaultStringConverter;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
@@ -83,7 +85,7 @@ public class AddLabelSetViewController {
             labelSet.addClusterFromSelectedCells();
             ControllerMediator.getInstance().clusterViewHandleClusterAddedFromSelectedCells();
             ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
-        } catch (AddClusterWhenNoCellsSelectedException e) {
+        } catch (RNAScoopException e) {
             ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
         }
     }
@@ -211,13 +213,21 @@ public class AddLabelSetViewController {
     private TableColumn<Cluster, String> getClusterNameColumn() {
         TableColumn<Cluster,String> clusterNameCol = new TableColumn("Name");
         clusterNameCol.setCellValueFactory(new PropertyValueFactory("name"));
-        clusterNameCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        clusterNameCol.setOnEditCommit(
-                (TableColumn.CellEditEvent<Cluster, String> t) -> {
-                    Cluster cluster = t.getTableView().getItems().get(t.getTablePosition().getRow());
-                    cluster.setName(t.getNewValue());
+        clusterNameCol.setCellFactory(col -> new TextFieldTableCell<Cluster, String>(new DefaultStringConverter()) {
+            @Override
+            public void commitEdit(String newName) {
+                if (labelSet.getClusterWithName(newName) == null) {
+                    super.commitEdit(newName);
+                    Cluster cluster = (Cluster) getTableRow().getItem();
+                    cluster.setName(newName);
                     ControllerMediator.getInstance().redrawLegend();
-                });
+                } else {
+                    super.cancelEdit();
+                    if (!super.getItem().equals(newName))
+                        ControllerMediator.getInstance().addConsoleErrorMessage("Label set already has a cluster named " + newName);
+                }
+            }
+        });
         return clusterNameCol;
     }
 
