@@ -50,7 +50,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        isoformPlot.prefWidthProperty().bind(isoformPlotPane.widthProperty());
+        isoformPlotPane.prefWidthProperty().bind(isoformPlot.widthProperty());
         selectionModel = new SelectionModel();
         geneGeneGroupMap = new HashMap<>();
         rectangularSelection = new RectangularSelection(isoformPlotPane);
@@ -243,6 +243,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         boolean shouldDisplayIsoformPlotLegend = shouldDisplayIsoformPlotLegend();
         if (shouldDisplayIsoformPlotLegend && isoformPlotLegend == null) {
             isoformPlotLegend = new IsoformPlotLegend();
+            VBox.setMargin(isoformPlotLegend, new Insets(0, 10, 10, 10));
             isoformPlot.getChildren().add(isoformPlotLegend);
         } else if (shouldDisplayIsoformPlotLegend) {
             isoformPlotLegend.updateIsoformPlotLegend(redraw);
@@ -697,7 +698,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             public IsoformGraphic(double pixelsPerNucleotide, boolean reverseComplement, boolean cellPlotCleared, boolean cellsSelected) {
                 setWidth(getIsoformGraphicWidth(pixelsPerNucleotide));
                 setHeight(EXON_HEIGHT + IsoformGraphic.ISOFORM_GRAPHIC_SPACING);
-
                 toolTip = new Tooltip();
                 toolTipShowing = false;
                 double expression = getIsoformExpression(cellsSelected);
