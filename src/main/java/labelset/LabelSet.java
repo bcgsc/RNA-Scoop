@@ -21,7 +21,7 @@ public class LabelSet {
     public LabelSet() {
         clusters = FXCollections.observableArrayList();
         cellNumberClusterMap = new HashMap<>();
-        name = "Label Set " + (ControllerMediator.getInstance().getNumLabelSets() + 1);
+        name = ControllerMediator.getInstance().getUniqueLabelSetName("Label Set " + (ControllerMediator.getInstance().getNumLabelSets() + 1));
         setUpClusters();
     }
 

@@ -3,6 +3,7 @@ package persistance;
 import labelset.LabelSet;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 public class CurrentSession {
@@ -74,8 +75,14 @@ public class CurrentSession {
         return isoformIDsPath;
     }
 
-    public static Collection<String> getLabelSetPaths() {
-        return (labelSetPaths == null)? null : labelSetPaths.values();
+    public static Map<String, String> getLabelSetPaths() {
+        if (labelSetPaths != null) {
+            Map<String, String> labelSetNamePathMap = new HashMap<>();
+            for (LabelSet labelSet : labelSetPaths.keySet())
+                labelSetNamePathMap.put(labelSet.getName(), labelSetPaths.get(labelSet));
+            return labelSetNamePathMap;
+        }
+        return null;
     }
 
     public static String getEmbeddingPath() {

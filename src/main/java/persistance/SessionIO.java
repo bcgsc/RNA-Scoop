@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class responsible for writing and reading to a JSON file in which
@@ -113,9 +114,9 @@ public class SessionIO {
             String gtf = prevSession.getString(SessionMaker.GTF_PATH_KEY);
             String matrix = prevSession.getString(SessionMaker.MATRIX_PATH_KEY);
             String isoformLabels = prevSession.getString(SessionMaker.ISOFORM_LABELS_PATH_KEY);
-            Collection<String> cellLabels = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.CELL_LABELS_PATH_KEY).toList();
+            Map<String, String> labelSets = (Map<String, String>)(Map<String, ?>) prevSession.getJSONObject(SessionMaker.CELL_LABELS_PATH_KEY).toMap();
             String embedding = (prevSession.has(SessionMaker.EMBEDDING_PATH_KEY))? prevSession.getString(SessionMaker.EMBEDDING_PATH_KEY) : null;
-            Parser.loadPreviousSessionData(gtf, matrix, isoformLabels, cellLabels, embedding);
+            Parser.loadPreviousSessionData(gtf, matrix, isoformLabels, labelSets, embedding);
         }
 
         private void restoreSession() {

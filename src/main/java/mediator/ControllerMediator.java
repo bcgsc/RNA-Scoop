@@ -315,6 +315,18 @@ public class ControllerMediator implements Mediator{
         return labelSetManagerController.getNumLabelSets();
     }
 
+    public int getNumLabelSetsExported() {
+        return labelSetManagerController.getNumLabelSetsExported();
+    }
+
+    public boolean hasLabelSetWithName(String name) {
+        return labelSetManagerController.hasLabelSetWithName(name);
+    }
+
+    public String getUniqueLabelSetName(String name) {
+        return labelSetManagerController.getUniqueLabelSetName(name);
+    }
+
     // Display t-SNE
     public void initializeClusterViewSettings(Parent tsneSettings, Parent umapSettings) {
         clusterViewSettingsController.initializeClusterViewSettings(tsneSettings, umapSettings);

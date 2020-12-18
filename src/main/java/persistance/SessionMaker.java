@@ -20,6 +20,7 @@ public class SessionMaker {
     public static final String CELLS_SELECTED_KEY = "cells_selected";
     public static final String CELL_CATEGORIES_SELECTED_KEY = "cell_categories_selected";
     public static final String LABEL_SET_IN_USE_KEY = "label_set_in_use";
+    public static final String NUM_LABEL_SETS_EXPORTED_KEY = "num_label_sets_exported";
     public static final String GENES_SHOWN_KEY = "genes_shown";
     public static final String ISOFORMS_SELECTED_KEY = "isoforms_selected";
     public static final String ISOFORM_PLOT_OPEN_KEY = "isoform_open";
@@ -135,6 +136,7 @@ public class SessionMaker {
         LabelSet labelSetInUse = ControllerMediator.getInstance().getLabelSetInUse();
         if (labelSetInUse != null)
             session.put(LABEL_SET_IN_USE_KEY, labelSetInUse.getName());
+        session.put(NUM_LABEL_SETS_EXPORTED_KEY, ControllerMediator.getInstance().getNumLabelSetsExported());
         return session;
     }
 }

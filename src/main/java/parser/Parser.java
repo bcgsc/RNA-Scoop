@@ -8,7 +8,6 @@ import javafx.application.Platform;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import persistance.CurrentSession;
 import persistance.SessionIO;
@@ -21,6 +20,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static javafx.application.Platform.isFxApplicationThread;
@@ -53,21 +53,15 @@ public class Parser {
                 embedding = resolveRelativePath((String) jsonObj.get(SessionMaker.EMBEDDING_PATH_KEY), jsonParent);
             }
 
-            ArrayList<String> cellLabels = new ArrayList<>();
-            Object cellLabelsObj = jsonObj.get(SessionMaker.CELL_LABELS_PATH_KEY);
-            if (cellLabelsObj instanceof JSONArray) {
-                for (Object o : (JSONArray) cellLabelsObj) {
-                    cellLabels.add(resolveRelativePath((String) o, jsonParent));
-                }
-            }
-            else {
-                cellLabels.add(resolveRelativePath((String) cellLabelsObj, jsonParent));
-            }
+            Map<String, String> labelSets = new HashMap<>();
+            JSONObject labelSetsJSONObject = jsonObj.getJSONObject(SessionMaker.CELL_LABELS_PATH_KEY);
+            for (String labelSetName : labelSetsJSONObject.keySet())
+                    labelSets.put(labelSetName, resolveRelativePath(labelSetsJSONObject.getString(labelSetName), jsonParent));
 
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing GTF file..."));
             GTFLoader.loadGTF(gtf);
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing matrix files..."));
-            Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, cellLabels, embedding);
+            Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, labelSets, embedding);
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + pathToPaths));
             CurrentSession.saveLoadedPaths(gtf, matrix, isoformLabels, labelSetPathMap, embedding);
             return true;
@@ -82,12 +76,12 @@ public class Parser {
         }
     }
 
-    public static boolean loadPreviousSessionData(String gtf, String matrix, String isoformLabels, Collection<String> cellLabels, String embedding) {
+    public static boolean loadPreviousSessionData(String gtf, String matrix, String isoformLabels, Map<String, String> labelSets, String embedding) {
         try {
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing previous session GTF file..."));
             GTFLoader.loadGTF(gtf);
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing previous session matrix files..."));
-            Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, cellLabels, embedding);
+            Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, labelSets, embedding);
             CurrentSession.saveLoadedPaths(gtf, matrix, isoformLabels, labelSetPathMap, embedding);
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Finished parsing previous session dataset files"));
             return true;
@@ -107,7 +101,8 @@ public class Parser {
      */
     public static boolean loadLabelSet(File labelSetFile) {
         try {
-            LabelSet labelSet = CellPlotInfoLoader.getLabelSet(labelSetFile);
+            String nameWithoutExtension = getLabelSetName(labelSetFile);
+            LabelSet labelSet = getLabelSet(labelSetFile, nameWithoutExtension);
             if (labelSet.getNumCellsInLabelSet() == ControllerMediator.getInstance().getNumCellsToPlot()) {
                 ControllerMediator.getInstance().addLabelSet(labelSet);
                 CurrentSession.saveLabelSetPath(labelSet, labelSetFile.getAbsolutePath());
@@ -119,6 +114,43 @@ public class Parser {
             ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
         return false;
+    }
+
+    private static String getLabelSetName(File labelSetFile) {
+        String name = labelSetFile.getName();
+        String nameWithoutExtension = name.replaceFirst("[.][^.]+$", "");
+
+        return ControllerMediator.getInstance().getUniqueLabelSetName(nameWithoutExtension);
+    }
+
+    /**
+     * Creates a label set from given label set file. Label set is made based on map of cells
+     * (represented by their numbers) and the clusters they belong to.
+     * If the first line of the cell labels file says "T Cells", the cell represented by the first
+     * row of the matrix should be in the cluster labelled "T Cells". The map from which the
+     * label set is produced will map 0 to a cluster with label "T Cells"
+     */
+    public static LabelSet getLabelSet(File labelSetFile, String labelSetName) throws IOException {
+        Map<Integer, Cluster> cellNumberClusterMap = new LinkedHashMap<>();
+        Map<String, Cluster> clusterMap = new HashMap<>();
+
+        String currentLabel;
+        Cluster cluster;
+        int cellNumber = 0;
+
+        BufferedReader reader= new BufferedReader(new FileReader(labelSetFile));
+        while ((currentLabel = reader.readLine()) != null) {
+            if (clusterMap.containsKey(currentLabel)) {
+                cluster = clusterMap.get(currentLabel);
+            } else {
+                cluster = new Cluster(currentLabel);
+                clusterMap.put(currentLabel, cluster);
+            }
+            cellNumberClusterMap.put(cellNumber, cluster);
+            cellNumber++;
+        }
+
+        return new LabelSet(cellNumberClusterMap, labelSetName);
     }
 
     public static Set<String> loadGeneSelectionFile(File geneSelectionFile) {
@@ -351,14 +383,16 @@ public class Parser {
          * Loads cell plot info (matrix, isoform labels, label sets, embedding), and returns map containing the loaded
          * label sets and their respective paths
          */
-        public static Map<LabelSet, String> loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, Collection<String> pathsToLabelSets, String pathToEmbedding) throws IOException, RNAScoopException {
+        public static Map<LabelSet, String> loadCellPlotInfo(String pathToMatrix, String pathToIsoformLabels, Map<String, String> pathsToLabelSets, String pathToEmbedding) throws IOException, RNAScoopException {
             HashMap<String, Integer> isoformIndexMap = getIsoformIndexMap(pathToIsoformLabels);
             int numIsoforms = isoformIndexMap.size();
             List<LabelSet> labelSets = new ArrayList<>();
             Map<LabelSet, String> labelSetPathMap =  new HashMap<>();
             int numCells = -1;
-            for (String pathToLabelSet : pathsToLabelSets) {
-                LabelSet labelSet = getLabelSet(new File(pathToLabelSet));
+            for (Map.Entry<String, String> pathToLabelSet : pathsToLabelSets.entrySet()) {
+                String path = pathToLabelSet.getValue();
+                String labelSetName = pathToLabelSet.getKey();
+                LabelSet labelSet = getLabelSet(new File(path), labelSetName);
                 if (numCells < 0) {
                     numCells = labelSet.getNumCellsInLabelSet();
                 }
@@ -367,7 +401,7 @@ public class Parser {
                     throw new RowLabelsLengthException();
                 }
                 labelSets.add(labelSet);
-                labelSetPathMap.put(labelSet, pathToLabelSet);
+                labelSetPathMap.put(labelSet, path);
             }
 
             double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix(pathToMatrix, numCells, numIsoforms);
@@ -389,39 +423,6 @@ public class Parser {
             });
             while (!addedLabelSets.get());
             return labelSetPathMap;
-        }
-
-        /**
-         * Creates a label set from given cell labels file. Label set is made based on map of cells
-         * (represented by their numbers) and the clusters they belong to.
-         * If the first line of the cell labels file says "T Cells", the cell represented by the first
-         * row of the matrix should be in the cluster labelled "T Cells". The map from which the
-         * label set is produced will map 0 to a cluster with label "T Cells"
-         */
-        public static LabelSet getLabelSet(File cellLabelsFile) throws IOException {
-            Map<Integer, Cluster> cellNumberClusterMap = new LinkedHashMap<>();
-            Map<String, Cluster> clusterMap = new HashMap<>();
-
-            String currentLabel;
-            Cluster cluster;
-            int cellNumber = 0;
-
-            BufferedReader reader= new BufferedReader(new FileReader(cellLabelsFile));
-            while ((currentLabel = reader.readLine()) != null) {
-                if (clusterMap.containsKey(currentLabel)) {
-                    cluster = clusterMap.get(currentLabel);
-                } else {
-                    cluster = new Cluster(currentLabel);
-                    clusterMap.put(currentLabel, cluster);
-                }
-                cellNumberClusterMap.put(cellNumber, cluster);
-                cellNumber++;
-            }
-
-            String name = cellLabelsFile.getName();
-            String nameWithoutExtension = name.replaceFirst("[.][^.]+$", "");
-
-            return new LabelSet(cellNumberClusterMap, nameWithoutExtension);
         }
 
         /**

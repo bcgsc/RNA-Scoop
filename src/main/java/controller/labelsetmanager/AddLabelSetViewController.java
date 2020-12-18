@@ -1,6 +1,5 @@
 package controller.labelsetmanager;
 
-import exceptions.AddClusterWhenNoCellsSelectedException;
 import exceptions.RNAScoopException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -8,6 +7,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.util.converter.DefaultStringConverter;
@@ -200,9 +200,23 @@ public class AddLabelSetViewController {
     private void setUpLabelSetNameTextField() {
         labelSetNameTextField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
             if (!newValue) { //when focus lost
-                ControllerMediator.getInstance().getLabelSetInUse().setName(labelSetNameTextField.getText());
+                handleChangedLabelSetName();
             }
         });
+        labelSetNameTextField.setOnKeyPressed(event -> {
+            if (event.getCode().equals(KeyCode.ENTER))
+                handleChangedLabelSetName();
+        });
+    }
+
+    private void handleChangedLabelSetName() {
+        String newName = labelSetNameTextField.getText();
+        if (!ControllerMediator.getInstance().hasLabelSetWithName(newName)) {
+            ControllerMediator.getInstance().getLabelSetInUse().setName(newName);
+        } else {
+            ControllerMediator.getInstance().addConsoleErrorMessage("There is already a label set named " + newName);
+            labelSetNameTextField.setText(labelSet.getName());
+        }
     }
 
     /**

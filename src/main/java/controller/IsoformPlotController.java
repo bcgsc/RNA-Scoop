@@ -389,7 +389,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      * A gene in the isoform plot with all its isoforms
      */
     private class GeneGroup extends VBox {
-        private final Font GENE_FONT = new Font("Open Sans Bold", 16);
+        private final Font GENE_FONT = Font.loadFont(getClass().getResource("/fonts/OpenSans-Bold.ttf").toExternalForm(), 16);
 
         private Gene gene;
         private SelectableText label;
@@ -553,7 +553,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     private static class IsoformGroup extends VBox {
         public static final int ISOFORM_GROUP_OFFSET = 10;
-        private static final Font ISOFORM_FONT = new Font("Open Sans", 12);
+        private static final Font ISOFORM_FONT = Font.loadFont(IsoformGroup.class.getResource("/fonts/OpenSans-Regular.ttf").toExternalForm(), 12);
         private static final int ISOFORM_GRAPHIC_DOT_PLOT_SPACING = 5;
 
         private Isoform isoform;
@@ -1039,7 +1039,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     private static class IsoformPlotLegend extends HBox {
-        public static final Font LEGEND_FONT = new Font("Open Sans", 11);
+        public static final Font LEGEND_FONT = Font.loadFont(IsoformPlotLegend.class.getResource("/fonts/OpenSans-Regular.ttf").toExternalForm(), 11);
 
         private GradientLegend gradientLegend;
         private Node dotLegend;
