@@ -212,8 +212,7 @@ public class ImageExporterController extends PopUpController implements Initiali
     }
 
     private Font getCellPlotAxisFont() throws IOException, FontFormatException {
-        File fontFile = new File(getClass().getResource("/fonts/OpenSans-Regular.ttf").getPath());
-        Font axisFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+        Font axisFont = Font.createFont(Font.TRUETYPE_FONT, getClass().getResourceAsStream("/fonts/OpenSans-Regular.ttf"));
         axisFont = axisFont.deriveFont(CELL_PLOT_AXIS_FONT_BASE_SIZE * scale);
         return axisFont;
     }
