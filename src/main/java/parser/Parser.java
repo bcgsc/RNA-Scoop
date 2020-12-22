@@ -58,10 +58,13 @@ public class Parser {
             for (String labelSetName : labelSetsJSONObject.keySet())
                     labelSets.put(labelSetName, resolveRelativePath(labelSetsJSONObject.getString(labelSetName), jsonParent));
 
+            String expressionUnit = (jsonObj.has(SessionMaker.EXPRESSION_UNIT_KEY))? jsonObj.getString(SessionMaker.EXPRESSION_UNIT_KEY) : null;
+
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing GTF file..."));
             GTFLoader.loadGTF(gtf);
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing matrix files..."));
             Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, labelSets, embedding);
+            ControllerMediator.getInstance().setExpressionUnit(expressionUnit);
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + pathToPaths));
             CurrentSession.saveLoadedPaths(gtf, matrix, isoformLabels, labelSetPathMap, embedding);
             return true;
@@ -76,12 +79,20 @@ public class Parser {
         }
     }
 
-    public static boolean loadPreviousSessionData(String gtf, String matrix, String isoformLabels, Map<String, String> labelSets, String embedding) {
+    public static boolean loadPreviousSessionData(JSONObject prevSession) {
         try {
+            String gtf = prevSession.getString(SessionMaker.GTF_PATH_KEY);
+            String matrix = prevSession.getString(SessionMaker.MATRIX_PATH_KEY);
+            String isoformLabels = prevSession.getString(SessionMaker.ISOFORM_LABELS_PATH_KEY);
+            Map<String, String> labelSets = (Map<String, String>)(Map<String, ?>) prevSession.getJSONObject(SessionMaker.CELL_LABELS_PATH_KEY).toMap();
+            String embedding = (prevSession.has(SessionMaker.EMBEDDING_PATH_KEY))? prevSession.getString(SessionMaker.EMBEDDING_PATH_KEY) : null;
+            String expressionUnit = (prevSession.has(SessionMaker.EXPRESSION_UNIT_KEY))? prevSession.getString(SessionMaker.EXPRESSION_UNIT_KEY) : null;
+
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing previous session GTF file..."));
             GTFLoader.loadGTF(gtf);
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing previous session matrix files..."));
             Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, labelSets, embedding);
+            ControllerMediator.getInstance().setExpressionUnit(expressionUnit);
             CurrentSession.saveLoadedPaths(gtf, matrix, isoformLabels, labelSetPathMap, embedding);
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Finished parsing previous session dataset files"));
             return true;

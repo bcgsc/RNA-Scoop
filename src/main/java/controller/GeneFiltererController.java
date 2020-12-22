@@ -32,16 +32,16 @@ public class GeneFiltererController extends PopUpController implements Initializ
     private static final double GENE_FILTERER_WIDTH = 550;
     private static final double GENE_FILTERER_HEIGHT = 600;
     // Dominant isoform switching (DIS)
-    private static final int DEFAULT_DIS_MIN_TPM = 10;
+    private static final int DEFAULT_DIS_MIN = 10;
     private static final int DEFAULT_DIS_MIN_PERCENT_EXPRESSED = 50;
     // Differential Expression (DE)
     private static final int DEFAULT_DE_MIN_FOLD_CHANGE = 2;
-    private static final int DEFAULT_DE_MIN_TPM = 10;
+    private static final int DEFAULT_DE_MIN = 10;
     private static final int DEFAULT_DE_MIN_PERCENT_EXPRESSED = 50;
     // Category-specific expression (CSE)
-    private static final int DEFAULT_CSE_MIN_TPM = 10;
+    private static final int DEFAULT_CSE_MIN = 10;
     private static final int DEFAULT_CSE_MIN_PERCENT_EXPRESSED = 75;
-    private static final int DEFAULT_CSE_MAX_TPM = 25;
+    private static final int DEFAULT_CSE_MAX = 25;
     private static final int DEFAULT_CSE_MAX_PERCENT_EXPRESSED = 25;
 
     @FXML private Parent geneFilterer;
@@ -50,35 +50,35 @@ public class GeneFiltererController extends PopUpController implements Initializ
     @FXML private RadioButton noneFilterOption;
     // Dominant isoform switching (DIS)
     @FXML private RadioButton disFilterOption;
-    @FXML private TextField disMinTPMField;
+    @FXML private TextField disMinField;
     @FXML private TextField disMinPercentExpressedField;
     // Differential Expression (DE)
     @FXML private RadioButton deFilterOption;
     @FXML private CheckComboBox<Cluster> deCategories;
     @FXML private TextField deMinFoldChangeField;
-    @FXML private TextField deMinTPMField;
+    @FXML private TextField deMinField;
     @FXML private TextField deMinPercentExpressedField;
     // Category-specific expression (CSE)
     @FXML private RadioButton cseFilterOption;
     @FXML private CheckComboBox<Cluster> cseCategories;
-    @FXML private TextField cseMinTPMField;
+    @FXML private TextField cseMinField;
     @FXML private TextField cseMinPercentExpressedField;
-    @FXML private TextField cseMaxTPMField;
+    @FXML private TextField cseMaxField;
     @FXML private TextField cseMaxPercentExpressedField;
 
     private Toggle optionFilteringBy;
     private LabelSet labelSetFilteringBy;
 
-    private MutableDouble disMinTPM;
+    private MutableDouble disMin;
     private MutableDouble disMinPercentExpressed;
 
     private MutableDouble deMinFoldChange;
-    private MutableDouble deMinTPM;
+    private MutableDouble deMin;
     private MutableDouble deMinPercentExpressed;
 
-    private MutableDouble cseMinTPM;
+    private MutableDouble cseMin;
     private MutableDouble cseMinPercentExpressed;
-    private MutableDouble cseMaxTPM;
+    private MutableDouble cseMax;
     private MutableDouble cseMaxPercentExpressed;
 
 
@@ -178,24 +178,24 @@ public class GeneFiltererController extends PopUpController implements Initializ
         noneFilterOption.setSelected(true);
         optionFilteringBy = noneFilterOption;
 
-        disMinTPMField.setText(Integer.toString(DEFAULT_DIS_MIN_TPM));
-        disMinTPM = new MutableDouble(DEFAULT_DIS_MIN_TPM);
+        disMinField.setText(Integer.toString(DEFAULT_DIS_MIN));
+        disMin = new MutableDouble(DEFAULT_DIS_MIN);
         disMinPercentExpressedField.setText(Integer.toString(DEFAULT_DIS_MIN_PERCENT_EXPRESSED));
         disMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
 
         deMinFoldChangeField.setText(Integer.toString(DEFAULT_DE_MIN_FOLD_CHANGE));
         deMinFoldChange = new MutableDouble(DEFAULT_DE_MIN_FOLD_CHANGE);
-        deMinTPMField.setText(Integer.toString(DEFAULT_DE_MIN_TPM));
-        deMinTPM = new MutableDouble(DEFAULT_DE_MIN_TPM);
+        deMinField.setText(Integer.toString(DEFAULT_DE_MIN));
+        deMin = new MutableDouble(DEFAULT_DE_MIN);
         deMinPercentExpressedField.setText(Integer.toString(DEFAULT_DE_MIN_PERCENT_EXPRESSED));
         deMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
 
-        cseMinTPMField.setText(Integer.toString(DEFAULT_CSE_MIN_TPM));
-        cseMinTPM = new MutableDouble(DEFAULT_CSE_MIN_TPM);
+        cseMinField.setText(Integer.toString(DEFAULT_CSE_MIN));
+        cseMin = new MutableDouble(DEFAULT_CSE_MIN);
         cseMinPercentExpressedField.setText(Integer.toString(DEFAULT_CSE_MIN_PERCENT_EXPRESSED));
         cseMinPercentExpressed = new MutableDouble(DEFAULT_CSE_MIN_PERCENT_EXPRESSED);
-        cseMaxTPMField.setText(Integer.toString(DEFAULT_CSE_MAX_TPM));
-        cseMaxTPM = new MutableDouble(DEFAULT_CSE_MAX_TPM);
+        cseMaxField.setText(Integer.toString(DEFAULT_CSE_MAX));
+        cseMax = new MutableDouble(DEFAULT_CSE_MAX);
         cseMaxPercentExpressedField.setText(Integer.toString(DEFAULT_CSE_MAX_PERCENT_EXPRESSED));
         cseMaxPercentExpressed = new MutableDouble(DEFAULT_CSE_MAX_PERCENT_EXPRESSED);
     }
@@ -244,8 +244,8 @@ public class GeneFiltererController extends PopUpController implements Initializ
         return cseFilterOption == optionFilteringBy;
     }
 
-    public double getDISMinTPM() {
-        return disMinTPM.doubleValue();
+    public double getDISMin() {
+        return disMin.doubleValue();
     }
 
     public double getDISMinPercentExpressed() {
@@ -256,24 +256,24 @@ public class GeneFiltererController extends PopUpController implements Initializ
         return deMinFoldChange.doubleValue();
     }
 
-    public double getDEMinTPM() {
-        return deMinTPM.doubleValue();
+    public double getDEMin() {
+        return deMin.doubleValue();
     }
 
     public double getDEMinPercentExpressed() {
         return deMinPercentExpressed.doubleValue();
     }
 
-    public double getCSEMinTPM() {
-        return cseMinTPM.doubleValue();
+    public double getCSEMin() {
+        return cseMin.doubleValue();
     }
 
     public double getCSEMinPercentExpressed() {
         return cseMinPercentExpressed.doubleValue();
     }
 
-    public double getCSEMaxTPM() {
-        return cseMaxTPM.doubleValue();
+    public double getCSEMax() {
+        return cseMax.doubleValue();
     }
 
     public double getCSEMaxPercentExpressed() {
@@ -303,7 +303,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
         double isoformExpression = isoform.getAverageExpressionInCluster(cluster, false, false);
         int isoformNumExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
         double isoformPercentExpressed = (double) isoformNumExpressingCells / cluster.getCells().size();
-        if (isoformExpression >= disMinTPM.doubleValue() && isoformPercentExpressed * 100 >= disMinPercentExpressed.doubleValue()) {
+        if (isoformExpression >= disMin.doubleValue() && isoformPercentExpressed * 100 >= disMinPercentExpressed.doubleValue()) {
             for (Iterator<Isoform> iterator = dominantIsoforms.iterator(); iterator.hasNext();) {
                 Isoform dominantIsoform = iterator.next();
                 double dominantIsoformExpression = dominantIsoform.getAverageExpressionInCluster(cluster, false, false);
@@ -333,20 +333,20 @@ public class GeneFiltererController extends PopUpController implements Initializ
     }
 
     private boolean isoformIsDifferentiallyExpressed(Isoform isoform) {
-        double minTPM = Double.MAX_VALUE;
-        double maxTPM = 0;
+        double minExpression = Double.MAX_VALUE;
+        double maxExpression = 0;
 
         for (Cluster cluster : deCategories.getCheckModel().getCheckedItems()) {
             double expression = isoform.getAverageExpressionInCluster(cluster, false, false);
             int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
             double percentExpressed = (double) numExpressingCells / cluster.getCells().size();
-            if (expression > maxTPM && expression > deMinTPM.doubleValue() && percentExpressed * 100 > deMinPercentExpressed.doubleValue())
-                maxTPM = expression;
-            else if (expression < minTPM)
-                minTPM = expression;
+            if (expression > maxExpression && expression > deMin.doubleValue() && percentExpressed * 100 > deMinPercentExpressed.doubleValue())
+                maxExpression = expression;
+            else if (expression < minExpression)
+                minExpression = expression;
 
         }
-        return (maxTPM / minTPM) >= deMinFoldChange.doubleValue();
+        return (maxExpression / minExpression) >= deMinFoldChange.doubleValue();
     }
 
     private boolean isoformHasCategorySpecificExpression(Isoform isoform) {
@@ -356,10 +356,10 @@ public class GeneFiltererController extends PopUpController implements Initializ
             double percentExpressed = (double) numExpressingCells / cluster.getCells().size();
 
             if (cseCategories.getCheckModel().isChecked(cluster)) {
-                if (expression < cseMinTPM.doubleValue() || percentExpressed * 100 < cseMinPercentExpressed.doubleValue())
+                if (expression < cseMin.doubleValue() || percentExpressed * 100 < cseMinPercentExpressed.doubleValue())
                     return false;
             } else {
-                if (expression > cseMaxTPM.doubleValue() && percentExpressed * 100 > cseMaxPercentExpressed.doubleValue())
+                if (expression > cseMax.doubleValue() && percentExpressed * 100 > cseMaxPercentExpressed.doubleValue())
                     return false;
             }
         }
@@ -367,8 +367,8 @@ public class GeneFiltererController extends PopUpController implements Initializ
     }
 
     private void restoreDISParamsFromPrevSession(JSONObject prevSession) {
-        disMinTPM.setValue(prevSession.getDouble(SessionMaker.DIS_MIN_TPM_KEY));
-        disMinTPMField.setText(Double.toString(disMinTPM.doubleValue()));
+        disMin.setValue(prevSession.getDouble(SessionMaker.DIS_MIN_KEY));
+        disMinField.setText(Double.toString(disMin.doubleValue()));
 
         disMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.DIS_MIN_PERCENT_EXPRESSED_KEY));
         disMinPercentExpressedField.setText(Double.toString(disMinPercentExpressed.doubleValue()));
@@ -389,8 +389,8 @@ public class GeneFiltererController extends PopUpController implements Initializ
         deMinFoldChange.setValue(prevSession.getDouble(SessionMaker.DE_MIN_FOLD_CHANGE_KEY));
         deMinFoldChangeField.setText(Double.toString(deMinFoldChange.doubleValue()));
 
-        deMinTPM.setValue(prevSession.getDouble(SessionMaker.DE_MIN_TPM_KEY));
-        deMinTPMField.setText(Double.toString(deMinTPM.doubleValue()));
+        deMin.setValue(prevSession.getDouble(SessionMaker.DE_MIN_KEY));
+        deMinField.setText(Double.toString(deMin.doubleValue()));
 
         deMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.DE_MIN_PERCENT_EXPRESSED_KEY));
         deMinPercentExpressedField.setText(Double.toString(deMinPercentExpressed.doubleValue()));
@@ -407,14 +407,14 @@ public class GeneFiltererController extends PopUpController implements Initializ
             }
         }
 
-        cseMinTPM.setValue(prevSession.getDouble(SessionMaker.CSE_MIN_TPM_KEY));
-        cseMinTPMField.setText(Double.toString(cseMinTPM.doubleValue()));
+        cseMin.setValue(prevSession.getDouble(SessionMaker.CSE_MIN_KEY));
+        cseMinField.setText(Double.toString(cseMin.doubleValue()));
 
         cseMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.CSE_MIN_PERCENT_EXPRESSED_KEY));
         cseMinPercentExpressedField.setText(Double.toString(cseMinPercentExpressed.doubleValue()));
 
-        cseMaxTPM.setValue(prevSession.getDouble(SessionMaker.CSE_MAX_TPM_KEY));
-        cseMaxTPMField.setText(Double.toString(cseMaxTPM.doubleValue()));
+        cseMax.setValue(prevSession.getDouble(SessionMaker.CSE_MAX_KEY));
+        cseMaxField.setText(Double.toString(cseMax.doubleValue()));
 
         cseMaxPercentExpressed.setValue(prevSession.getDouble(SessionMaker.CSE_MAX_PERCENT_EXPRESSED_KEY));
         cseMaxPercentExpressedField.setText(Double.toString(cseMaxPercentExpressed.doubleValue()));
@@ -460,24 +460,24 @@ public class GeneFiltererController extends PopUpController implements Initializ
     }
 
     private void setUpFieldUpdating(){
-        disMinTPMField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, disMinTPMField, disMinTPM, ChangedCutOffEvent.CHANGED_TPM_CUTOFF));
+        disMinField.focusedProperty().addListener((arg0, oldValue, newValue) ->
+                handleChangedFilteringParam(newValue, disMinField, disMin, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
         disMinPercentExpressedField.focusedProperty().addListener((arg0, oldValue, newValue) ->
                 handleChangedFilteringParam(newValue, disMinPercentExpressedField, disMinPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
 
         deMinFoldChangeField.focusedProperty().addListener((arg0, oldValue, newValue) ->
                 handleChangedFilteringParam(newValue, deMinFoldChangeField, deMinFoldChange, ChangedCutOffEvent.CHANGED_MIN_FOLD_CHANGE_CUTOFF));
-        deMinTPMField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, deMinTPMField, deMinTPM, ChangedCutOffEvent.CHANGED_TPM_CUTOFF));
+        deMinField.focusedProperty().addListener((arg0, oldValue, newValue) ->
+                handleChangedFilteringParam(newValue, deMinField, deMin, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
         deMinPercentExpressedField.focusedProperty().addListener((arg0, oldValue, newValue) ->
                 handleChangedFilteringParam(newValue, deMinPercentExpressedField, deMinPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
 
-        cseMinTPMField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, cseMinTPMField, cseMinTPM, ChangedCutOffEvent.CHANGED_TPM_CUTOFF));
+        cseMinField.focusedProperty().addListener((arg0, oldValue, newValue) ->
+                handleChangedFilteringParam(newValue, cseMinField, cseMin, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
         cseMinPercentExpressedField.focusedProperty().addListener((arg0, oldValue, newValue) ->
                 handleChangedFilteringParam(newValue, cseMinPercentExpressedField, cseMinPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
-        cseMaxTPMField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, cseMaxTPMField, cseMaxTPM, ChangedCutOffEvent.CHANGED_TPM_CUTOFF));
+        cseMaxField.focusedProperty().addListener((arg0, oldValue, newValue) ->
+                handleChangedFilteringParam(newValue, cseMaxField, cseMax, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
         cseMaxPercentExpressedField.focusedProperty().addListener((arg0, oldValue, newValue) ->
                 handleChangedFilteringParam(newValue, cseMaxPercentExpressedField, cseMaxPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
 
@@ -487,8 +487,8 @@ public class GeneFiltererController extends PopUpController implements Initializ
         if (!newValue) { //when focus lost
             String newCutOff = field.getText();
             try {
-                if (event.equals(ChangedCutOffEvent.CHANGED_TPM_CUTOFF))
-                    checkTPMCutOff(newCutOff);
+                if (event.equals(ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF))
+                    checkExpressionCutOff(newCutOff);
                 else if (event.equals(ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF))
                     checkPercentExpressedCutOff(newCutOff);
                 else
@@ -518,15 +518,15 @@ public class GeneFiltererController extends PopUpController implements Initializ
         });
     }
 
-    private void checkTPMCutOff(String tpmCutOff) throws InvalidTPMCutOffException {
-        double doubleTPMCutOff;
+    private void checkExpressionCutOff(String cutOff) throws InvalidExpressionCutOffException {
+        double doubleCutOff;
         try {
-            doubleTPMCutOff = Double.parseDouble(tpmCutOff);
+            doubleCutOff = Double.parseDouble(cutOff);
         } catch (Exception e) {
-            throw new InvalidTPMCutOffException();
+            throw new InvalidExpressionCutOffException();
         }
-        if (doubleTPMCutOff < 0)
-            throw new InvalidTPMCutOffException();
+        if (doubleCutOff < 0)
+            throw new InvalidExpressionCutOffException();
     }
 
     private void checkPercentExpressedCutOff(String percentExpressedCutOff) throws InvalidPercentCutOff {
@@ -598,7 +598,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
     }
 
     private enum ChangedCutOffEvent {
-        CHANGED_TPM_CUTOFF,
+        CHANGED_EXPRESSION_CUTOFF,
         CHANGED_PERCENT_CUTOFF,
         CHANGED_MIN_FOLD_CHANGE_CUTOFF
     }

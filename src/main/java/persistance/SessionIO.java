@@ -5,14 +5,11 @@ import mediator.ControllerMediator;
 import org.json.JSONObject;
 import parser.Parser;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -55,8 +52,7 @@ public class SessionIO {
     }
 
     /**
-     * Clears all data from current session (isoforms from GTF, matrix, console messages, path to
-     * JSON file...)
+     * Clears all data from current session (isoforms from GTF, matrix, console messages...)
      */
     public static void clearCurrentSessionData() {
         ControllerMediator.getInstance().clearGeneSelector();
@@ -65,6 +61,7 @@ public class SessionIO {
         ControllerMediator.getInstance().setIsoformIndexMap(null);
         ControllerMediator.getInstance().setCellIsoformExpressionMatrix(null);
         ControllerMediator.getInstance().setEmbedding(null);
+        ControllerMediator.getInstance().setExpressionUnit(null);
         CurrentSession.clearSavedPaths();
     }
 
@@ -74,7 +71,7 @@ public class SessionIO {
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableClusterView(true);
         ControllerMediator.getInstance().disableClusterViewSettings();
-        ControllerMediator.getInstance().disableTPMGradientAdjuster();
+        ControllerMediator.getInstance().disableGradientAdjuster();
         ControllerMediator.getInstance().disableLabelSetManager();
         ControllerMediator.getInstance().disableGeneFilterer();
         // doesn't disable add label set view, because main should be disabled
@@ -87,7 +84,7 @@ public class SessionIO {
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
-        ControllerMediator.getInstance().enableTPMGradientAdjuster();
+        ControllerMediator.getInstance().enableGradientAdjuster();
         ControllerMediator.getInstance().enableLabelSetManager();
         ControllerMediator.getInstance().enableGeneFilterer();
     }
@@ -104,25 +101,16 @@ public class SessionIO {
         @Override
         public void run() {
             if (prevSession.has(SessionMaker.GTF_PATH_KEY)) // if there is no loaded gtf file in the prev session, no data was loaded
-                loadPreviousSessionData();
+                Parser.loadPreviousSessionData(prevSession);
             restoreSession();
             Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded session"));
             enableAssociatedFunctionality();
         }
 
-        private void loadPreviousSessionData() {
-            String gtf = prevSession.getString(SessionMaker.GTF_PATH_KEY);
-            String matrix = prevSession.getString(SessionMaker.MATRIX_PATH_KEY);
-            String isoformLabels = prevSession.getString(SessionMaker.ISOFORM_LABELS_PATH_KEY);
-            Map<String, String> labelSets = (Map<String, String>)(Map<String, ?>) prevSession.getJSONObject(SessionMaker.CELL_LABELS_PATH_KEY).toMap();
-            String embedding = (prevSession.has(SessionMaker.EMBEDDING_PATH_KEY))? prevSession.getString(SessionMaker.EMBEDDING_PATH_KEY) : null;
-            Parser.loadPreviousSessionData(gtf, matrix, isoformLabels, labelSets, embedding);
-        }
-
         private void restoreSession() {
             Platform.runLater(() -> {
                 ControllerMediator.getInstance().restoreMainFromPrevSession(prevSession);
-                ControllerMediator.getInstance().restoreTPMGradientFromPrevSession(prevSession);
+                ControllerMediator.getInstance().restoreGradientFromPrevSession(prevSession);
                 ControllerMediator.getInstance().restoreClusterViewSettingsFromPrevSession(prevSession);
                 ControllerMediator.getInstance().restoreImageExporterFromPrevSession(prevSession);
                 ControllerMediator.getInstance().restoreLabelSetManagerFromPrevSession(prevSession);

@@ -133,7 +133,7 @@ public class ImageExporterController extends PopUpController implements Initiali
     private void enableAssociatedFunctionality() {
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableGeneSelector();
-        ControllerMediator.getInstance().enableTPMGradientAdjuster();
+        ControllerMediator.getInstance().enableGradientAdjuster();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableLabelSetManager();
@@ -142,7 +142,7 @@ public class ImageExporterController extends PopUpController implements Initiali
     private void disableAssociatedFunctionality() {
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableGeneSelector();
-        ControllerMediator.getInstance().disableTPMGradientAdjuster();
+        ControllerMediator.getInstance().disableGradientAdjuster();
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableLabelSetManager();

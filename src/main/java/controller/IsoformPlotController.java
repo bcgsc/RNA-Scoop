@@ -193,7 +193,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Called when TPM gradient changes
+     * Called when gradient changes
      * Updates isoform plot if necessary (i.e. if cell plot isn't cleared)
      */
     public void handleGradientChange() {
@@ -262,6 +262,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         selectionModel.selectIsoformsWithGivenIDs(isoformsToSelectIDs);
     }
 
+    public void setExpressionUnit(String expressionUnit) {
+        IsoformPlotLegend.setExpressionUnit(expressionUnit);
+    }
+
+    public String getExpressionUnit() {
+        return IsoformPlotLegend.getExpressionUnit();
+    }
+
     public static Collection<GeneGroup> getGeneGroups() {
         return geneGeneGroupMap.values();
     }
@@ -291,11 +299,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     }
 
     /**
-     * Opens up TPM gradient adjuster window when handle set TPM gradient button is pressed
+     * Opens up gradient adjuster window when set expression gradient button is pressed
      */
     @FXML
-    protected void handleSetTPMGradientButton() {
-        ControllerMediator.getInstance().displayTPMGradientAdjuster();
+    protected void handleSetExpressionGradientButton() {
+        ControllerMediator.getInstance().displayGradientAdjuster();
     }
 
     private void hideSingeExonIsoforms() {
@@ -370,13 +378,13 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
      */
     private static String getToolTipExpressionText(double expression, boolean showMedian, boolean includingZeros) {
         if (showMedian && includingZeros)
-            return "Median TPM: " + roundToOneDecimal(expression);
+            return "Median expression: " + roundToOneDecimal(expression);
         else if (showMedian)
-            return "Median non-zero TPM: " + roundToOneDecimal(expression);
+            return "Median non-zero expression: " + roundToOneDecimal(expression);
         else if (includingZeros)
-            return "Average TPM: " + roundToOneDecimal(expression);
+            return "Average expression: " + roundToOneDecimal(expression);
         else
-            return "Average non-zero TPM: " + roundToOneDecimal(expression);
+            return "Average non-zero expression: " + roundToOneDecimal(expression);
 
     }
 
@@ -791,7 +799,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             private Color getIsoformColor(boolean shouldGetCustomIsoformColor, double expression) {
                 Color isoformColor = DEFAULT_EXON_COLOR;
                 if (shouldGetCustomIsoformColor)
-                    isoformColor = ControllerMediator.getInstance().getColorFromTPMGradient(expression);
+                    isoformColor = ControllerMediator.getInstance().getColorFromGradient(expression);
                 return isoformColor;
             }
 
@@ -1014,11 +1022,11 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private static Canvas getDotPlotRowCircle(double expression, int numExpressingCells, int numCells) {
             Canvas dotPlotRowItem = new Canvas(DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT);
 
-            if (expression >= ControllerMediator.getInstance().getGradientMinTPM()) {
+            if (expression >= ControllerMediator.getInstance().getGradientMin()) {
                 double dotX = DOT_PLOT_COLUMN_WIDTH / 2;
                 double dotY = DOT_PLOT_ROW_HEIGHT / 2;
                 double dotSize = getDotSize((double) numExpressingCells/numCells);
-                Color dotColor = ControllerMediator.getInstance().getColorFromTPMGradient(expression);
+                Color dotColor = ControllerMediator.getInstance().getColorFromGradient(expression);
 
                 GraphicsContext graphicsContext = dotPlotRowItem.getGraphicsContext2D();
                 graphicsContext.setFill(dotColor);
@@ -1042,6 +1050,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         public static final Font LEGEND_FONT = Font.loadFont(IsoformPlotLegend.class.getResource("/fonts/OpenSans-Regular.ttf").toExternalForm(), 11);
 
         private GradientLegend gradientLegend;
+        private static String expressionUnit;
         private Node dotLegend;
 
         public IsoformPlotLegend() {
@@ -1059,6 +1068,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 addDotLegend();
             else if (!DotPlot.shouldDrawDotPlot() && dotLegend != null)
                 removeDotLegend();
+        }
+
+        public static void setExpressionUnit(String expressionUnit) {
+            IsoformPlotLegend.expressionUnit = expressionUnit;
+        }
+
+        public static String getExpressionUnit() {
+            return expressionUnit;
         }
 
         private void addGradientLegend() {
@@ -1094,18 +1111,18 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                 initializeGradientExpressionLabels();
                 initializeGradientScale();
 
-                StackPane tpmLabels = new StackPane();
-                tpmLabels.getChildren().addAll(minText, midText, maxText);
+                StackPane expressionLabels = new StackPane();
+                expressionLabels.getChildren().addAll(minText, midText, maxText);
                 StackPane.setAlignment(minText, Pos.CENTER_LEFT);
                 StackPane.setAlignment(midText, Pos.CENTER);
                 StackPane.setAlignment(maxText, Pos.CENTER_RIGHT);
 
-                getChildren().addAll(tpmLabels, gradient, scale);
+                getChildren().addAll(expressionLabels, gradient, scale);
             }
 
             private void initializeGradient() {
                 gradient = new Rectangle(GRADIENT_WIDTH, GRADIENT_HEIGHT);
-                gradient.setFill(ControllerMediator.getInstance().getTPMGradientFill());
+                gradient.setFill(ControllerMediator.getInstance().getGradientFill());
                 VBox.setMargin(gradient, new Insets(5, 0, 5, 0));
                 gradient.setStyle("-fx-stroke: black; -fx-stroke-width: 1");
             }
@@ -1127,7 +1144,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
 
             public void redraw() {
-                gradient.setFill(ControllerMediator.getInstance().getTPMGradientFill());
+                gradient.setFill(ControllerMediator.getInstance().getGradientFill());
                 minText.setText(getMinText());
                 midText.setText(getMidText());
                 maxText.setText(getMaxText());
@@ -1135,23 +1152,25 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             }
 
             private String getMinText() {
-                return roundAndConvertToString(ControllerMediator.getInstance().getGradientMinTPM());
+                return roundAndConvertToString(ControllerMediator.getInstance().getGradientMin());
             }
 
             private String getMidText() {
-                return roundAndConvertToString(ControllerMediator.getInstance().getGradientMidTPM());
+                return roundAndConvertToString(ControllerMediator.getInstance().getGradientMid());
             }
 
             private String getMaxText() {
-                return roundAndConvertToString(ControllerMediator.getInstance().getGradientMaxTPM());
+                return roundAndConvertToString(ControllerMediator.getInstance().getGradientMax());
             }
 
             private String getScaleText() {
                 String scaleText = "Expression Level";
-                if (ControllerMediator.getInstance().getScaleOptionInUse().equals(TPMGradientAdjusterController.LINEAR_SCALE_OPTION))
-                        return scaleText + " (Linear)";
+                boolean usingLinearScale = ControllerMediator.getInstance().getScaleOptionInUse().equals(GradientAdjusterController.LINEAR_SCALE_OPTION);
+                String scaleOption = usingLinearScale ? "Linear" : "Log";
+                if (expressionUnit != null)
+                        return scaleText + " (" + expressionUnit + ", " + scaleOption + ")";
                 else
-                    return scaleText + " (Log)";
+                    return scaleText + " (" + scaleOption + ")";
             }
 
             /**

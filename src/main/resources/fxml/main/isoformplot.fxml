@@ -11,7 +11,7 @@
             <Insets left="10" right="10" top="10"/>
         </VBox.margin>
         <Button onAction="#handleSelectGenesButton" text="Select genes"/>
-        <Button onAction="#handleSetTPMGradientButton" text="Set TPM gradient">
+        <Button onAction="#handleSetExpressionGradientButton" text="Set expression gradient">
             <HBox.margin>
                 <Insets left="10"/>
             </HBox.margin>

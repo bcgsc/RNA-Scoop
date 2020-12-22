@@ -22,7 +22,6 @@ import ui.Main;
 import java.io.File;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Collection;
-import java.util.Map;
 
 import static javafx.application.Platform.runLater;
 
@@ -278,7 +277,7 @@ public class MainController implements InteractiveElementController {
         openClusterView();
         openConsole();
         setViewTogglesToDefault();
-        ControllerMediator.getInstance().setTPMGradientToDefault();
+        ControllerMediator.getInstance().setGradientToDefault();
         ControllerMediator.getInstance().setGeneFilteringParamsToDefault();
         ControllerMediator.getInstance().setClusterViewSettingsToDefault();
         ControllerMediator.getInstance().setImageExporterSettingsToDefault();
@@ -618,7 +617,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
-        ControllerMediator.getInstance().disableTPMGradientAdjuster();
+        ControllerMediator.getInstance().disableGradientAdjuster();
         ControllerMediator.getInstance().disableLabelSetManager();
         ControllerMediator.getInstance().disableGeneFilterer();
         // doesn't disable add label set view, because main should be disabled when
@@ -631,7 +630,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
-        ControllerMediator.getInstance().enableTPMGradientAdjuster();
+        ControllerMediator.getInstance().enableGradientAdjuster();
         ControllerMediator.getInstance().enableLabelSetManager();
         ControllerMediator.getInstance().enableGeneFilterer();
     }
