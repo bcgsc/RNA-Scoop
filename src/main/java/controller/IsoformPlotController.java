@@ -33,7 +33,7 @@ import java.util.*;
 import static util.Util.roundToOneDecimal;
 
 public class IsoformPlotController implements Initializable, InteractiveElementController {
-    private static final int SCROLLBAR_WIDTH = 16;
+    private static final int SCROLLBAR_WIDTH = 18;
 
     @FXML private VBox isoformPlot;
     @FXML private VBox isoformPlotPanel;
@@ -50,7 +50,6 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        isoformPlotPane.prefWidthProperty().bind(isoformPlot.widthProperty());
         selectionModel = new SelectionModel();
         geneGeneGroupMap = new HashMap<>();
         rectangularSelection = new RectangularSelection(isoformPlotPane);
@@ -563,7 +562,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
     private static class IsoformGroup extends VBox {
         public static final int ISOFORM_GROUP_OFFSET = 10;
         private static final Font ISOFORM_FONT = Font.loadFont(IsoformGroup.class.getResource("/fonts/OpenSans-Regular.ttf").toExternalForm(), 12);
-        private static final int ISOFORM_GRAPHIC_DOT_PLOT_SPACING = 5;
+        private static final int ISOFORM_GRAPHIC_DOT_PLOT_SPACING = 15;
 
         private Isoform isoform;
         private SelectableText label;
@@ -617,9 +616,10 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
             rectangularSelection.removeSelectableIsoformGraphic(isoformGraphic);
         }
 
-
         public void setDotPlotRow(HBox dotPlotRow) {
             this.dotPlotRow = dotPlotRow;
+            if (dotPlotRow != null)
+                BorderPane.setMargin(dotPlotRow, new Insets(0,0, 0,  ISOFORM_GRAPHIC_DOT_PLOT_SPACING));
             graphicsHolder.setRight(dotPlotRow);
         }
 
@@ -784,14 +784,14 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
                     int geneStart = gene.getStartNucleotide();
 
                     double isoformExtraOffset = (isoformStart - geneStart) * pixelsPerNucleotide;
-                    BorderPane.setMargin(this, new Insets(0, ISOFORM_GRAPHIC_DOT_PLOT_SPACING, 0, isoformExtraOffset));
+                    BorderPane.setMargin(this, new Insets(0, 0, 0, isoformExtraOffset));
                     drawIsoform(pixelsPerNucleotide, isoformColor, exons, isoformStart, graphicsContext);
                 } else {
                     int isoformEnd = isoform.getEndNucleotide();
                     int geneEnd = gene.getEndNucleotide();
 
                     double isoformExtraOffset = (geneEnd - isoformEnd) * pixelsPerNucleotide;
-                    BorderPane.setMargin(this, new Insets(0, ISOFORM_GRAPHIC_DOT_PLOT_SPACING, 0, isoformExtraOffset));
+                    BorderPane.setMargin(this, new Insets(0, 0, 0, isoformExtraOffset));
                     drawIsoformReverseComplement(pixelsPerNucleotide, isoformColor, exons, isoformEnd, graphicsContext);
                 }
             }
