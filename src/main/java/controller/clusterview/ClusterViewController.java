@@ -398,6 +398,9 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     protected  void handleExportEmbeddingButton() {
         if (!isPlotCleared()) {
             FileChooser fileChooser = new FileChooser();
+            FileChooser.ExtensionFilter textFileFilter = new FileChooser.ExtensionFilter("Text Files", "*.txt");
+            fileChooser.getExtensionFilters().add(textFileFilter);
+            fileChooser.setInitialFileName("embedding.txt");
             File embeddingFile = fileChooser.showSaveDialog(ControllerMediator.getInstance().getMainWindow());
             if (embeddingFile != null)
                 exportEmbeddingToFile(embeddingFile);

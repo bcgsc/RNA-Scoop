@@ -262,6 +262,9 @@ public class LabelSetManagerController extends PopUpController {
             ControllerMediator.getInstance().disableMain();
 
             FileChooser fileChooser = new FileChooser();
+            FileChooser.ExtensionFilter textFileFilter = new FileChooser.ExtensionFilter("Text Files", "*.txt");
+            fileChooser.getExtensionFilters().add(textFileFilter);
+            fileChooser.setInitialFileName("labelset.txt");
             File labelSetFile = fileChooser.showSaveDialog(window);
             if (labelSetFile != null)
                 exportLabelSetToFile(labelSetFile, labelSetInUse);
