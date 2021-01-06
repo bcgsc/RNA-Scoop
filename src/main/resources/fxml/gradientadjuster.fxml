@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.ScrollPane?>
+<ScrollPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.GradientAdjusterController"
+            fx:id="gradientAdjuster" style="-fx-background-color: #fcfcfc;" fitToWidth="true" fitToHeight="true">
+    <VBox>
+        <GridPane fx:id="gridPane" style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets topRightBottomLeft="10"/>
+            </VBox.margin>
+            <HBox alignment="BOTTOM_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                <GridPane.margin>
+                    <Insets right="10" left="10"/>
+                </GridPane.margin>
+                <Text fx:id="minGradientLabel" text="Min: ">
+                    <HBox.margin>
+                        <Insets bottom="6"/>
+                    </HBox.margin>
+                </Text>
+                <TextField fx:id="gradientMinField" onAction="#handleChangedGradientMaxMin" prefWidth="75"/>
+            </HBox>
+            <HBox alignment="BOTTOM_RIGHT" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                <GridPane.margin>
+                    <Insets right="10" left="10"/>
+                </GridPane.margin>
+                <Text fx:id="maxGradientLabel" text="Max: ">
+                    <HBox.margin>
+                        <Insets bottom="6" left="10"/>
+                    </HBox.margin>
+                </Text>
+                <TextField fx:id="gradientMaxField" onAction="#handleChangedGradientMaxMin" prefWidth="75"/>
+            </HBox>
+            <HBox alignment="BOTTOM_CENTER" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                <Button fx:id="useAutoMinMaxButton" onAction="#handleAutoMinMaxButton" text="Auto min/max"/>
+            </HBox>
+            <Rectangle fx:id="gradient" GridPane.rowIndex="1" GridPane.columnSpan="3" GridPane.halignment="CENTER">
+                <GridPane.margin>
+                    <Insets top="5" right="10" bottom="5" left="10"/>
+                </GridPane.margin>
+            </Rectangle>
+            <ColorPicker fx:id="minColorPicker" onAction="#handleColorPicker"
+                         GridPane.valignment="TOP" GridPane.columnIndex="0" GridPane.rowIndex="2" prefWidth="50">
+                <GridPane.margin>
+                    <Insets right="10" left="10"/>
+                </GridPane.margin>
+            </ColorPicker>
+            <ColorPicker fx:id="midColorPicker" onAction="#handleColorPicker"
+                         GridPane.valignment="TOP" GridPane.halignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="50"/>
+            <VBox alignment="TOP_RIGHT" GridPane.columnIndex="2" GridPane.rowIndex="2">
+                <GridPane.margin>
+                    <Insets right="10" left="10" bottom="10"/>
+                </GridPane.margin>
+                <ColorPicker fx:id="maxColorPicker" onAction="#handleColorPicker" prefWidth="50"/>
+                <HBox alignment="TOP_RIGHT">
+                    <VBox.margin>
+                        <Insets top="10"/>
+                    </VBox.margin>
+                    <Text text="Scale: ">
+                        <HBox.margin>
+                            <Insets top="5"/>
+                        </HBox.margin>
+                    </Text>
+                    <ComboBox fx:id="scaleChooser" onAction="#handleChangedGradientScale"/>
+                </HBox>
+            </VBox>
+        </GridPane>
+    </VBox>
+</ScrollPane>

@@ -27,7 +27,7 @@ public class Main extends Application {
         FXMLLoader clusterViewLoader = new FXMLLoader(getClass().getResource("/fxml/main/clusterview.fxml"));
         FXMLLoader geneSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/geneselector.fxml"));
         FXMLLoader geneFiltererLoader = new FXMLLoader(getClass().getResource("/fxml/genefilterer.fxml"));
-        FXMLLoader tpmGradientLoader = new FXMLLoader(getClass().getResource("/fxml/tpmgradient.fxml"));
+        FXMLLoader gradientAdjusterLoader = new FXMLLoader(getClass().getResource("/fxml/gradientadjuster.fxml"));
         FXMLLoader labelSetManagerLoader = new FXMLLoader(getClass().getResource("/fxml/labelsetmanager/labelsetmanager.fxml"));
         FXMLLoader addLabelSetViewLoader = new FXMLLoader(getClass().getResource("/fxml/labelsetmanager/addlabelsetview.fxml"));
         FXMLLoader clusterViewSettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/clusterviewsettings.fxml"));
@@ -42,7 +42,7 @@ public class Main extends Application {
         Parent clusterView = clusterViewLoader.load();
         geneSelectorLoader.load();
         geneFiltererLoader.load();
-        tpmGradientLoader.load();
+        gradientAdjusterLoader.load();
         Parent labelSetManager = labelSetManagerLoader.load();
         Parent addLabelSetView = addLabelSetViewLoader.load();
         clusterViewSettingsLoader.load();
@@ -52,7 +52,7 @@ public class Main extends Application {
 
         registerControllers(mainLoader.getController(), aboutLoader.getController(), consoleLoader.getController(), isoformPlotLoader.getController(),
                             clusterViewLoader.getController(), geneSelectorLoader.getController(), geneFiltererLoader.getController(),
-                            tpmGradientLoader.getController(), labelSetManagerLoader.getController(), addLabelSetViewLoader.getController(),
+                            gradientAdjusterLoader.getController(), labelSetManagerLoader.getController(), addLabelSetViewLoader.getController(),
                             clusterViewSettingsLoader.getController(), tSNESettingsLoader.getController(), umapSettingsLoader.getController(),
                             imageExporterLoader.getController());
         ControllerMediator.getInstance().initializeMain(console, isoformPlot, clusterView);
@@ -66,7 +66,7 @@ public class Main extends Application {
     private void registerControllers(MainController mainController, AboutController aboutController, ConsoleController consoleController,
                                      IsoformPlotController isoformPlotController, ClusterViewController clusterViewController,
                                      GeneSelectorController geneSelectorController, GeneFiltererController geneFiltererController,
-                                     TPMGradientAdjusterController tpmGradientAdjusterController, LabelSetManagerController labelSetManagerController,
+                                     GradientAdjusterController gradientAdjusterController, LabelSetManagerController labelSetManagerController,
                                      AddLabelSetViewController addLabelSetViewController, ClusterViewSettingsController clusterViewSettingsController,
                                      TSNESettingsController tsneSettingsController, UMAPSettingsController umapSettingsController,
                                      ImageExporterController imageExporterController) {
@@ -77,7 +77,7 @@ public class Main extends Application {
         ControllerMediator.getInstance().registerClusterViewController(clusterViewController);
         ControllerMediator.getInstance().registerGeneSelectorController(geneSelectorController);
         ControllerMediator.getInstance().registerGeneFiltererController(geneFiltererController);
-        ControllerMediator.getInstance().registerTPMGradientController(tpmGradientAdjusterController);
+        ControllerMediator.getInstance().registerGradientAdjusterController(gradientAdjusterController);
         ControllerMediator.getInstance().registerLabelSetManagerController(labelSetManagerController);
         ControllerMediator.getInstance().registerAddLabelSetViewController(addLabelSetViewController);
         ControllerMediator.getInstance().registerClusterViewSettingsController(clusterViewSettingsController);

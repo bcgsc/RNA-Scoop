@@ -10,6 +10,7 @@ import controller.labelsetmanager.AddLabelSetViewController;
 import controller.labelsetmanager.LabelSetManagerController;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.LinearGradient;
 import javafx.stage.Window;
@@ -18,8 +19,8 @@ import labelset.LabelSet;
 import org.json.JSONObject;
 import ui.LabelSetManagerWindow;
 
+import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ControllerMediator implements Mediator{
     private MainController mainController;
@@ -29,7 +30,7 @@ public class ControllerMediator implements Mediator{
     private ClusterViewController clusterViewController;
     private GeneSelectorController geneSelectorController;
     private GeneFiltererController geneFiltererController;
-    private TPMGradientAdjusterController tpmGradientAdjusterController;
+    private GradientAdjusterController gradientAdjusterController;
     private LabelSetManagerController labelSetManagerController;
     private AddLabelSetViewController addLabelSetViewController;
     private ClusterViewSettingsController clusterViewSettingsController;
@@ -74,8 +75,8 @@ public class ControllerMediator implements Mediator{
     }
 
     @Override
-    public void registerTPMGradientController(TPMGradientAdjusterController tpmGradientAdjusterController) {
-        this.tpmGradientAdjusterController = tpmGradientAdjusterController;
+    public void registerGradientAdjusterController(GradientAdjusterController gradientAdjusterController) {
+        this.gradientAdjusterController = gradientAdjusterController;
     }
 
     @Override
@@ -145,8 +146,8 @@ public class ControllerMediator implements Mediator{
         geneSelectorController.display();
     }
 
-    public void displayTPMGradientAdjuster() {
-        tpmGradientAdjusterController.display();
+    public void displayGradientAdjuster() {
+        gradientAdjusterController.display();
     }
 
     public void addGenesToIsoformPlot(Collection<Gene> genes) {
@@ -226,11 +227,11 @@ public class ControllerMediator implements Mediator{
     }
 
     public void setGeneFilteringParamsToDefault() {
-        geneFiltererController.setGeneFilteringParamsToDefault();
+        geneFiltererController.setSettingsToDefault();
     }
 
-    public void setTPMGradientToDefault() {
-        tpmGradientAdjusterController.setTPMGradientToDefault();
+    public void setGradientToDefault() {
+        gradientAdjusterController.setGradientToDefault();
     }
 
     public boolean geneHasIsoformSwitches(Gene gene) {
@@ -294,7 +295,7 @@ public class ControllerMediator implements Mediator{
         labelSetManagerController.clearLabelSets();
     }
 
-    public void exportLabelSetsToFiles(String pathToDir) {
+    public void exportLabelSetsToFiles(String pathToDir) throws IOException {
         labelSetManagerController.exportLabelSetsToFiles(pathToDir);
     }
 
@@ -312,6 +313,18 @@ public class ControllerMediator implements Mediator{
 
     public int getNumLabelSets() {
         return labelSetManagerController.getNumLabelSets();
+    }
+
+    public int getNumLabelSetsExported() {
+        return labelSetManagerController.getNumLabelSetsExported();
+    }
+
+    public boolean hasLabelSetWithName(String name) {
+        return labelSetManagerController.hasLabelSetWithName(name);
+    }
+
+    public String getUniqueLabelSetName(String name) {
+        return labelSetManagerController.getUniqueLabelSetName(name);
     }
 
     // Display t-SNE
@@ -359,7 +372,7 @@ public class ControllerMediator implements Mediator{
         tsneSettingsController.restoreSettingsToSaved();
     }
 
-    public void exportEmbeddingToFile(String pathToDir) {
+    public void exportEmbeddingToFile(String pathToDir) throws IOException {
         clusterViewController.exportEmbeddingToFile(pathToDir);
     }
 
@@ -441,8 +454,8 @@ public class ControllerMediator implements Mediator{
         mainController.restoreMainFromPrevSession(prevSession);
     }
 
-    public void restoreTPMGradientFromPrevSession(JSONObject prevSession) {
-        tpmGradientAdjusterController.restoreTPMGradientFromPrevSession(prevSession);
+    public void restoreGradientFromPrevSession(JSONObject prevSession) {
+        gradientAdjusterController.restoreGradientFromPrevSession(prevSession);
     }
 
     public void restoreUMAPSettingsFromPrevSession(JSONObject prevSession) {
@@ -496,7 +509,7 @@ public class ControllerMediator implements Mediator{
         return clusterViewController.getClusterView();
     }
 
-    public Node getCellClusterPlot() {
+    public Pane getCellClusterPlot() {
         return clusterViewController.getCellClusterPlot();
     }
 
@@ -508,7 +521,7 @@ public class ControllerMediator implements Mediator{
         return isoformPlotController.getIsoformPlotPanel();
     }
 
-    public Node getIsoformPlot() {
+    public Pane getIsoformPlot() {
         return isoformPlotController.getIsoformPlot();
     }
 
@@ -536,8 +549,8 @@ public class ControllerMediator implements Mediator{
         return geneFiltererController.isFilteringByCategorySpecificExpression();
     }
 
-    public double getDISMinTPM() {
-        return geneFiltererController.getDISMinTPM();
+    public double getDISMin() {
+        return geneFiltererController.getDISMin();
     }
 
     public double getDISMinPercentExpressed() {
@@ -556,32 +569,28 @@ public class ControllerMediator implements Mediator{
         return geneFiltererController.getDEMinFoldChange();
     }
 
-    public double getDEMinTPM() {
-        return geneFiltererController.getDEMinTPM();
+    public double getDEMin() {
+        return geneFiltererController.getDEMin();
     }
 
     public double getDEMinPercentExpressed() {
         return geneFiltererController.getDEMinPercentExpressed();
     }
 
-    public double getCSEMinTPM() {
-        return geneFiltererController.getCSEMinTPM();
+    public double getCSEMin() {
+        return geneFiltererController.getCSEMin();
     }
 
     public double getCSEMinPercentExpressed() {
         return geneFiltererController.getCSEMinPercentExpressed();
     }
 
-    public double getCSEMaxTPM() {
-        return geneFiltererController.getCSEMaxTPM();
+    public double getCSEMax() {
+        return geneFiltererController.getCSEMax();
     }
 
     public double getCSEMaxPercentExpressed() {
         return geneFiltererController.getCSEMaxPercentExpressed();
-    }
-
-    public Map<Integer, ClusterViewController.CellDataItem> getCellNumberCellMap() {
-        return clusterViewController.getCellNumberCellMap();
     }
 
     public Collection<String> getSelectedIsoformIDs() {
@@ -600,40 +609,44 @@ public class ControllerMediator implements Mediator{
         return clusterViewController.getCells(onlySelected);
     }
 
-    public double getGradientMinTPM() {
-        return tpmGradientAdjusterController.getGradientMinTPM();
+    public String getExpressionUnit() {
+        return isoformPlotController.getExpressionUnit();
     }
 
-    public double getGradientMaxTPM() {
-        return tpmGradientAdjusterController.getGradientMaxTPM();
+    public double getGradientMin() {
+        return gradientAdjusterController.getGradientMin();
     }
 
-    public double getGradientMidTPM() {
-        return tpmGradientAdjusterController.getGradientMidTPM();
+    public double getGradientMax() {
+        return gradientAdjusterController.getGradientMax();
+    }
+
+    public double getGradientMid() {
+        return gradientAdjusterController.getGradientMid();
     }
 
     public String getScaleOptionInUse() {
-        return tpmGradientAdjusterController.getScaleOptionInUse();
+        return gradientAdjusterController.getScaleOptionInUse();
     }
 
-    public Color getColorFromTPMGradient(double expression) {
-        return tpmGradientAdjusterController.getColorFromTPMGradient(expression);
+    public Color getColorFromGradient(double expression) {
+        return gradientAdjusterController.getColorFromGradient(expression);
     }
 
     public String getGradientMinColorCode() {
-        return tpmGradientAdjusterController.getGradientMinColorCode();
+        return gradientAdjusterController.getGradientMinColorCode();
     }
 
     public String getGradientMidColorCode() {
-        return tpmGradientAdjusterController.getGradientMidColorCode();
+        return gradientAdjusterController.getGradientMidColorCode();
     }
 
     public String getGradientMaxColorCode() {
-        return tpmGradientAdjusterController.getGradientMaxColorCode();
+        return gradientAdjusterController.getGradientMaxColorCode();
     }
 
-    public LinearGradient getTPMGradientFill() {
-        return tpmGradientAdjusterController.getTPMGradientFill();
+    public LinearGradient getGradientFill() {
+        return gradientAdjusterController.getGradientFill();
     }
 
     public LabelSet getLabelSetInUse() {
@@ -667,8 +680,17 @@ public class ControllerMediator implements Mediator{
     public float getFigureScale() {
         return imageExporterController.getFigureScale();
     }
+
     public String getFigureTypeExporting() {
         return imageExporterController.getFigureTypeExporting();
+    }
+
+    public String getCellPlotFigureXAxisLabel() {
+        return imageExporterController.getCellPlotFigureXAxisLabel();
+    }
+
+    public String getCellPlotFigureYAxisLabel() {
+        return imageExporterController.getCellPlotFigureYAxisLabel();
     }
 
     public boolean isReverseComplementing() {
@@ -760,24 +782,28 @@ public class ControllerMediator implements Mediator{
         clusterViewController.setEmbedding(embedding);
     }
 
-    public void setRecommendedMinTPM(int recommendedMinTPM) {
-        tpmGradientAdjusterController.setRecommendedMinTPM(recommendedMinTPM);
+    public void setExpressionUnit(String expressionUnit) {
+        isoformPlotController.setExpressionUnit(expressionUnit);
     }
 
-    public void setRecommendedMaxTPM(int recommendedMaxTPM) {
-        tpmGradientAdjusterController.setRecommendedMaxTPM(recommendedMaxTPM);
+    public void setRecommendedGradientMin(int recommendedMin) {
+        gradientAdjusterController.setRecommendedMin(recommendedMin);
+    }
+
+    public void setRecommendedGradientMax(int recommendedMax) {
+        gradientAdjusterController.setRecommendedMax(recommendedMax);
     }
 
     public void setGradientMaxMinToRecommended() {
-        tpmGradientAdjusterController.setGradientMinMaxToRecommended();
+        gradientAdjusterController.setGradientMinMaxToRecommended();
     }
 
-    public void addMinTPMToGradientMinTPMLabel(double realMinTPM) {
-        tpmGradientAdjusterController.addMinTPMToGradientMinTPMLabel(realMinTPM);
+    public void addMinExpressionToGradientMinLabel(double min) {
+        gradientAdjusterController.addMinExpressionToGradientMinLabel(min);
     }
 
-    public void addMaxTPMToGradientMaxTPMLabel(double realMaxTPM) {
-        tpmGradientAdjusterController.addMaxTPMToGradientMaxTPMLabel(realMaxTPM);
+    public void addMaxExpressionToGradientMaxLabel(double max) {
+        gradientAdjusterController.addMaxExpressionToGradientMaxLabel(max);
     }
 
     //Disable Functionality
@@ -809,8 +835,8 @@ public class ControllerMediator implements Mediator{
         geneFiltererController.disable();
     }
 
-    public void disableTPMGradientAdjuster() {
-        tpmGradientAdjusterController.disable();
+    public void disableGradientAdjuster() {
+        gradientAdjusterController.disable();
     }
 
     public void disableLabelSetManager() {
@@ -842,8 +868,8 @@ public class ControllerMediator implements Mediator{
         geneFiltererController.enable();
     }
 
-    public void enableTPMGradientAdjuster() {
-        tpmGradientAdjusterController.enable();
+    public void enableGradientAdjuster() {
+        gradientAdjusterController.enable();
     }
 
     public void enableLabelSetManager() {

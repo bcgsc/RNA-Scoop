@@ -14,13 +14,17 @@ import labelset.LabelSet;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
 import parser.Parser;
-import persistance.CurrentSession;
-import persistance.SessionMaker;
+import persistence.CurrentSession;
+import persistence.SessionMaker;
 import ui.LabelSetManagerWindow;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static javafx.application.Platform.runLater;
 
@@ -35,12 +39,14 @@ public class LabelSetManagerController extends PopUpController {
     private ObservableList<LabelSet> labelSets;
     private LabelSet labelSetInUse;
     private boolean calculatingLabelSetInUseFoldChanges;
+    private int numLabelSetsExported;
 
     public void initializeLabelSetManager(LabelSetManagerWindow window) {
         this.window = window;
         setUpLabelSetsListView();
         addFromCellSelectionOption.setDisable(true);
         calculatingLabelSetInUseFoldChanges = false;
+        numLabelSetsExported = 0;
     }
 
     /**
@@ -119,12 +125,13 @@ public class LabelSetManagerController extends PopUpController {
         }
     }
 
-    public void exportLabelSetsToFiles(String pathToDir) {
+    public void exportLabelSetsToFiles(String pathToDir) throws IOException {
         for (LabelSet labelSet : labelSets) {
             if (!CurrentSession.isLabelSetPathSaved(labelSet)) {
-                String name = labelSet.getName();
-                String extension = (name.lastIndexOf(".") != -1) ? "" : ".txt";
-                File labelSetFile = new File(pathToDir + File.separator + name + extension);
+                Files.createDirectories(Paths.get(pathToDir));
+                numLabelSetsExported += 1;
+                String name = "labelset" + numLabelSetsExported + ".txt";
+                File labelSetFile = new File(pathToDir + File.separator + name);
                 exportLabelSetToFile(labelSetFile, labelSet);
             }
         }
@@ -141,14 +148,17 @@ public class LabelSetManagerController extends PopUpController {
     }
 
     public void restoreLabelSetManagerFromPrevSession(JSONObject prevSession) {
-        String prevLabelSetInUseName = prevSession.getString(SessionMaker.LABEL_SET_IN_USE_KEY);
-        for (LabelSet labelSet : labelSets) {
-            if (labelSet.getName().equals(prevLabelSetInUseName)) {
-                labelSetsListView.getSelectionModel().select(labelSet);
-                labelSetInUse = labelSet;
-                break;
+        if (prevSession.has(SessionMaker.LABEL_SET_IN_USE_KEY)) { // if no label set was selected in prev session, no label sets were loaded
+            String prevLabelSetInUseName = prevSession.getString(SessionMaker.LABEL_SET_IN_USE_KEY);
+            for (LabelSet labelSet : labelSets) {
+                if (labelSet.getName().equals(prevLabelSetInUseName)) {
+                    labelSetsListView.getSelectionModel().select(labelSet);
+                    labelSetInUse = labelSet;
+                    break;
+                }
             }
         }
+        numLabelSetsExported = prevSession.getInt(SessionMaker.NUM_LABEL_SETS_EXPORTED_KEY);
     }
 
     /**
@@ -170,6 +180,26 @@ public class LabelSetManagerController extends PopUpController {
 
     public int getNumLabelSets() {
         return labelSets.size();
+    }
+
+    public int getNumLabelSetsExported() {
+        return numLabelSetsExported;
+    }
+
+    public boolean hasLabelSetWithName(String name) {
+        Collection<String> labelSetNames = labelSets.stream().map(LabelSet::getName).collect(Collectors.toSet());
+        return labelSetNames.contains(name);
+    }
+
+    public String getUniqueLabelSetName(String name) {
+        Collection<String> labelSetNames = labelSets.stream().map(LabelSet::getName).collect(Collectors.toSet());
+        int num = 1;
+        String uniqueName = name;
+        while(labelSetNames.contains(uniqueName)) {
+            uniqueName = name + " (" + num + ")";
+            num += 1;
+        }
+        return uniqueName;
     }
 
     /**
@@ -232,6 +262,9 @@ public class LabelSetManagerController extends PopUpController {
             ControllerMediator.getInstance().disableMain();
 
             FileChooser fileChooser = new FileChooser();
+            FileChooser.ExtensionFilter textFileFilter = new FileChooser.ExtensionFilter("Text Files", "*.txt");
+            fileChooser.getExtensionFilters().add(textFileFilter);
+            fileChooser.setInitialFileName("labelset.txt");
             File labelSetFile = fileChooser.showSaveDialog(window);
             if (labelSetFile != null)
                 exportLabelSetToFile(labelSetFile, labelSetInUse);

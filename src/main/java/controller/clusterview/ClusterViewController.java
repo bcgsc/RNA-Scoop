@@ -12,6 +12,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -35,8 +36,8 @@ import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.json.JSONObject;
-import persistance.CurrentSession;
-import persistance.SessionMaker;
+import persistence.CurrentSession;
+import persistence.SessionMaker;
 import tagbio.umap.Umap;
 import ui.CategoryLabelsLegend;
 import util.Util;
@@ -49,6 +50,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -257,9 +260,11 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             plotRenderer.updateOutlineAndRedraw();
     }
 
-    public void exportEmbeddingToFile(String pathToDir) {
-        if (!isPlotCleared() && !CurrentSession.isEmbeddingSaved())
+    public void exportEmbeddingToFile(String pathToDir) throws IOException {
+        if (!isPlotCleared() && !CurrentSession.isEmbeddingSaved()) {
+            Files.createDirectories(Paths.get(pathToDir));
             exportEmbeddingToFile(new File(pathToDir + File.separator + "embedding.txt"));
+        }
     }
 
     /**
@@ -284,7 +289,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         return clusterView;
     }
 
-    public Node getCellClusterPlot() {
+    public Pane getCellClusterPlot() {
         return plotHolder;
     }
 
@@ -307,7 +312,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     }
 
     public Collection<String> getSelectedCellCategoryNames() {
-        return legend.getSelectedCategoryNames();
+        return !isPlotCleared()? legend.getSelectedCategoryNames() : new ArrayList<>();
     }
 
     public int getNumCellsToPlot() {
@@ -393,6 +398,9 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     protected  void handleExportEmbeddingButton() {
         if (!isPlotCleared()) {
             FileChooser fileChooser = new FileChooser();
+            FileChooser.ExtensionFilter textFileFilter = new FileChooser.ExtensionFilter("Text Files", "*.txt");
+            fileChooser.getExtensionFilters().add(textFileFilter);
+            fileChooser.setInitialFileName("embedding.txt");
             File embeddingFile = fileChooser.showSaveDialog(ControllerMediator.getInstance().getMainWindow());
             if (embeddingFile != null)
                 exportEmbeddingToFile(embeddingFile);
@@ -406,7 +414,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().disableMain();
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
-        ControllerMediator.getInstance().disableTPMGradientAdjuster();
+        ControllerMediator.getInstance().disableGradientAdjuster();
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableLabelSetManager();
         ControllerMediator.getInstance().disableGeneFilterer();
@@ -419,7 +427,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         ControllerMediator.getInstance().enableMain();
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
-        ControllerMediator.getInstance().enableTPMGradientAdjuster();
+        ControllerMediator.getInstance().enableGradientAdjuster();
         ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableLabelSetManager();
         ControllerMediator.getInstance().enableGeneFilterer();
@@ -530,7 +538,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             if (isColoringByIsoform()) {
                 Collection<String> selectedIsoformIDs = ControllerMediator.getInstance().getSelectedIsoformIDs();
                 String id = selectedIsoformIDs.iterator().next();
-                javafx.scene.paint.Color javaFXColor = ControllerMediator.getInstance().getColorFromTPMGradient(cell.getIsoformExpressionLevel(id));
+                javafx.scene.paint.Color javaFXColor = ControllerMediator.getInstance().getColorFromGradient(cell.getIsoformExpressionLevel(id));
                 return new Color((int) Math.round(javaFXColor.getRed() * 255),
                                  (int) Math.round(javaFXColor.getGreen() * 255),
                                  (int) Math.round(javaFXColor.getBlue() * 255));
@@ -832,7 +840,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
         private XYSeriesCollection cellsInNewPlot;
 
         /**
-         * Draws the plot and sets the TPM gradient values
+         * Draws the plot and sets the gradient values
          */
         @Override
         public void run() {
@@ -847,7 +855,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             }
         }
 
-        public void drawPlotAndUpdateAssociatedComponents(boolean updateIsoformPlot, boolean updateTPMGradientValues) {
+        public void drawPlotAndUpdateAssociatedComponents(boolean updateIsoformPlot, boolean updateGradientValues) {
             cellsInNewPlot = new XYSeriesCollection();
             double[][] matrix = (embedding == null ? generatePlotMatrix() : embedding);
             drawPlot(matrix);
@@ -857,8 +865,8 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             ControllerMediator.getInstance().updateFilterCellCategories();
             if(updateIsoformPlot)
                 runLater(() -> ControllerMediator.getInstance().updateIsoformPlot(false));
-            if(updateTPMGradientValues)
-                setTPMGradientValues();
+            if(updateGradientValues)
+                setGradientValues();
         }
 
         private double[][] generatePlotMatrix() {
@@ -886,54 +894,54 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             plot = panel;
             plot.setPreferredSize(new Dimension(500, Integer.MAX_VALUE));
             chart.removeLegend();
-            Platform.runLater(() -> addLegend());
+            Platform.runLater(this::addLegend);
 
             cellsInPlot = cellsInNewPlot;
             swingNode.setContent(plot);
         }
 
-        private void setTPMGradientValues() {
-            double minTPM = Double.MAX_VALUE;
-            double maxTPM = Double.MIN_VALUE;
+        private void setGradientValues() {
+            double minExpression = Double.MAX_VALUE;
+            double maxExpression = Double.MIN_VALUE;
 
             int sampleSize = 100000;
             double replacementProb = 0.5d;
             double maxRandNum = sampleSize/replacementProb;
-            double[] sampleTpms = new double[sampleSize];
-            int numTpmValsGE1 = 0;
+            double[] sampleExpressionVals = new double[sampleSize];
+            int numExpressionValsGE1 = 0;
 
             for (double[] row : cellIsoformExpressionMatrix) {
                 for (double d : row) {
-                    if (d < minTPM) {
-                        minTPM = d;
+                    if (d < minExpression) {
+                        minExpression = d;
                     }
-                    if (d > maxTPM) {
-                        maxTPM = d;
+                    if (d > maxExpression) {
+                        maxExpression = d;
                     }
                     if (d >= 1) {
-                        if (numTpmValsGE1 < sampleSize) {
-                            sampleTpms[numTpmValsGE1] = d;
+                        if (numExpressionValsGE1 < sampleSize) {
+                            sampleExpressionVals[numExpressionValsGE1] = d;
                         }
                         else {
                             // randomly replace one value in the sample
                             int i = (int) Math.floor(Math.random() * maxRandNum);
                             if (i < sampleSize) {
-                                sampleTpms[i] = d;
+                                sampleExpressionVals[i] = d;
                             }
                         }
-                        ++numTpmValsGE1;
+                        ++numExpressionValsGE1;
                     }
                 }
             }
 
-            if (numTpmValsGE1 < sampleSize) {
-                sampleTpms = Arrays.copyOfRange(sampleTpms, 0, numTpmValsGE1);
+            if (numExpressionValsGE1 < sampleSize) {
+                sampleExpressionVals = Arrays.copyOfRange(sampleExpressionVals, 0, numExpressionValsGE1);
             }
 
-            Arrays.sort(sampleTpms);
+            Arrays.sort(sampleExpressionVals);
 
-            addMinMaxTPMToTPMGradientLabels(minTPM, maxTPM);
-            setTPMGradientMaxMinToRecommended(sampleTpms);
+            addMinMaxExpressionToGradientLabels(minExpression, maxExpression);
+            setGradientMaxMinToRecommended(sampleExpressionVals);
         }
 
         private double[][] generateTSNEMatrix() {
@@ -951,7 +959,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
             float minDist = ControllerMediator.getInstance().getMinDist();
             int nearestNeighbors = ControllerMediator.getInstance().getNearestNeighbors();
             final Umap umap = new Umap();
-            umap.setNumberComponents(2);         // number of dimensions in result
+            umap.setNumberComponents(2); // number of dimensions in generated matrix
             umap.setMinDist(minDist);
             umap.setNumberNearestNeighbours(nearestNeighbors);
             umap.setThreads(Runtime.getRuntime().availableProcessors());
@@ -1030,19 +1038,19 @@ public class ClusterViewController implements Initializable, InteractiveElementC
 
         /**
          * Adds the absolute min and max expression values in the expressionArray to the min
-         * and max labels of the TPM gradient adjuster window
+         * and max labels of the gradient adjuster window
          *
-         * @param minTPM min TPM value to set
-         * @param maxTPM max TPM value to set
+         * @param min min value to set
+         * @param max max value to set
          */
-        private void addMinMaxTPMToTPMGradientLabels(double minTPM, double maxTPM) {
+        private void addMinMaxExpressionToGradientLabels(double min, double max) {
             ControllerMediator c = ControllerMediator.getInstance();
-            c.addMinTPMToGradientMinTPMLabel(minTPM);
-            c.addMaxTPMToGradientMaxTPMLabel(maxTPM);
+            c.addMinExpressionToGradientMinLabel(min);
+            c.addMaxExpressionToGradientMaxLabel(max);
         }
 
         /**
-         * Calculates the recommended gradient min and max values and sets the TPM gradient's
+         * Calculates the recommended gradient min and max values and sets the gradient's
          * min and max to them
          *
          * If the size of the filteredExpressionArray is 0, sets the recommended min to 0 and the
@@ -1054,24 +1062,24 @@ public class ClusterViewController implements Initializable, InteractiveElementC
          * @param filteredExpressionArray sorted array of all the isoform expression values > 0 for all cells in the
          *                                plot
          */
-        private void setTPMGradientMaxMinToRecommended(double[] filteredExpressionArray) {
+        private void setGradientMaxMinToRecommended(double[] filteredExpressionArray) {
             if (filteredExpressionArray.length != 0) {
                 int filteredExpressionArraySize = filteredExpressionArray.length;
-                double filteredMinTPM = filteredExpressionArray[0];
-                double filteredMaxTPM = filteredExpressionArray[filteredExpressionArraySize - 1];
+                double filteredMin = filteredExpressionArray[0];
+                double filteredMax = filteredExpressionArray[filteredExpressionArraySize - 1];
                 double q1 = filteredExpressionArray[filteredExpressionArraySize / 4];
                 double q3 = filteredExpressionArray[filteredExpressionArraySize * 3/4];
                 double iqr = q3 - q1;
-                int recommendedMinTPM = (int) Double.max(q1 - 1.5 * iqr, filteredMinTPM);
-                int recommendedMaxTPM = (int) Double.min(q3 + 1.5 * iqr, filteredMaxTPM);
-                if (recommendedMaxTPM == recommendedMinTPM)
-                    recommendedMaxTPM += 1;
-                ControllerMediator.getInstance().setRecommendedMinTPM(recommendedMinTPM);
-                ControllerMediator.getInstance().setRecommendedMaxTPM(recommendedMaxTPM);
+                int recommendedMin = (int) Double.max(q1 - 1.5 * iqr, filteredMin);
+                int recommendedMax = (int) Double.min(q3 + 1.5 * iqr, filteredMax);
+                if (recommendedMax == recommendedMin)
+                    recommendedMax += 1;
+                ControllerMediator.getInstance().setRecommendedGradientMin(recommendedMin);
+                ControllerMediator.getInstance().setRecommendedGradientMax(recommendedMax);
                 ControllerMediator.getInstance().setGradientMaxMinToRecommended();
             } else {
-                ControllerMediator.getInstance().setRecommendedMinTPM(0);
-                ControllerMediator.getInstance().setRecommendedMaxTPM(1);
+                ControllerMediator.getInstance().setRecommendedGradientMin(0);
+                ControllerMediator.getInstance().setRecommendedGradientMax(1);
                 ControllerMediator.getInstance().setGradientMaxMinToRecommended();
             }
         }

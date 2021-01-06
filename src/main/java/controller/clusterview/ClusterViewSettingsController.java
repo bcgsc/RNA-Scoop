@@ -12,7 +12,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
-import persistance.SessionMaker;
+import persistence.SessionMaker;
 import ui.Main;
 
 public class ClusterViewSettingsController extends PopUpController {
@@ -26,7 +26,8 @@ public class ClusterViewSettingsController extends PopUpController {
     @FXML private Button okButton;
     @FXML private VBox holder;
 
-    private boolean usingUMAPSettings;
+    // whether or not using UMAP settings, only updated when "OK" button is pressed
+    private boolean savedUsingUMAPSettings;
 
     private Parent tsneSettings;
     private Parent umapSettings;
@@ -51,7 +52,7 @@ public class ClusterViewSettingsController extends PopUpController {
     }
 
     public boolean usingUMAPSettings() {
-        return usingUMAPSettings;
+        return savedUsingUMAPSettings;
     }
 
     public void setSettingsToDefault() {
@@ -72,11 +73,20 @@ public class ClusterViewSettingsController extends PopUpController {
 
     @FXML
     protected void handleClusterViewAlgorithmChange() {
-        if (usingUMAPSettings) {
+        if (algorithmComboBox.getSelectionModel().getSelectedItem().equals(T_SNE_OPTION)) {
             useTSNESettings();
         } else {
             useUMAPSettings();
         }
+    }
+
+    @FXML
+    protected void handleOKButton() {
+        saveAlgorithmInUseSetting();
+        ControllerMediator.getInstance().saveUMAPSettings();
+        ControllerMediator.getInstance().saveTSNESettings();
+        ControllerMediator.getInstance().drawCellPlot();
+        window.hide();
     }
 
     private void useUMAPSettings() {
@@ -85,7 +95,6 @@ public class ClusterViewSettingsController extends PopUpController {
             selectionModel.select(UMAP_OPTION);
         holder.getChildren().clear();
         holder.getChildren().add(umapSettings);
-        usingUMAPSettings = true;
     }
 
     private void useTSNESettings() {
@@ -94,13 +103,27 @@ public class ClusterViewSettingsController extends PopUpController {
             selectionModel.select(T_SNE_OPTION);
         holder.getChildren().clear();
         holder.getChildren().add(tsneSettings);
-        usingUMAPSettings = false;
+    }
+
+    private void saveAlgorithmInUseSetting() {
+        savedUsingUMAPSettings = algorithmComboBox.getSelectionModel().getSelectedItem().equals(UMAP_OPTION);
+    }
+
+    private void restoreSettingsToSaved() {
+        if (savedUsingUMAPSettings)
+            algorithmComboBox.getSelectionModel().select(UMAP_OPTION);
+        else
+            algorithmComboBox.getSelectionModel().select(T_SNE_OPTION);
+
+        ControllerMediator.getInstance().restoreUMAPSettingsToSaved();
+        ControllerMediator.getInstance().restoreTSNESettingsToSaved();
     }
 
     private void setUpAlgorithmComboBox() {
         algorithmComboBox.getItems().addAll(UMAP_OPTION, T_SNE_OPTION);
         algorithmComboBox.setValue(UMAP_OPTION);
         useUMAPSettings();
+        saveAlgorithmInUseSetting();
     }
 
     /**
@@ -115,21 +138,12 @@ public class ClusterViewSettingsController extends PopUpController {
         setWindowSizeAndDisplay();
         window.setOnCloseRequest(event -> {
             event.consume();
-            ControllerMediator.getInstance().restoreUMAPSettingsToSaved();
-            ControllerMediator.getInstance().restoreTSNESettingsToSaved();
+            restoreSettingsToSaved();
             window.hide();
         });
     }
 
     private void setWindowSizeAndDisplay() {
         window.setScene(new Scene(clusterViewSettings, CLUSTER_VIEW_SETTINGS_WIDTH, CLUSTER_VIEW_SETTINGS_HEIGHT));
-    }
-
-    @FXML
-    protected void handleOKButton() {
-        ControllerMediator.getInstance().saveUMAPSettings();
-        ControllerMediator.getInstance().saveTSNESettings();
-        ControllerMediator.getInstance().drawCellPlot();
-        window.hide();
     }
 }

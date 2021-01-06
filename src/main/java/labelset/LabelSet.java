@@ -1,6 +1,8 @@
 package labelset;
 
 import controller.clusterview.ClusterViewController;
+import exceptions.AddClusterWhenNoCellsSelectedException;
+import exceptions.AddingClusterMakesEmptyClustersException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import mediator.ControllerMediator;
@@ -9,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class LabelSet {
     private final Map<Integer, Cluster> cellNumberClusterMap;
@@ -18,7 +21,7 @@ public class LabelSet {
     public LabelSet() {
         clusters = FXCollections.observableArrayList();
         cellNumberClusterMap = new HashMap<>();
-        name = "Label Set " + (ControllerMediator.getInstance().getNumLabelSets() + 1);
+        name = ControllerMediator.getInstance().getUniqueLabelSetName("Label Set " + (ControllerMediator.getInstance().getNumLabelSets() + 1));
         setUpClusters();
     }
 
@@ -45,10 +48,18 @@ public class LabelSet {
     /**
      * Adds new cluster to label set containing the selected cells in the t-SNE plot
      */
-    public void addClusterFromSelectedCells() {
+    public void addClusterFromSelectedCells() throws AddClusterWhenNoCellsSelectedException, AddingClusterMakesEmptyClustersException {
         Set<ClusterViewController.CellDataItem> selectedCells = (Set<ClusterViewController.CellDataItem>) ControllerMediator.getInstance().getCells(true);
-        int clusterNumber = clusters.size() + 1;
-        Cluster newCluster = new Cluster("Cluster " + clusterNumber, this, selectedCells);
+
+        // check if adding new clusters will result in clusters with no cells
+        if (selectedCells.size() == 0)
+            throw new AddClusterWhenNoCellsSelectedException();
+        for (Cluster cluster : clusters) {
+            if (selectedCells.containsAll(cluster.getCells()))
+                throw new AddingClusterMakesEmptyClustersException(cluster.getName());
+        }
+
+        Cluster newCluster = new Cluster(getNewClusterName(), this, selectedCells);
         for (ClusterViewController.CellDataItem selectedCell : selectedCells) {
             for (Cluster cluster : clusters) {
                 Set<ClusterViewController.CellDataItem> clusterCells = cluster.getCells();
@@ -82,6 +93,14 @@ public class LabelSet {
             cellNumberClusterMap.put(cell.getCellNumber(), clusterToCombineWith);
             clusterToCombineWith.addCell(cell);
         }
+    }
+
+    public Cluster getClusterWithName(String name) {
+        for (Cluster cluster : clusters) {
+            if (cluster.getName().equals(name))
+                return cluster;
+        }
+        return null;
     }
 
     public void setName(String name) {
@@ -137,6 +156,23 @@ public class LabelSet {
         Cluster cluster = cellNumberClusterMap.get(cell.getCellNumber());
         if (cluster != null)
             cluster.addCell(cell);
+    }
+
+    /**
+     * Returns unique name that should be given to next cluster added by cell
+     * selection
+     */
+    private String getNewClusterName() {
+        int nextClusterNum = clusters.size() + 1;
+        String nextClusterName = "Cluster " + nextClusterNum;
+        Set<String> clusterNames = clusters.stream().map(Cluster::getName).collect(Collectors.toSet());
+
+        while (clusterNames.contains(nextClusterName)) {
+            nextClusterNum += 1;
+            nextClusterName = "Cluster " + nextClusterNum;
+        }
+
+        return nextClusterName;
     }
 
     /**

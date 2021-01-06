@@ -15,13 +15,13 @@ import javafx.stage.*;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
 import parser.Parser;
-import persistance.SessionIO;
-import persistance.SessionMaker;
+import persistence.SessionIO;
+import persistence.SessionMaker;
 import ui.Main;
 
 import java.io.File;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.Collection;
-import java.util.Map;
 
 import static javafx.application.Platform.runLater;
 
@@ -231,12 +231,18 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleSaveSessionButton() {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        File folder = directoryChooser.showDialog(window);
-        if (folder != null) {
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter jsonFilter = new FileChooser.ExtensionFilter("JSON Files", "*.json");
+        fileChooser.getExtensionFilters().add(jsonFilter);
+        fileChooser.setInitialFileName("session.json");
+        File file = fileChooser.showSaveDialog(window);
+        if (file != null) {
             try {
-                SessionIO.saveSessionAtPath(folder.getPath());
+                SessionIO.saveSessionAtPath(file.getPath());
                 ControllerMediator.getInstance().addConsoleMessage("Successfully saved session");
+            } catch (FileAlreadyExistsException e) {
+                ControllerMediator.getInstance().addConsoleErrorMessage("Could not create directory named " + e.getFile() +
+                        " as a file with that name already exists. Either rename the file, or use another name for the session");
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
             }
@@ -249,11 +255,11 @@ public class MainController implements InteractiveElementController {
      */
     @FXML
     protected void handleLoadSessionButton() {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        File folder = directoryChooser.showDialog(window);
-        if (folder != null) {
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showOpenDialog(window);
+        if (file != null) {
             try {
-                SessionIO.loadSessionAtPath(folder.getPath());
+                SessionIO.loadSessionAtPath(file.getPath());
             } catch (Exception e) {
                 ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
             }
@@ -271,7 +277,7 @@ public class MainController implements InteractiveElementController {
         openClusterView();
         openConsole();
         setViewTogglesToDefault();
-        ControllerMediator.getInstance().setTPMGradientToDefault();
+        ControllerMediator.getInstance().setGradientToDefault();
         ControllerMediator.getInstance().setGeneFilteringParamsToDefault();
         ControllerMediator.getInstance().setClusterViewSettingsToDefault();
         ControllerMediator.getInstance().setImageExporterSettingsToDefault();
@@ -611,7 +617,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
-        ControllerMediator.getInstance().disableTPMGradientAdjuster();
+        ControllerMediator.getInstance().disableGradientAdjuster();
         ControllerMediator.getInstance().disableLabelSetManager();
         ControllerMediator.getInstance().disableGeneFilterer();
         // doesn't disable add label set view, because main should be disabled when
@@ -624,7 +630,7 @@ public class MainController implements InteractiveElementController {
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
-        ControllerMediator.getInstance().enableTPMGradientAdjuster();
+        ControllerMediator.getInstance().enableGradientAdjuster();
         ControllerMediator.getInstance().enableLabelSetManager();
         ControllerMediator.getInstance().enableGeneFilterer();
     }
@@ -665,7 +671,7 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Sets size of window and scene it displays, adds important styling for all scroll-panes
+     * Sets size of window and scene it displays, adds fonts and important styling for all scroll-panes
      * in the scene
      */
     private void setWindowSizeAndDisplay() {

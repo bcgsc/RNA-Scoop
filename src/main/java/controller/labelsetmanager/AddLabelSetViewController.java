@@ -1,13 +1,16 @@
 package controller.labelsetmanager;
 
+import exceptions.RNAScoopException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.util.converter.DefaultStringConverter;
 import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
@@ -73,14 +76,18 @@ public class AddLabelSetViewController {
     }
 
     /**
-     * Adds new cluster from the select cells to the label set user is customizing,
-     * alerts the cluster view of the change, and updates the isoform plot
+     * Adds new cluster from the selected cells to the label set user is customizing,
+     * alerts the cluster view of the change, and updates the isoform plot.
      */
     @FXML
     protected void handleMakeClusterButton() {
-        labelSet.addClusterFromSelectedCells();
-        ControllerMediator.getInstance().clusterViewHandleClusterAddedFromSelectedCells();
-        ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+        try {
+            labelSet.addClusterFromSelectedCells();
+            ControllerMediator.getInstance().clusterViewHandleClusterAddedFromSelectedCells();
+            ControllerMediator.getInstance().updateIsoformGraphicsAndDotPlot();
+        } catch (RNAScoopException e) {
+            ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
+        }
     }
 
     /**
@@ -193,9 +200,23 @@ public class AddLabelSetViewController {
     private void setUpLabelSetNameTextField() {
         labelSetNameTextField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
             if (!newValue) { //when focus lost
-                ControllerMediator.getInstance().getLabelSetInUse().setName(labelSetNameTextField.getText());
+                handleChangedLabelSetName();
             }
         });
+        labelSetNameTextField.setOnKeyPressed(event -> {
+            if (event.getCode().equals(KeyCode.ENTER))
+                handleChangedLabelSetName();
+        });
+    }
+
+    private void handleChangedLabelSetName() {
+        String newName = labelSetNameTextField.getText();
+        if (!ControllerMediator.getInstance().hasLabelSetWithName(newName)) {
+            ControllerMediator.getInstance().getLabelSetInUse().setName(newName);
+        } else {
+            ControllerMediator.getInstance().addConsoleErrorMessage("There is already a label set named " + newName);
+            labelSetNameTextField.setText(labelSet.getName());
+        }
     }
 
     /**
@@ -206,13 +227,21 @@ public class AddLabelSetViewController {
     private TableColumn<Cluster, String> getClusterNameColumn() {
         TableColumn<Cluster,String> clusterNameCol = new TableColumn("Name");
         clusterNameCol.setCellValueFactory(new PropertyValueFactory("name"));
-        clusterNameCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        clusterNameCol.setOnEditCommit(
-                (TableColumn.CellEditEvent<Cluster, String> t) -> {
-                    Cluster cluster = t.getTableView().getItems().get(t.getTablePosition().getRow());
-                    cluster.setName(t.getNewValue());
+        clusterNameCol.setCellFactory(col -> new TextFieldTableCell<Cluster, String>(new DefaultStringConverter()) {
+            @Override
+            public void commitEdit(String newName) {
+                if (labelSet.getClusterWithName(newName) == null) {
+                    super.commitEdit(newName);
+                    Cluster cluster = (Cluster) getTableRow().getItem();
+                    cluster.setName(newName);
                     ControllerMediator.getInstance().redrawLegend();
-                });
+                } else {
+                    super.cancelEdit();
+                    if (!super.getItem().equals(newName))
+                        ControllerMediator.getInstance().addConsoleErrorMessage("Label set already has a cluster named " + newName);
+                }
+            }
+        });
         return clusterNameCol;
     }
 

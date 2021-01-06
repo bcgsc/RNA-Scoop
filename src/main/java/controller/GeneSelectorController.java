@@ -21,7 +21,7 @@ import labelset.LabelSet;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
 import parser.Parser;
-import persistance.SessionMaker;
+import persistence.SessionMaker;
 import ui.Main;
 
 import java.io.File;

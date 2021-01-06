@@ -33,7 +33,7 @@ RNA-Scoop can be run as `java -jar /path/to/RNA-Scoop.jar ...`
 
 RNA-Scoop is written in Java with IntelliJ IDEA. It uses the following external libraries:
 * [T-SNE-Java](https://github.com/lejon/T-SNE-Java)
-* [UMAP-Java](https://github.com/tag-bio/umap-java)
+* [Java UMAP](https://github.com/tag-bio/umap-java)
 * [JFreeChart (Future State Edition)](https://github.com/jfree/jfreechart-fse)
 * [JSON-Java](https://github.com/stleary/JSON-java)
 * [ControlsFX](https://github.com/controlsfx/controlsfx)
