@@ -9,9 +9,9 @@ import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
-import persistance.CurrentSession;
-import persistance.SessionIO;
-import persistance.SessionMaker;
+import persistence.CurrentSession;
+import persistence.SessionIO;
+import persistence.SessionMaker;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -20,7 +20,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static javafx.application.Platform.isFxApplicationThread;

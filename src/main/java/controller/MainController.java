@@ -15,8 +15,8 @@ import javafx.stage.*;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
 import parser.Parser;
-import persistance.SessionIO;
-import persistance.SessionMaker;
+import persistence.SessionIO;
+import persistence.SessionMaker;
 import ui.Main;
 
 import java.io.File;

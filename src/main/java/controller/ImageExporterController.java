@@ -16,7 +16,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
-import persistance.SessionMaker;
+import persistence.SessionMaker;
 import ui.Main;
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -46,7 +46,12 @@ public class ImageExporterController extends PopUpController implements Initiali
     @FXML private TextField scaleField;
     @FXML private TextField cellPlotFigureXAxisLabelField;
     @FXML private TextField cellPlotFigureYAxisLabelField;
-    private float scale;
+
+    private float tempScale;
+    private float savedScale;
+    private String savedFigureTypeExporting;
+    private String savedCellPlotFigureXAxisLabel;
+    private String savedCellPlotFigureYAxisLabel;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -55,6 +60,7 @@ public class ImageExporterController extends PopUpController implements Initiali
         setUpScale();
         cellPlotFigureXAxisLabelField.setText(DEFAULT_CELL_PLOT_X_AXIS_LABEL);
         cellPlotFigureYAxisLabelField.setText(DEFAULT_CELL_PLOT_Y_AXIS_LABEL);
+        saveSettings();
     }
 
     @Override
@@ -65,32 +71,34 @@ public class ImageExporterController extends PopUpController implements Initiali
 
     public void setSettingsToDefault() {
         exportOptions.getSelectionModel().select(BOTH_OPTION);
-        setScale(DEFAULT_SCALE);
+        setTempScale(DEFAULT_SCALE);
         cellPlotFigureXAxisLabelField.setText(DEFAULT_CELL_PLOT_X_AXIS_LABEL);
         cellPlotFigureYAxisLabelField.setText(DEFAULT_CELL_PLOT_Y_AXIS_LABEL);
+        saveSettings();
     }
 
     public void restoreImageExporterFromPrevSession(JSONObject prevSession) {
         exportOptions.getSelectionModel().select(prevSession.getString(SessionMaker.FIGURE_TYPE_EXPORTING_KEY));
-        setScale(prevSession.getFloat(SessionMaker.FIGURE_SCALE_KEY));
+        setTempScale(prevSession.getFloat(SessionMaker.FIGURE_SCALE_KEY));
         cellPlotFigureXAxisLabelField.setText(prevSession.getString(SessionMaker.FIGURE_CELL_PLOT_X_AXIS_LABEL_KEY));
         cellPlotFigureYAxisLabelField.setText(prevSession.getString(SessionMaker.FIGURE_CELL_PLOT_Y_AXIS_LABEL_KEY));
+        saveSettings();
     }
 
     public float getFigureScale() {
-        return scale;
+        return savedScale;
     }
 
     public String getFigureTypeExporting() {
-        return exportOptions.getSelectionModel().getSelectedItem();
+        return savedFigureTypeExporting;
     }
 
     public String getCellPlotFigureXAxisLabel() {
-        return cellPlotFigureXAxisLabelField.getText();
+        return savedCellPlotFigureXAxisLabel;
     }
 
     public String getCellPlotFigureYAxisLabel() {
-        return cellPlotFigureYAxisLabelField.getText();
+        return savedCellPlotFigureYAxisLabel;
     }
 
     /**
@@ -107,11 +115,11 @@ public class ImageExporterController extends PopUpController implements Initiali
         if (imageFile != null) {
             ControllerMediator.getInstance().addConsoleMessage("Exporting figure...");
             try {
+                saveSettings();
                 BufferedImage image;
-                String selectedOption = exportOptions.getSelectionModel().getSelectedItem();
-                if (selectedOption.equals(JUST_ISOFORM_VIEW_OPTION))
+                if (savedFigureTypeExporting.equals(JUST_ISOFORM_VIEW_OPTION))
                     image = getIsoformPlotImage();
-                else if (selectedOption.equals(JUST_CELL_CLUSTER_PLOT_OPTION))
+                else if (savedFigureTypeExporting.equals(JUST_CELL_CLUSTER_PLOT_OPTION))
                     image = getCellClusterPlotImage();
                 else
                     image = getIsoformViewAndCellClusterPlotImage();
@@ -125,9 +133,23 @@ public class ImageExporterController extends PopUpController implements Initiali
         window.hide();
     }
 
-    private void setScale(float scale) {
-        this.scale = scale;
-        scaleField.setText(Float.toString(scale));
+    private void setTempScale(float tempScale) {
+        this.tempScale = tempScale;
+        scaleField.setText(Float.toString(tempScale));
+    }
+
+    private void saveSettings() {
+        savedScale = tempScale;
+        savedFigureTypeExporting = exportOptions.getSelectionModel().getSelectedItem();
+        savedCellPlotFigureXAxisLabel = cellPlotFigureXAxisLabelField.getText();
+        savedCellPlotFigureYAxisLabel = cellPlotFigureYAxisLabelField.getText();
+    }
+
+    private void restoreSettingsToSaved() {
+        setTempScale(savedScale);
+        exportOptions.getSelectionModel().select(savedFigureTypeExporting);
+        cellPlotFigureXAxisLabelField.setText(savedCellPlotFigureXAxisLabel);
+        cellPlotFigureYAxisLabelField.setText(savedCellPlotFigureYAxisLabel);
     }
 
     private void enableAssociatedFunctionality() {
@@ -154,16 +176,14 @@ public class ImageExporterController extends PopUpController implements Initiali
 
     private BufferedImage getCellClusterPlotImage() throws IOException, FontFormatException {
         Font axisFont = getCellPlotAxisFont();
-        String xAxisText = cellPlotFigureXAxisLabelField.getText();
-        String yAxisText = cellPlotFigureYAxisLabelField.getText();
 
-        double horizAxisTextWidth = getTextWidth(axisFont, xAxisText);
-        double horizxAxisTextHeight = getTextHeight(axisFont, xAxisText);
-        double vertAxisTextWidth = getTextWidth(axisFont, yAxisText);
-        double vertxAxisTextHeight = getTextHeight(axisFont, yAxisText);
+        double horizAxisTextWidth = getTextWidth(axisFont, savedCellPlotFigureXAxisLabel);
+        double horizxAxisTextHeight = getTextHeight(axisFont, savedCellPlotFigureXAxisLabel);
+        double vertAxisTextWidth = getTextWidth(axisFont, savedCellPlotFigureYAxisLabel);
+        double vertxAxisTextHeight = getTextHeight(axisFont, savedCellPlotFigureYAxisLabel);
         double maxAxisTextHeight = Math.max(horizxAxisTextHeight, vertxAxisTextHeight);
 
-        double borderSpacing = CELL_PLOT_BASE_BORDER_SPACING * scale;
+        double borderSpacing = CELL_PLOT_BASE_BORDER_SPACING * savedScale;
 
         BufferedImage image;
         BufferedImage cellClusterPlot = exportToImage(ControllerMediator.getInstance().getCellClusterPlot());
@@ -180,13 +200,13 @@ public class ImageExporterController extends PopUpController implements Initiali
         graphics.setFont(axisFont);
         graphics.setColor(Color.BLACK);
 
-        Rectangle xAxisLabelStringBounds = getTextBounds(axisFont, xAxisText, 0, imageHeight, graphics);
+        Rectangle xAxisLabelStringBounds = getTextBounds(axisFont, savedCellPlotFigureXAxisLabel, 0, imageHeight, graphics);
         float xAxisLabelXCoord = (float) (imageWidth / 2 - horizAxisTextWidth / 2);
         float xAxisLabelYCoord = (float) (2 * imageHeight - borderSpacing / 2 - maxAxisTextHeight - xAxisLabelStringBounds.getY());
-        graphics.drawString(xAxisText, xAxisLabelXCoord, xAxisLabelYCoord);
+        graphics.drawString(savedCellPlotFigureXAxisLabel, xAxisLabelXCoord, xAxisLabelYCoord);
 
         graphics.rotate(Math.toRadians(-90),  maxAxisTextHeight + borderSpacing/2, (float) (imageHeight /2 + vertAxisTextWidth/2));
-        graphics.drawString(yAxisText,  (float) (maxAxisTextHeight + borderSpacing/2), (float) (imageHeight /2 + vertAxisTextWidth/2));
+        graphics.drawString(savedCellPlotFigureYAxisLabel,  (float) (maxAxisTextHeight + borderSpacing/2), (float) (imageHeight /2 + vertAxisTextWidth/2));
         return image;
     }
 
@@ -206,14 +226,14 @@ public class ImageExporterController extends PopUpController implements Initiali
 
     private BufferedImage exportToImage(Node node) {
         SnapshotParameters spa = new SnapshotParameters();
-        spa.setTransform(Transform.scale(scale, scale));
+        spa.setTransform(Transform.scale(savedScale, savedScale));
         WritableImage image = node.snapshot(spa, null);
         return SwingFXUtils.fromFXImage(image, null);
     }
 
     private Font getCellPlotAxisFont() throws IOException, FontFormatException {
         Font axisFont = Font.createFont(Font.TRUETYPE_FONT, getClass().getResourceAsStream("/fonts/OpenSans-Regular.ttf"));
-        axisFont = axisFont.deriveFont(CELL_PLOT_AXIS_FONT_BASE_SIZE * scale);
+        axisFont = axisFont.deriveFont(CELL_PLOT_AXIS_FONT_BASE_SIZE * savedScale);
         return axisFont;
     }
 
@@ -247,6 +267,7 @@ public class ImageExporterController extends PopUpController implements Initiali
         setWindowSizeAndDisplay();
         window.setOnCloseRequest(event -> {
             event.consume();
+            restoreSettingsToSaved();
             window.hide();
             enableAssociatedFunctionality();
         });
@@ -258,18 +279,18 @@ public class ImageExporterController extends PopUpController implements Initiali
     }
 
     /**
-     * Sets scale to default value and makes it so scale value is updated
-     * when new values are entered into the scale field
+     * Sets tempScale to default value and makes it so tempScale value is updated
+     * when new values are entered into the tempScale field
      */
     private void setUpScale() {
-        setScale(DEFAULT_SCALE);
+        setTempScale(DEFAULT_SCALE);
         scaleField.focusedProperty().addListener((arg0, oldValue, newValue) -> {
             if (!newValue) { //when focus lost
                 try {
                    updateScale();
                 } catch (Exception e) {
                     ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
-                    scaleField.setText(Float.toString(scale));
+                    scaleField.setText(Float.toString(tempScale));
                 }
             }
         });
@@ -277,7 +298,7 @@ public class ImageExporterController extends PopUpController implements Initiali
 
     /**
      * Checks if value in scale field is valid (is number >= 0), and if so,
-     * updates the scale
+     * updates the tempScale
      */
     private void updateScale() throws InvalidFigureScaleException {
         float newScale;
@@ -290,7 +311,7 @@ public class ImageExporterController extends PopUpController implements Initiali
         if (newScale <= 0)
             throw new InvalidFigureScaleException();
 
-        scale = newScale;
+        tempScale = newScale;
     }
 
     private void setWindowSizeAndDisplay() {

@@ -1,4 +1,4 @@
-package persistance;
+package persistence;
 
 import javafx.application.Platform;
 import mediator.ControllerMediator;
@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Class responsible for writing and reading to a JSON file in which
@@ -91,11 +91,9 @@ public class SessionIO {
 
     private static class SessionLoader implements Runnable {
         private JSONObject prevSession;
-        private boolean restoredAllButCellPlotAndFiltering;
 
         public SessionLoader(JSONObject prevSession) {
             this.prevSession = prevSession;
-            restoredAllButCellPlotAndFiltering = false;
         }
 
         @Override
@@ -108,6 +106,7 @@ public class SessionIO {
         }
 
         private void restoreSession() {
+            AtomicBoolean restoredAllButCellPlotAndFiltering = new AtomicBoolean(false);
             Platform.runLater(() -> {
                 ControllerMediator.getInstance().restoreMainFromPrevSession(prevSession);
                 ControllerMediator.getInstance().restoreGradientFromPrevSession(prevSession);
@@ -116,9 +115,9 @@ public class SessionIO {
                 ControllerMediator.getInstance().restoreLabelSetManagerFromPrevSession(prevSession);
                 ControllerMediator.getInstance().restoreGeneSelectorFromPrevSession(prevSession);
                 ControllerMediator.getInstance().restoreIsoformViewFromPrevSession(prevSession);
-                restoredAllButCellPlotAndFiltering = true;
+                restoredAllButCellPlotAndFiltering.set(true);
             });
-            while (!restoredAllButCellPlotAndFiltering)
+            while (!restoredAllButCellPlotAndFiltering.get());
             ControllerMediator.getInstance().restoreClusterViewFromPrevSession(prevSession);
             ControllerMediator.getInstance().restoreGeneFiltererFromPrevSession(prevSession);
         }

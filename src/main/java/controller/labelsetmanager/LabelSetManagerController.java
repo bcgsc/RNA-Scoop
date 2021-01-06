@@ -14,8 +14,8 @@ import labelset.LabelSet;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
 import parser.Parser;
-import persistance.CurrentSession;
-import persistance.SessionMaker;
+import persistence.CurrentSession;
+import persistence.SessionMaker;
 import ui.LabelSetManagerWindow;
 
 import java.io.File;

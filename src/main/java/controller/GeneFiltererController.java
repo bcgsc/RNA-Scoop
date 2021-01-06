@@ -18,8 +18,9 @@ import labelset.Cluster;
 import labelset.LabelSet;
 import mediator.ControllerMediator;
 import org.controlsfx.control.CheckComboBox;
+import org.controlsfx.control.IndexedCheckModel;
 import org.json.JSONObject;
-import persistance.SessionMaker;
+import persistence.SessionMaker;
 import ui.Main;
 
 
@@ -69,23 +70,36 @@ public class GeneFiltererController extends PopUpController implements Initializ
     private Toggle optionFilteringBy;
     private LabelSet labelSetFilteringBy;
 
-    private MutableDouble disMin;
-    private MutableDouble disMinPercentExpressed;
+    private MutableDouble tempDISMin;
+    private double savedDISMin;
+    private MutableDouble tempDISMinPercentExpressed;
+    private double savedDISMinPercentExpressed;
 
-    private MutableDouble deMinFoldChange;
-    private MutableDouble deMin;
-    private MutableDouble deMinPercentExpressed;
+    private MutableDouble tempDEMinFoldChange;
+    private double savedDEMinFoldChange;
+    private MutableDouble tempDEMin;
+    private double savedDEMin;
+    private MutableDouble tempDEMinPercentExpressed;
+    private double savedDEMinPercentExpressed;
+    private Collection<Cluster> savedDECategories;
 
-    private MutableDouble cseMin;
-    private MutableDouble cseMinPercentExpressed;
-    private MutableDouble cseMax;
-    private MutableDouble cseMaxPercentExpressed;
+    private MutableDouble tempCSEMin;
+    private double savedCSEMin;
+    private MutableDouble tempCSEMinPercentExpressed;
+    private double savedCSEMinPercentExpressed;
+    private MutableDouble tempCSEMax;
+    private double savedCSEMax;
+    private MutableDouble tempCSEMaxPercentExpressed;
+    private double savedCSEMaxPercentExpressed;
+    private Collection<Cluster> savedCSECategories;
 
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        savedDECategories = new HashSet<>();
+        savedCSECategories = new HashSet<>();
         setUpFieldUpdating();
-        setGeneFilteringParamsToDefault();
+        setSettingsToDefault();
         setUpWindow();
         disable();
     }
@@ -156,7 +170,9 @@ public class GeneFiltererController extends PopUpController implements Initializ
         LabelSet labelSet = ControllerMediator.getInstance().getLabelSetInUse();
         if (labelSetFilteringBy != labelSet) {
             deCategories.getCheckModel().clearChecks();
+            savedDECategories.clear();
             cseCategories.getCheckModel().clearChecks();
+            savedCSECategories.clear();
             ObservableList deCategoryItems = deCategories.getItems();
             ObservableList cseCategoryItems = cseCategories.getItems();
             deCategoryItems.clear();
@@ -174,42 +190,44 @@ public class GeneFiltererController extends PopUpController implements Initializ
         disable();
     }
 
-    public void setGeneFilteringParamsToDefault() {
+    public void setSettingsToDefault() {
         noneFilterOption.setSelected(true);
-        optionFilteringBy = noneFilterOption;
 
         disMinField.setText(Integer.toString(DEFAULT_DIS_MIN));
-        disMin = new MutableDouble(DEFAULT_DIS_MIN);
+        tempDISMin = new MutableDouble(DEFAULT_DIS_MIN);
         disMinPercentExpressedField.setText(Integer.toString(DEFAULT_DIS_MIN_PERCENT_EXPRESSED));
-        disMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
+        tempDISMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
 
         deMinFoldChangeField.setText(Integer.toString(DEFAULT_DE_MIN_FOLD_CHANGE));
-        deMinFoldChange = new MutableDouble(DEFAULT_DE_MIN_FOLD_CHANGE);
+        tempDEMinFoldChange = new MutableDouble(DEFAULT_DE_MIN_FOLD_CHANGE);
         deMinField.setText(Integer.toString(DEFAULT_DE_MIN));
-        deMin = new MutableDouble(DEFAULT_DE_MIN);
+        tempDEMin = new MutableDouble(DEFAULT_DE_MIN);
         deMinPercentExpressedField.setText(Integer.toString(DEFAULT_DE_MIN_PERCENT_EXPRESSED));
-        deMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
+        tempDEMinPercentExpressed = new MutableDouble(DEFAULT_DIS_MIN_PERCENT_EXPRESSED);
 
         cseMinField.setText(Integer.toString(DEFAULT_CSE_MIN));
-        cseMin = new MutableDouble(DEFAULT_CSE_MIN);
+        tempCSEMin = new MutableDouble(DEFAULT_CSE_MIN);
         cseMinPercentExpressedField.setText(Integer.toString(DEFAULT_CSE_MIN_PERCENT_EXPRESSED));
-        cseMinPercentExpressed = new MutableDouble(DEFAULT_CSE_MIN_PERCENT_EXPRESSED);
+        tempCSEMinPercentExpressed = new MutableDouble(DEFAULT_CSE_MIN_PERCENT_EXPRESSED);
         cseMaxField.setText(Integer.toString(DEFAULT_CSE_MAX));
-        cseMax = new MutableDouble(DEFAULT_CSE_MAX);
+        tempCSEMax = new MutableDouble(DEFAULT_CSE_MAX);
         cseMaxPercentExpressedField.setText(Integer.toString(DEFAULT_CSE_MAX_PERCENT_EXPRESSED));
-        cseMaxPercentExpressed = new MutableDouble(DEFAULT_CSE_MAX_PERCENT_EXPRESSED);
+        tempCSEMaxPercentExpressed = new MutableDouble(DEFAULT_CSE_MAX_PERCENT_EXPRESSED);
+
+        saveSettings();
     }
 
 
     public void restoreGeneFiltererFromPrevSession(JSONObject prevSession) {
-        AtomicBoolean restoredFilteringParams = new AtomicBoolean(false);
+        AtomicBoolean restoredSettings = new AtomicBoolean(false);
         Platform.runLater(() -> {
-            restoreDISParamsFromPrevSession(prevSession);
-            restoreDEParamsFromPrevSession(prevSession);
-            restoreCSEParamsFromPrevSession(prevSession);
-            restoredFilteringParams.set(true);
+            restoreDISSettingsFromPrevSession(prevSession);
+            restoreDESettingsFromPrevSession(prevSession);
+            restoreCSESettingsFromPrevSession(prevSession);
+            saveSettings();
+            restoredSettings.set(true);
         });
-        while (!restoredFilteringParams.get());
+        while (!restoredSettings.get());
         filterGenesAsInPreviousSession(prevSession);
     }
 
@@ -225,11 +243,11 @@ public class GeneFiltererController extends PopUpController implements Initializ
     }
 
     public Collection<String> getDESelectedCategories() {
-        return deCategories.getCheckModel().getCheckedItems().stream().map(Cluster::getName).collect(Collectors.toList());
+        return savedDECategories.stream().map(Cluster::getName).collect(Collectors.toList());
     }
 
     public Collection<String> getCSESelectedCategories() {
-        return cseCategories.getCheckModel().getCheckedItems().stream().map(Cluster::getName).collect(Collectors.toList());
+        return savedCSECategories.stream().map(Cluster::getName).collect(Collectors.toList());
     }
 
     public boolean isFilteringByDominantIsoformSwitching() {
@@ -245,39 +263,39 @@ public class GeneFiltererController extends PopUpController implements Initializ
     }
 
     public double getDISMin() {
-        return disMin.doubleValue();
+        return savedDISMin;
     }
 
     public double getDISMinPercentExpressed() {
-        return disMinPercentExpressed.doubleValue();
+        return savedDISMinPercentExpressed;
     }
 
     public double getDEMinFoldChange() {
-        return deMinFoldChange.doubleValue();
+        return savedDEMinFoldChange;
     }
 
     public double getDEMin() {
-        return deMin.doubleValue();
+        return savedDEMin;
     }
 
     public double getDEMinPercentExpressed() {
-        return deMinPercentExpressed.doubleValue();
+        return savedDEMinPercentExpressed;
     }
 
     public double getCSEMin() {
-        return cseMin.doubleValue();
+        return savedCSEMin;
     }
 
     public double getCSEMinPercentExpressed() {
-        return cseMinPercentExpressed.doubleValue();
+        return savedCSEMinPercentExpressed;
     }
 
     public double getCSEMax() {
-        return cseMax.doubleValue();
+        return savedCSEMax;
     }
 
     public double getCSEMaxPercentExpressed() {
-        return cseMaxPercentExpressed.doubleValue();
+        return savedCSEMaxPercentExpressed;
     }
 
     @FXML
@@ -299,11 +317,64 @@ public class GeneFiltererController extends PopUpController implements Initializ
         }
     }
 
+    private void saveSettings() {
+        savedDISMin = tempDISMin.doubleValue();
+        savedDISMinPercentExpressed = tempDISMinPercentExpressed.doubleValue();
+
+        savedDEMinFoldChange = tempDEMinFoldChange.doubleValue();
+        savedDEMin = tempDEMin.doubleValue();
+        savedDEMinPercentExpressed = tempDEMinPercentExpressed.doubleValue();
+        savedDECategories.clear();
+        savedDECategories.addAll(deCategories.getCheckModel().getCheckedItems());
+
+        savedCSEMin = tempCSEMin.doubleValue();
+        savedCSEMinPercentExpressed = tempCSEMinPercentExpressed.doubleValue();
+        savedCSEMax = tempCSEMax.doubleValue();
+        savedCSEMaxPercentExpressed = tempCSEMaxPercentExpressed.doubleValue();
+        savedCSECategories.clear();
+        savedCSECategories.addAll(cseCategories.getCheckModel().getCheckedItems());
+
+        optionFilteringBy = filterToggles.getSelectedToggle();
+    }
+
+    private void restoreSettingsToSaved() {
+        tempDISMin.setValue(savedDISMin);
+        disMinField.setText(getStringRepresentationOfNum(savedDISMin));
+        tempDISMinPercentExpressed.setValue(savedDISMinPercentExpressed);
+        disMinPercentExpressedField.setText(getStringRepresentationOfNum(savedDISMinPercentExpressed));
+
+        tempDEMinFoldChange.setValue(savedDEMinFoldChange);
+        deMinFoldChangeField.setText(getStringRepresentationOfNum(savedDEMinFoldChange));
+        tempDEMin.setValue(savedDEMin);
+        deMinField.setText(getStringRepresentationOfNum(savedDEMin));
+        tempDEMinPercentExpressed.setValue(savedDEMinPercentExpressed);
+        deMinPercentExpressedField.setText(getStringRepresentationOfNum(savedDEMinPercentExpressed));
+        IndexedCheckModel<Cluster> deCheckModel = deCategories.getCheckModel();
+        deCheckModel.clearChecks();
+        for (Cluster cluster : savedDECategories)
+            deCheckModel.check(cluster);
+
+        tempCSEMin.setValue(savedCSEMin);
+        cseMinField.setText(getStringRepresentationOfNum(savedCSEMin));
+        tempCSEMinPercentExpressed.setValue(savedCSEMinPercentExpressed);
+        cseMinPercentExpressedField.setText(getStringRepresentationOfNum(savedCSEMinPercentExpressed));
+        tempCSEMax.setValue(savedCSEMax);
+        cseMaxField.setText(getStringRepresentationOfNum(savedCSEMax));
+        tempCSEMaxPercentExpressed.setValue(savedCSEMaxPercentExpressed);
+        cseMaxPercentExpressedField.setText(getStringRepresentationOfNum(savedCSEMaxPercentExpressed));
+        IndexedCheckModel<Cluster> cseCheckModel = cseCategories.getCheckModel();
+        cseCheckModel.clearChecks();
+        for (Cluster cluster : savedCSECategories)
+            cseCheckModel.check(cluster);
+
+        optionFilteringBy.setSelected(true);
+    }
+
     private void updateClusterDominantIsoforms(Cluster cluster, Isoform isoform, Set<Isoform> dominantIsoforms) {
         double isoformExpression = isoform.getAverageExpressionInCluster(cluster, false, false);
         int isoformNumExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
         double isoformPercentExpressed = (double) isoformNumExpressingCells / cluster.getCells().size();
-        if (isoformExpression >= disMin.doubleValue() && isoformPercentExpressed * 100 >= disMinPercentExpressed.doubleValue()) {
+        if (isoformExpression >= savedDISMin && isoformPercentExpressed * 100 >= savedDISMinPercentExpressed) {
             for (Iterator<Isoform> iterator = dominantIsoforms.iterator(); iterator.hasNext();) {
                 Isoform dominantIsoform = iterator.next();
                 double dominantIsoformExpression = dominantIsoform.getAverageExpressionInCluster(cluster, false, false);
@@ -335,18 +406,17 @@ public class GeneFiltererController extends PopUpController implements Initializ
     private boolean isoformIsDifferentiallyExpressed(Isoform isoform) {
         double minExpression = Double.MAX_VALUE;
         double maxExpression = 0;
-
-        for (Cluster cluster : deCategories.getCheckModel().getCheckedItems()) {
+        for (Cluster cluster : savedDECategories) {
             double expression = isoform.getAverageExpressionInCluster(cluster, false, false);
             int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
             double percentExpressed = (double) numExpressingCells / cluster.getCells().size();
-            if (expression > maxExpression && expression > deMin.doubleValue() && percentExpressed * 100 > deMinPercentExpressed.doubleValue())
+            if (expression > maxExpression && expression >= savedDEMin && percentExpressed * 100 >= savedDEMinPercentExpressed)
                 maxExpression = expression;
-            else if (expression < minExpression)
+            if (expression < minExpression)
                 minExpression = expression;
 
         }
-        return (maxExpression / minExpression) >= deMinFoldChange.doubleValue();
+        return (maxExpression / minExpression) >= savedDEMinFoldChange;
     }
 
     private boolean isoformHasCategorySpecificExpression(Isoform isoform) {
@@ -355,26 +425,26 @@ public class GeneFiltererController extends PopUpController implements Initializ
             int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
             double percentExpressed = (double) numExpressingCells / cluster.getCells().size();
 
-            if (cseCategories.getCheckModel().isChecked(cluster)) {
-                if (expression < cseMin.doubleValue() || percentExpressed * 100 < cseMinPercentExpressed.doubleValue())
+            if (savedCSECategories.contains(cluster)) {
+                if (expression < savedCSEMin || percentExpressed * 100 < savedCSEMinPercentExpressed)
                     return false;
             } else {
-                if (expression > cseMax.doubleValue() && percentExpressed * 100 > cseMaxPercentExpressed.doubleValue())
+                if (expression > savedCSEMax && percentExpressed * 100 > savedCSEMaxPercentExpressed)
                     return false;
             }
         }
         return true;
     }
 
-    private void restoreDISParamsFromPrevSession(JSONObject prevSession) {
-        disMin.setValue(prevSession.getDouble(SessionMaker.DIS_MIN_KEY));
-        disMinField.setText(Double.toString(disMin.doubleValue()));
+    private void restoreDISSettingsFromPrevSession(JSONObject prevSession) {
+        tempDISMin.setValue(prevSession.getDouble(SessionMaker.DIS_MIN_KEY));
+        disMinField.setText(getStringRepresentationOfNum(tempDISMin.doubleValue()));
 
-        disMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.DIS_MIN_PERCENT_EXPRESSED_KEY));
-        disMinPercentExpressedField.setText(Double.toString(disMinPercentExpressed.doubleValue()));
+        tempDISMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.DIS_MIN_PERCENT_EXPRESSED_KEY));
+        disMinPercentExpressedField.setText(getStringRepresentationOfNum(tempDISMinPercentExpressed.doubleValue()));
     }
 
-    private void restoreDEParamsFromPrevSession(JSONObject prevSession) {
+    private void restoreDESettingsFromPrevSession(JSONObject prevSession) {
         Collection<String> catagoriesToSelect = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.DE_SELECTED_CATEGORIES_KEY).toList();
 
         for (Cluster category : deCategories.getItems()) {
@@ -386,17 +456,17 @@ public class GeneFiltererController extends PopUpController implements Initializ
             }
         }
 
-        deMinFoldChange.setValue(prevSession.getDouble(SessionMaker.DE_MIN_FOLD_CHANGE_KEY));
-        deMinFoldChangeField.setText(Double.toString(deMinFoldChange.doubleValue()));
+        tempDEMinFoldChange.setValue(prevSession.getDouble(SessionMaker.DE_MIN_FOLD_CHANGE_KEY));
+        deMinFoldChangeField.setText(getStringRepresentationOfNum(tempDEMinFoldChange.doubleValue()));
 
-        deMin.setValue(prevSession.getDouble(SessionMaker.DE_MIN_KEY));
-        deMinField.setText(Double.toString(deMin.doubleValue()));
+        tempDEMin.setValue(prevSession.getDouble(SessionMaker.DE_MIN_KEY));
+        deMinField.setText(getStringRepresentationOfNum(tempDEMin.doubleValue()));
 
-        deMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.DE_MIN_PERCENT_EXPRESSED_KEY));
-        deMinPercentExpressedField.setText(Double.toString(deMinPercentExpressed.doubleValue()));
+        tempDEMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.DE_MIN_PERCENT_EXPRESSED_KEY));
+        deMinPercentExpressedField.setText(getStringRepresentationOfNum(tempDEMinPercentExpressed.doubleValue()));
     }
 
-    private void restoreCSEParamsFromPrevSession(JSONObject prevSession) {
+    private void restoreCSESettingsFromPrevSession(JSONObject prevSession) {
         Collection<String> catagoriesToSelect = (List<String>)(List<?>) prevSession.getJSONArray(SessionMaker.CSE_SELECTED_CATEGORIES_KEY).toList();
         for (Cluster category : cseCategories.getItems()) {
             for (String categoryToSelect : catagoriesToSelect) {
@@ -407,17 +477,17 @@ public class GeneFiltererController extends PopUpController implements Initializ
             }
         }
 
-        cseMin.setValue(prevSession.getDouble(SessionMaker.CSE_MIN_KEY));
-        cseMinField.setText(Double.toString(cseMin.doubleValue()));
+        tempCSEMin.setValue(prevSession.getDouble(SessionMaker.CSE_MIN_KEY));
+        cseMinField.setText(getStringRepresentationOfNum(tempCSEMin.doubleValue()));
 
-        cseMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.CSE_MIN_PERCENT_EXPRESSED_KEY));
-        cseMinPercentExpressedField.setText(Double.toString(cseMinPercentExpressed.doubleValue()));
+        tempCSEMinPercentExpressed.setValue(prevSession.getDouble(SessionMaker.CSE_MIN_PERCENT_EXPRESSED_KEY));
+        cseMinPercentExpressedField.setText(getStringRepresentationOfNum(tempCSEMinPercentExpressed.doubleValue()));
 
-        cseMax.setValue(prevSession.getDouble(SessionMaker.CSE_MAX_KEY));
-        cseMaxField.setText(Double.toString(cseMax.doubleValue()));
+        tempCSEMax.setValue(prevSession.getDouble(SessionMaker.CSE_MAX_KEY));
+        cseMaxField.setText(getStringRepresentationOfNum(tempCSEMax.doubleValue()));
 
-        cseMaxPercentExpressed.setValue(prevSession.getDouble(SessionMaker.CSE_MAX_PERCENT_EXPRESSED_KEY));
-        cseMaxPercentExpressedField.setText(Double.toString(cseMaxPercentExpressed.doubleValue()));
+        tempCSEMaxPercentExpressed.setValue(prevSession.getDouble(SessionMaker.CSE_MAX_PERCENT_EXPRESSED_KEY));
+        cseMaxPercentExpressedField.setText(getStringRepresentationOfNum(tempCSEMaxPercentExpressed.doubleValue()));
     }
     private void filterGenesAsInPreviousSession(JSONObject prevSession) {
         String optionToFilterBy = prevSession.getString(SessionMaker.OPTION_FILTERING_BY_KEY);
@@ -441,6 +511,16 @@ public class GeneFiltererController extends PopUpController implements Initializ
             Platform.runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Finished filtering genes"));
     }
 
+    /**
+     * If num has no decimal part, returns string version of num with no decimal (no .0),
+     * else returns string num string with decimal
+     */
+    private String getStringRepresentationOfNum(double num) {
+        if (num % 1 == 0)
+            return Integer.toString((int) num);
+        return Double.toString(num);
+    }
+
     private void enableAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableMain();
@@ -461,29 +541,29 @@ public class GeneFiltererController extends PopUpController implements Initializ
 
     private void setUpFieldUpdating(){
         disMinField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, disMinField, disMin, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
+                handleChangedFilteringSetting(newValue, disMinField, tempDISMin, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
         disMinPercentExpressedField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, disMinPercentExpressedField, disMinPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
+                handleChangedFilteringSetting(newValue, disMinPercentExpressedField, tempDISMinPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
 
         deMinFoldChangeField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, deMinFoldChangeField, deMinFoldChange, ChangedCutOffEvent.CHANGED_MIN_FOLD_CHANGE_CUTOFF));
+                handleChangedFilteringSetting(newValue, deMinFoldChangeField, tempDEMinFoldChange, ChangedCutOffEvent.CHANGED_MIN_FOLD_CHANGE_CUTOFF));
         deMinField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, deMinField, deMin, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
+                handleChangedFilteringSetting(newValue, deMinField, tempDEMin, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
         deMinPercentExpressedField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, deMinPercentExpressedField, deMinPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
+                handleChangedFilteringSetting(newValue, deMinPercentExpressedField, tempDEMinPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
 
         cseMinField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, cseMinField, cseMin, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
+                handleChangedFilteringSetting(newValue, cseMinField, tempCSEMin, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
         cseMinPercentExpressedField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, cseMinPercentExpressedField, cseMinPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
+                handleChangedFilteringSetting(newValue, cseMinPercentExpressedField, tempCSEMinPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
         cseMaxField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, cseMaxField, cseMax, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
+                handleChangedFilteringSetting(newValue, cseMaxField, tempCSEMax, ChangedCutOffEvent.CHANGED_EXPRESSION_CUTOFF));
         cseMaxPercentExpressedField.focusedProperty().addListener((arg0, oldValue, newValue) ->
-                handleChangedFilteringParam(newValue, cseMaxPercentExpressedField, cseMaxPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
+                handleChangedFilteringSetting(newValue, cseMaxPercentExpressedField, tempCSEMaxPercentExpressed, ChangedCutOffEvent.CHANGED_PERCENT_CUTOFF));
 
     }
 
-    private void handleChangedFilteringParam(Boolean newValue, TextField field, MutableDouble originalCutOff, ChangedCutOffEvent event) {
+    private void handleChangedFilteringSetting(Boolean newValue, TextField field, MutableDouble originalCutOff, ChangedCutOffEvent event) {
         if (!newValue) { //when focus lost
             String newCutOff = field.getText();
             try {
@@ -495,7 +575,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
                     checkMinFoldChange(newCutOff);
                 originalCutOff.setValue(Double.parseDouble(newCutOff));
             } catch (Exception e){
-                field.setText(Double.toString(originalCutOff.doubleValue()));
+                field.setText(getStringRepresentationOfNum(originalCutOff.doubleValue()));
                 ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
             }
         }
@@ -512,8 +592,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
         setWindowSizeAndDisplay();
         window.setOnCloseRequest(event -> {
             event.consume();
-            if (!optionFilteringBy.isSelected())
-                optionFilteringBy.setSelected(true);
+            restoreSettingsToSaved();
             window.hide();
         });
     }
@@ -564,7 +643,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
 
         @Override
         public void run() {
-            optionFilteringBy = filterToggles.getSelectedToggle();
+            saveSettings();
 
             boolean filteringGenes = (optionFilteringBy != noneFilterOption);
             if (filteringGenes)

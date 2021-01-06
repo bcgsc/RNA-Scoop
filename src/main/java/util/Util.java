@@ -18,7 +18,7 @@ public class Util {
     }
 
     public static double roundToOneDecimal (double value) {
-        int scale = (int) Math.pow(10, 1);
+        int scale = 10;
         return (double) Math.round(value * scale) / scale;
     }
 }

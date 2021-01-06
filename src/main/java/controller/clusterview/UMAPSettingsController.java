@@ -6,7 +6,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.TextField;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
-import persistance.SessionMaker;
+import persistence.SessionMaker;
 
 import java.net.URL;
 import java.util.ResourceBundle;

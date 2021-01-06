@@ -227,7 +227,7 @@ public class ControllerMediator implements Mediator{
     }
 
     public void setGeneFilteringParamsToDefault() {
-        geneFiltererController.setGeneFilteringParamsToDefault();
+        geneFiltererController.setSettingsToDefault();
     }
 
     public void setGradientToDefault() {

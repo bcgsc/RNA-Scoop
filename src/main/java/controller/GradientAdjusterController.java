@@ -23,7 +23,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
-import persistance.SessionMaker;
+import persistence.SessionMaker;
 import ui.Main;
 
 import java.net.URL;

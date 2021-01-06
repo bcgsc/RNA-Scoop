@@ -24,7 +24,7 @@ import javafx.scene.text.Text;
 import labelset.Cluster;
 import mediator.ControllerMediator;
 import org.json.JSONObject;
-import persistance.SessionMaker;
+import persistence.SessionMaker;
 import ui.CategoryLabelsLegend;
 import util.Util;
 import java.net.URL;

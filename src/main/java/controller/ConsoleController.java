@@ -6,14 +6,8 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import persistance.SessionMaker;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 public class ConsoleController implements Initializable{
