@@ -16,15 +16,22 @@
                 <Insets top="5" bottom="15"/>
             </VBox.margin>
         </ImageView>
+        <Text text="https://github.com/bcgsc/RNA-Scoop"/>
         <Line startX="100" endX="350">
             <VBox.margin>
-                <Insets bottom="15"/>
+                <Insets top="15" bottom="15"/>
             </VBox.margin>
         </Line>
-        <Text text="RNA-Scoop Version 0.0.1"/>
         <HBox>
             <VBox.margin>
-                <Insets top="20" left="15" right="15"/>
+                <Insets top="10" left="15" right="15"/>
+            </VBox.margin>
+            <Text text="RNA-Scoop Version: " style="-fx-font-weight: bold"/>
+            <Text text="1.0.0"/>
+        </HBox>
+        <HBox>
+            <VBox.margin>
+                <Insets top="10" left="15" right="15"/>
             </VBox.margin>
             <Text text="Java Version: " style="-fx-font-weight: bold"/>
             <Text fx:id="javaVersion"/>
