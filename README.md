@@ -28,6 +28,9 @@ tar -zxf rnascoop_vX.X.X.tar.gz
 ```
 RNA-Scoop can be run as `java -jar /path/to/RNA-Scoop.jar ...`
 
+## Tutorial :mag:
+
+Please consult our [wiki pages](https://github.com/bcgsc/RNA-Scoop/wiki) for an introduction to highlight features in RNA-Scoop.
 
 ## Implementation :pencil:
 
