@@ -424,7 +424,6 @@ public class GeneFiltererController extends PopUpController implements Initializ
             double expression = isoform.getAverageExpressionInCluster(cluster, false, false);
             int numExpressingCells = ControllerMediator.getInstance().getNumExpressingCells(isoform.getId(), cluster, false);
             double percentExpressed = (double) numExpressingCells / cluster.getCells().size();
-
             if (savedCSECategories.contains(cluster)) {
                 if (expression < savedCSEMin || percentExpressed * 100 < savedCSEMinPercentExpressed)
                     return false;

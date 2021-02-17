@@ -140,6 +140,7 @@ public class GradientAdjusterController extends PopUpController implements Initi
     public void restoreGradientFromPrevSession(JSONObject prevSession) {
         restoreGradientMinFromPrevSession(prevSession);
         restoreGradientMaxFromPrevSession(prevSession);
+        restoreGradientRecommendedMaxMinFromPrevSession(prevSession);
         restoreGradientColorsFromPrevSession(prevSession);
         restoreGradientScaleFromPrevSession(prevSession);
     }
@@ -152,6 +153,11 @@ public class GradientAdjusterController extends PopUpController implements Initi
     private void restoreGradientMaxFromPrevSession(JSONObject prevSession) {
         gradientMax = prevSession.getDouble(SessionMaker.MAX_GRADIENT_KEY);
         gradientMaxField.setText(Double.toString(gradientMax));
+    }
+
+    private void restoreGradientRecommendedMaxMinFromPrevSession(JSONObject prevSession) {
+        setRecommendedMin(prevSession.getInt(SessionMaker.RECOMMENDED_MIN_GRADIENT_KEY));
+        setRecommendedMax(prevSession.getInt(SessionMaker.RECOMMENDED_MAX_GRADIENT_KEY));
     }
 
     private void restoreGradientColorsFromPrevSession(JSONObject prevSession) {
@@ -172,6 +178,14 @@ public class GradientAdjusterController extends PopUpController implements Initi
 
     public double getGradientMax() {
         return gradientMax;
+    }
+
+    public int getRecommendedGradientMin() {
+        return recommendedMin;
+    }
+
+    public int getRecommendedGradientMax() {
+        return recommendedMax;
     }
 
     public double getGradientMid() {
