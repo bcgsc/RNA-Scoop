@@ -39,6 +39,8 @@ public class SessionMaker {
     public static final String COLOR_CELL_PLOT_BY_ISOFORM_KEY = "color_cell_plot_by_isoform";
     public static final String MIN_GRADIENT_KEY = "min_gradient_key";
     public static final String MAX_GRADIENT_KEY = "max_gradient_key";
+    public static final String RECOMMENDED_MIN_GRADIENT_KEY = "recommended_min_gradient_key";
+    public static final String RECOMMENDED_MAX_GRADIENT_KEY = "recommended_max_gradient_key";
     public static final String MIN_COLOR_KEY = "min_color_key";
     public static final String MID_COLOR_KEY = "mid_color_key";
     public static final String MAX_COLOR_KEY = "max_color_key";
@@ -107,6 +109,8 @@ public class SessionMaker {
         session.put(COLOR_CELL_PLOT_BY_ISOFORM_KEY, ControllerMediator.getInstance().isColoringCellPlotBySelectedIsoform());
         session.put(MIN_GRADIENT_KEY, ControllerMediator.getInstance().getGradientMin());
         session.put(MAX_GRADIENT_KEY, ControllerMediator.getInstance().getGradientMax());
+        session.put(RECOMMENDED_MIN_GRADIENT_KEY, ControllerMediator.getInstance().getRecommendedGradientMin());
+        session.put(RECOMMENDED_MAX_GRADIENT_KEY, ControllerMediator.getInstance().getRecommendedGradientMax());
         session.put(MIN_COLOR_KEY, ControllerMediator.getInstance().getGradientMinColorCode());
         session.put(MID_COLOR_KEY, ControllerMediator.getInstance().getGradientMidColorCode());
         session.put(MAX_COLOR_KEY, ControllerMediator.getInstance().getGradientMaxColorCode());

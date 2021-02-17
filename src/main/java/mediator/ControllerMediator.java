@@ -625,6 +625,14 @@ public class ControllerMediator implements Mediator{
         return gradientAdjusterController.getGradientMid();
     }
 
+    public int getRecommendedGradientMin() {
+        return gradientAdjusterController.getRecommendedGradientMin();
+    }
+
+    public int getRecommendedGradientMax() {
+        return gradientAdjusterController.getRecommendedGradientMax();
+    }
+
     public String getScaleOptionInUse() {
         return gradientAdjusterController.getScaleOptionInUse();
     }

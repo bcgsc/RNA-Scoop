@@ -33,7 +33,12 @@ public class Parser {
      * GTF and cell plot info. Loads both from it
      */
     public static boolean loadJSONFile(String pathToPaths)  {
-        runLater(SessionIO::clearCurrentSessionData);
+        AtomicBoolean clearedData = new AtomicBoolean(false);
+        Platform.runLater(() -> {
+            SessionIO.clearCurrentSessionData();
+            clearedData.set(true);
+        });
+        while (!clearedData.get());
         try {
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + pathToPaths));
             Path jsonPath = Paths.get(pathToPaths);
