@@ -2,7 +2,7 @@
   <img src="https://github.com/bcgsc/RNA-Scoop/blob/master/src/wiki/images/RNA-Scoop_logo_small.png?raw=true"/>
 </p>
 
-**RNA Scoop** is a tool to visualize isoforms in single cell transcriptomes. Through use of an interactive t-SNE plot,
+**RNA Scoop** is a tool to visualize isoforms in single cell transcriptomes. Through use of an interactive cell cluster plot,
 users are able to explore isoforms in a single-cell transcriptome dataset of thousands of cells. 
 
 Specifically, users are able to:
