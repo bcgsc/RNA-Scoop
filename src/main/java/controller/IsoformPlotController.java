@@ -1022,7 +1022,7 @@ public class IsoformPlotController implements Initializable, InteractiveElementC
         private static Canvas getDotPlotRowCircle(double expression, int numExpressingCells, int numCells) {
             Canvas dotPlotRowItem = new Canvas(DOT_PLOT_COLUMN_WIDTH, DOT_PLOT_ROW_HEIGHT);
 
-            if (expression >= ControllerMediator.getInstance().getGradientMin()) {
+            if (expression >= ControllerMediator.getInstance().getGradientMin() && numCells > 0 && numExpressingCells > 0) {
                 double dotX = DOT_PLOT_COLUMN_WIDTH / 2;
                 double dotY = DOT_PLOT_ROW_HEIGHT / 2;
                 double dotSize = getDotSize((double) numExpressingCells/numCells);
