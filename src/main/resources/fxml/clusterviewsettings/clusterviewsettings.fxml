@@ -10,7 +10,7 @@
             fx:controller="controller.clusterview.ClusterViewSettingsController"
             fx:id="clusterViewSettings" style="-fx-background-color: #fcfcfc;" fitToWidth="true" fitToHeight="true">
     <VBox>
-        <VBox style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
+        <VBox alignment="CENTER" style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS">
             <VBox.margin>
                 <Insets topRightBottomLeft="10"/>
             </VBox.margin>

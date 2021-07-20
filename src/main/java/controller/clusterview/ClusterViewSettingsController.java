@@ -17,7 +17,7 @@ import ui.Main;
 
 public class ClusterViewSettingsController extends PopUpController {
     private static final float CLUSTER_VIEW_SETTINGS_HEIGHT = 160;
-    private static final float CLUSTER_VIEW_SETTINGS_WIDTH = 440;
+    private static final float CLUSTER_VIEW_SETTINGS_WIDTH = 500;
     private static final String UMAP_OPTION = "UMAP";
     private static final String T_SNE_OPTION = "t-SNE";
 

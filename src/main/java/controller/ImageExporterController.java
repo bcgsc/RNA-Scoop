@@ -30,7 +30,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class ImageExporterController extends PopUpController implements Initializable {
-    private static final float IMAGE_EXPORTER_HEIGHT = 250;
+    private static final float IMAGE_EXPORTER_HEIGHT = 300;
     private static final float IMAGE_EXPORTER_WIDTH = 450;
     private static final float DEFAULT_SCALE = 1f;
     private static final String JUST_ISOFORM_VIEW_OPTION = "Isoform view";

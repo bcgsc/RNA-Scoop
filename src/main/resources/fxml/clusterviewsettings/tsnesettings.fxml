@@ -20,14 +20,14 @@
                 <Insets top="5" right="5"/>
             </HBox.margin>
         </Text>
-        <TextField fx:id="perplexityField" onAction="#handleChangedPerplexity" prefWidth="50"/>
+        <TextField fx:id="perplexityField" onAction="#handleChangedPerplexity" prefWidth="70"/>
     </HBox>
     <HBox>
-        <Text text="Max Number of Interations: ">
+        <Text text="Max. Interations: ">
             <HBox.margin>
                 <Insets top="5" right="5"/>
             </HBox.margin>
         </Text>
-        <TextField fx:id="maxIterationsField" onAction="#handleChangedMaxIterations" prefWidth="50"/>
+        <TextField fx:id="maxIterationsField" onAction="#handleChangedMaxIterations" prefWidth="70"/>
     </HBox>
 </HBox>

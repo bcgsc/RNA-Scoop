@@ -15,19 +15,19 @@
         <HBox.margin>
             <Insets right="40"/>
         </HBox.margin>
-        <Text text="Min Distance: ">
+        <Text text="Min. Distance: ">
             <HBox.margin>
                 <Insets top="5" right="5"/>
             </HBox.margin>
         </Text>
-        <TextField fx:id="minDistField" onAction="#handleChangedMinDist" prefWidth="50"/>
+        <TextField fx:id="minDistField" onAction="#handleChangedMinDist" prefWidth="70"/>
     </HBox>
     <HBox>
-        <Text text="Number of Nearest Neighbors: ">
+        <Text text="Nearest Neighbors: ">
             <HBox.margin>
                 <Insets top="5" right="5"/>
             </HBox.margin>
         </Text>
-        <TextField fx:id="nearestNeighborsField" text="1000" onAction="#handleChangedNearestNeighbors" prefWidth="50"/>
+        <TextField fx:id="nearestNeighborsField" text="1000" onAction="#handleChangedNearestNeighbors" prefWidth="70"/>
     </HBox>
 </HBox>

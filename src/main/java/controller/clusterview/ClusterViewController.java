@@ -1,5 +1,6 @@
 package controller.clusterview;
 
+import com.jujutsu.tsne.FastTSne;
 import com.jujutsu.tsne.TSneConfiguration;
 import com.jujutsu.tsne.barneshut.BHTSne;
 import com.jujutsu.utils.TSneUtils;
