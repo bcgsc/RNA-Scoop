@@ -15,6 +15,10 @@ Written by [Maria Stephenson](mailto:mstephenson@bcgsc.ca) and [Ka Ming Nip](mai
 
 ---    
 
+## Disclaimer :warning:
+
+RNA-Scoop is designed to work with data produced from single-cell protocols that supports transcript isoform level analysis. In other words, 3' end capture protocols (such as 10x Genomics or Drop-Seq) designed for measuring gene expression in single cells are NOT supported.
+
 ## Dependency :pushpin:
 
 * [Java SE Runtime Environment (JRE) 8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)
