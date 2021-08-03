@@ -72,7 +72,7 @@
                         <Insets left="10" right="10"/>
                     </HBox.margin>
                 </Button>
-                <Button onAction="#handleDatasetLoaderButton" prefWidth="335" text="Load dataset dialogue"/>
+                <Button fx:id="datasetLoaderButton" onAction="#handleDatasetLoaderButton" prefWidth="335" text="Load dataset dialogue"/>
             </HBox>
         </VBox>
     </top>

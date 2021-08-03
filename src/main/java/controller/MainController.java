@@ -30,6 +30,7 @@ public class MainController implements InteractiveElementController {
     @FXML private BorderPane borderPane;
     @FXML private ComboBox pathComboBox;
     @FXML private Button openFileChooserButton;
+    @FXML private Button datasetLoaderButton;
     @FXML private Menu fileMenu;
     @FXML private Menu viewMenu;
     @FXML private MenuItem clusterViewToggle;
@@ -74,6 +75,7 @@ public class MainController implements InteractiveElementController {
         fileMenu.setDisable(true);
         viewMenu.setDisable(true);
         openFileChooserButton.setDisable(true);
+        datasetLoaderButton.setDisable(true);
         pathComboBox.setDisable(true);
     }
 
@@ -84,6 +86,7 @@ public class MainController implements InteractiveElementController {
         fileMenu.setDisable(false);
         viewMenu.setDisable(false);
         openFileChooserButton.setDisable(false);
+        datasetLoaderButton.setDisable(false);
         pathComboBox.setDisable(false);
     }
 
@@ -241,6 +244,7 @@ public class MainController implements InteractiveElementController {
     public void enableLoadingDatasetAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableIsoformPlot();
+        ControllerMediator.getInstance().enableDatasetLoader();
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();

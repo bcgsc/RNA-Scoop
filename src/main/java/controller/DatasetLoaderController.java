@@ -1,9 +1,7 @@
 package controller;
 
-import exceptions.DatasetMissingPathException;
-import exceptions.LabelSetMissingNameException;
-import exceptions.LabelSetMissingPathException;
-import exceptions.RNAScoopException;
+import exceptions.*;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -28,10 +26,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import static javafx.application.Platform.runLater;
+
 // TODO: clear???
 // TODO: figure out current loaded path thing
 public class DatasetLoaderController extends PopUpController implements Initializable {
-    private static final float DATASET_LOADER_HEIGHT = 580;
+    private static final float DATASET_LOADER_HEIGHT = 640;
     private static final float DATASET_LOADER_WIDTH = 500;
 
     @FXML private Parent datasetLoader;
@@ -46,6 +46,7 @@ public class DatasetLoaderController extends PopUpController implements Initiali
     public void initialize(URL location, ResourceBundle resources) {
         addLabelSetLoaderSection();
         setUpWindow();
+        runLater(() -> datasetLoader.requestFocus());
     }
 
     public void disable() {
@@ -157,11 +158,11 @@ public class DatasetLoaderController extends PopUpController implements Initiali
                 Parser.loadDatasetFromIndividualPaths(gtfPath, matrixPath, isoformIDsPath, embedding, labelSets, expressionUnit);
                 ControllerMediator.getInstance().enableLoadingDatasetAssociatedFunctionality();
             } catch (RNAScoopException e) {
-                ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage());
+                runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
             } catch (Exception e) {
-                ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
+                runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
             } finally {
-                ControllerMediator.getInstance().enableLoadingDatasetAssociatedFunctionality();
+                runLater(() -> ControllerMediator.getInstance().enableLoadingDatasetAssociatedFunctionality());
             }
         }
 
@@ -180,6 +181,8 @@ public class DatasetLoaderController extends PopUpController implements Initiali
                 String name = labelSetLoaderSection.getName();
                 if (name.equals(""))
                     throw new LabelSetMissingNameException();
+                if (labelSetMap.containsKey(name))
+                    throw new LabelSetDuplicateNameException();
                 String path = labelSetLoaderSection.getPath();
                 if (path.equals(""))
                     throw new LabelSetMissingPathException();

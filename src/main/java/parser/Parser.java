@@ -204,7 +204,7 @@ public class Parser {
         GTFLoader.loadGTF(gtf);
         runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing matrix files..."));
         Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, labelSets, embedding);
-        ControllerMediator.getInstance().setExpressionUnit(expressionUnit);
+        if (expressionUnit != null && !expressionUnit.equals("")) ControllerMediator.getInstance().setExpressionUnit(expressionUnit);
         CurrentSession.saveLoadedPaths(gtf, matrix, isoformLabels, labelSetPathMap, embedding);
     }
 
@@ -452,7 +452,7 @@ public class Parser {
 
             double[][] cellIsoformExpressionMatrix = getCellIsoformExpressionMatrix(pathToMatrix, numCells, numIsoforms);
 
-            if (pathToEmbedding != null) {
+            if (pathToEmbedding != null && !pathToEmbedding.equals("")) {
                 double[][] embedding = getEmbedding(pathToEmbedding);
 
                 if (embedding.length != numCells)
