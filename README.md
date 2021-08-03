@@ -15,6 +15,10 @@ Written by [Maria Stephenson](mailto:mstephenson@bcgsc.ca) and [Ka Ming Nip](mai
 
 ---    
 
+## Disclaimer :warning:
+
+RNA-Scoop is designed to work with data produced from single-cell protocols that supports transcript isoform level analysis. In other words, 3' end capture protocols (such as 10x Genomics or Drop-Seq) designed for measuring gene expression in single cells are NOT supported.
+
 ## Dependency :pushpin:
 
 * [Java SE Runtime Environment (JRE) 8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)
@@ -26,7 +30,19 @@ Written by [Maria Stephenson](mailto:mstephenson@bcgsc.ca) and [Ka Ming Nip](mai
 ```
 tar -zxf rnascoop_vX.X.X.tar.gz
 ```
-RNA-Scoop can be run as `java -jar /path/to/RNA-Scoop.jar ...`
+RNA-Scoop can be run as simple as:
+```
+java -jar /path/to/RNA-Scoop.jar ...
+```
+
+## Setting max heap space in Java :floppy_disk:
+
+The memory required for RNA-Scoop depends of the dimension (rows, columns) of the input expression matrix. If a memory error is encountered while running RNA-Scoop (i.e. `java.lang.OutOfMemoryError: Java heap space`), then the max heap space in Java needs to be increased, e.g.
+```
+java -Xmx16g -jar /path/to/RNA-Scoop.jar ...
+```
+
+This limits the maximum Java heap to 16 GB with the `-Xmx` option. See documentation for other [JVM options](https://docs.oracle.com/cd/E37116_01/install.111210/e23737/configuring_jvm.htm#OUDIG00071).
 
 ## Tutorial :mag:
 

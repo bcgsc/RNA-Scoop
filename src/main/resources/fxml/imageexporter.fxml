@@ -31,28 +31,31 @@
                     <VBox.margin>
                         <Insets bottom="15"/>
                     </VBox.margin>
-                    <HBox GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS" >
+                    <HBox GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" >
                         <Text text="Figure: " textAlignment="RIGHT">
                             <HBox.margin>
                                 <Insets right="5" top="2"/>
                             </HBox.margin>
                         </Text>
-                        <ComboBox fx:id="exportOptions"/>
+                        <ComboBox fx:id="exportOptions" prefWidth="300" minWidth="300"/>
                     </HBox>
-                    <HBox GridPane.columnIndex="1" GridPane.rowIndex="0">
-                        <Text text="Scale (increase if blurry):" textAlignment="RIGHT">
+                    <HBox GridPane.columnIndex="0" GridPane.rowIndex="1">
+                        <GridPane.margin>
+                            <Insets top="10"/>
+                        </GridPane.margin>
+                        <Text text="Scale:" textAlignment="RIGHT">
                             <HBox.margin>
                                 <Insets right="5" top="2"/>
                             </HBox.margin>
                         </Text>
-                        <TextField fx:id="scaleField" prefWidth="35" minWidth="35"/>
+                        <TextField fx:id="scaleField" prefWidth="50" minWidth="50"/>
                     </HBox>
-                    <Text GridPane.rowIndex="1" text="Cell cluster plot axis labels: ">
+                    <Text GridPane.rowIndex="2" text="Cell cluster plot axis labels: ">
                         <GridPane.margin>
                             <Insets top="10"/>
                         </GridPane.margin>
                     </Text>
-                    <HBox GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
+                    <HBox GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS">
                         <Text text="x: " textAlignment="RIGHT">
                             <HBox.margin>
                                 <Insets right="5" top="2"/>
@@ -60,7 +63,7 @@
                         </Text>
                         <TextField fx:id="cellPlotFigureXAxisLabelField" prefWidth="135" minWidth="135"/>
                     </HBox>
-                    <HBox GridPane.rowIndex="2" GridPane.columnIndex="1">
+                    <HBox GridPane.rowIndex="3" GridPane.columnIndex="1">
                         <Text text="y:" >
                             <HBox.margin>
                                 <Insets right="5" top="2"/>
