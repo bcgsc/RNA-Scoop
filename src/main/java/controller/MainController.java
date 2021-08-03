@@ -7,9 +7,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.*;
 import mediator.ControllerMediator;
@@ -18,6 +16,7 @@ import parser.Parser;
 import persistence.SessionIO;
 import persistence.SessionMaker;
 import ui.Main;
+import util.Util;
 
 import java.io.File;
 import java.nio.file.FileAlreadyExistsException;
@@ -223,6 +222,31 @@ public class MainController implements InteractiveElementController {
 
     public Window getMainWindow() {
         return window;
+    }
+
+    public void disableLoadingDatasetAssociatedFunctionality() {
+        disable();
+        ControllerMediator.getInstance().disableDatasetLoader();
+        ControllerMediator.getInstance().disableIsoformPlot();
+        ControllerMediator.getInstance().disableGeneSelector();
+        ControllerMediator.getInstance().disableClusterView();
+        ControllerMediator.getInstance().disableClusterViewSettings();
+        ControllerMediator.getInstance().disableGradientAdjuster();
+        ControllerMediator.getInstance().disableLabelSetManager();
+        ControllerMediator.getInstance().disableGeneFilterer();
+        // doesn't disable add label set view, because main should be disabled when
+        // that view is active
+    }
+
+    public void enableLoadingDatasetAssociatedFunctionality() {
+        enable();
+        ControllerMediator.getInstance().enableIsoformPlot();
+        ControllerMediator.getInstance().enableGeneSelector();
+        ControllerMediator.getInstance().enableClusterView();
+        ControllerMediator.getInstance().enableClusterViewSettings();
+        ControllerMediator.getInstance().enableGradientAdjuster();
+        ControllerMediator.getInstance().enableLabelSetManager();
+        ControllerMediator.getInstance().enableGeneFilterer();
     }
 
     /**
@@ -436,6 +460,14 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
+     * Displays Dataset Loader window when Dataset Loader button is pressed
+     */
+    @FXML
+    protected void handleDatasetLoaderButton() {
+        ControllerMediator.getInstance().displayDatasetLoader();
+    }
+
+    /**
      * If the isoform plot was closed in the previous session, closes the isoform plot,
      * otherwise opens it
      */
@@ -601,38 +633,14 @@ public class MainController implements InteractiveElementController {
      */
     private void loadFile() {
         currentLoadedPath = null;
-        disableAssociatedFunctionality();
+        disableLoadingDatasetAssociatedFunctionality();
         try {
             Thread fileLoaderThread = new Thread(new FileLoaderThread());
             fileLoaderThread.start();
         } catch (Exception e) {
-            enableAssociatedFunctionality();
+            enableLoadingDatasetAssociatedFunctionality();
             ControllerMediator.getInstance().addConsoleErrorMessage("reading file from path: " + pathComboBox.getValue());
         }
-    }
-
-    private void disableAssociatedFunctionality() {
-        disable();
-        ControllerMediator.getInstance().disableIsoformPlot();
-        ControllerMediator.getInstance().disableGeneSelector();
-        ControllerMediator.getInstance().disableClusterView();
-        ControllerMediator.getInstance().disableClusterViewSettings();
-        ControllerMediator.getInstance().disableGradientAdjuster();
-        ControllerMediator.getInstance().disableLabelSetManager();
-        ControllerMediator.getInstance().disableGeneFilterer();
-        // doesn't disable add label set view, because main should be disabled when
-        // that view is active
-    }
-
-    private void enableAssociatedFunctionality() {
-        enable();
-        ControllerMediator.getInstance().enableIsoformPlot();
-        ControllerMediator.getInstance().enableGeneSelector();
-        ControllerMediator.getInstance().enableClusterView();
-        ControllerMediator.getInstance().enableClusterViewSettings();
-        ControllerMediator.getInstance().enableGradientAdjuster();
-        ControllerMediator.getInstance().enableLabelSetManager();
-        ControllerMediator.getInstance().enableGeneFilterer();
     }
 
     /**
@@ -654,7 +662,7 @@ public class MainController implements InteractiveElementController {
                 currentLoadedPath = filePath;
                 runLater(MainController.this::addLoadedPath);
             }
-            enableAssociatedFunctionality();
+            enableLoadingDatasetAssociatedFunctionality();
         }
     }
 
@@ -735,20 +743,6 @@ public class MainController implements InteractiveElementController {
      * If user drags multiple files, prints an error message to the console
      */
     private void setUpPathComboBoxDragNDrop() {
-        pathComboBox.setOnDragOver(event -> {
-            if (event.getGestureSource() != pathComboBox && event.getDragboard().hasFiles()) {
-                event.acceptTransferModes(TransferMode.MOVE);
-            }
-            event.consume();
-        });
-        pathComboBox.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            pathComboBox.requestFocus();
-            if (db.getFiles().size() > 1)
-                ControllerMediator.getInstance().addConsoleErrorMessage("You cannot load more than one file at a time");
-            else
-                pathComboBox.setValue(db.getFiles().get(0).getAbsolutePath());
-            event.consume();
-        });
+        Util.setFieldDragNDrop(pathComboBox);
     }
 }

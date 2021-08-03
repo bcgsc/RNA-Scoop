@@ -67,6 +67,7 @@ public class SessionIO {
 
     private static void disableAssociatedFunctionality() {
         ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableDatasetLoader();
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableClusterView(true);
@@ -80,6 +81,7 @@ public class SessionIO {
 
     private static void enableAssociatedFunctionality() {
         ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableDatasetLoader();
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableClusterView();

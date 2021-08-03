@@ -33,12 +33,7 @@ public class Parser {
      * GTF and cell plot info. Loads both from it
      */
     public static boolean loadJSONFile(String pathToPaths)  {
-        AtomicBoolean clearedData = new AtomicBoolean(false);
-        Platform.runLater(() -> {
-            SessionIO.clearCurrentSessionData();
-            clearedData.set(true);
-        });
-        while (!clearedData.get());
+        clearCurrentSessionData();
         try {
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + pathToPaths));
             Path jsonPath = Paths.get(pathToPaths);
@@ -64,13 +59,27 @@ public class Parser {
 
             String expressionUnit = (jsonObj.has(SessionMaker.EXPRESSION_UNIT_KEY))? jsonObj.getString(SessionMaker.EXPRESSION_UNIT_KEY) : null;
 
-            runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing GTF file..."));
-            GTFLoader.loadGTF(gtf);
-            runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing matrix files..."));
-            Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, labelSets, embedding);
-            ControllerMediator.getInstance().setExpressionUnit(expressionUnit);
+            loadDatasetFiles(gtf, matrix, isoformLabels, embedding, labelSets, expressionUnit);
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded file from path: " + pathToPaths));
-            CurrentSession.saveLoadedPaths(gtf, matrix, isoformLabels, labelSetPathMap, embedding);
+            return true;
+        } catch (RNAScoopException e){
+            runLater(Parser::clearLoadedData);
+            runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
+            return false;
+        } catch (Exception e) {
+            runLater(Parser::clearLoadedData);
+            runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
+            return false;
+        }
+    }
+
+    public static boolean loadDatasetFromIndividualPaths(String gtf, String matrix, String isoformLabels, String embedding,
+                                                         Map<String, String> labelSets, String expressionUnit)  {
+        clearCurrentSessionData();
+        try {
+            runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading dataset"));
+            loadDatasetFiles(gtf, matrix, isoformLabels, embedding, labelSets, expressionUnit);
+            runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded dataset"));
             return true;
         } catch (RNAScoopException e){
             runLater(Parser::clearLoadedData);
@@ -131,13 +140,6 @@ public class Parser {
         return false;
     }
 
-    private static String getLabelSetName(File labelSetFile) {
-        String name = labelSetFile.getName();
-        String nameWithoutExtension = name.replaceFirst("[.][^.]+$", "");
-
-        return ControllerMediator.getInstance().getUniqueLabelSetName(nameWithoutExtension);
-    }
-
     /**
      * Creates a label set from given label set file. Label set is made based on map of cells
      * (represented by their numbers) and the clusters they belong to.
@@ -182,6 +184,35 @@ public class Parser {
         }
 
         return genesToSelect;
+    }
+
+    /**
+     * Clears current session data, and waits until it has been cleared
+     */
+    private static void clearCurrentSessionData() {
+        AtomicBoolean clearedData = new AtomicBoolean(false);
+        Platform.runLater(() -> {
+            SessionIO.clearCurrentSessionData();
+            clearedData.set(true);
+        });
+        while (!clearedData.get());
+    }
+
+    private static void loadDatasetFiles(String gtf, String matrix, String isoformLabels, String embedding,
+                                         Map<String, String> labelSets, String expressionUnit) throws IOException, RNAScoopException {
+        runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing GTF file..."));
+        GTFLoader.loadGTF(gtf);
+        runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Parsing matrix files..."));
+        Map<LabelSet, String> labelSetPathMap = CellPlotInfoLoader.loadCellPlotInfo(matrix, isoformLabels, labelSets, embedding);
+        ControllerMediator.getInstance().setExpressionUnit(expressionUnit);
+        CurrentSession.saveLoadedPaths(gtf, matrix, isoformLabels, labelSetPathMap, embedding);
+    }
+
+    private static String getLabelSetName(File labelSetFile) {
+        String name = labelSetFile.getName();
+        String nameWithoutExtension = name.replaceFirst("[.][^.]+$", "");
+
+        return ControllerMediator.getInstance().getUniqueLabelSetName(nameWithoutExtension);
     }
 
     private static String resolveRelativePath(String f, String parent) throws FileNotFoundException {

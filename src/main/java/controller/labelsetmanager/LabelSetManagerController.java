@@ -260,6 +260,7 @@ public class LabelSetManagerController extends PopUpController {
     protected void handleExportLabelSetButton() {
         if (labelSetInUse != null) {
             ControllerMediator.getInstance().disableMain();
+            ControllerMediator.getInstance().disableDatasetLoader();
 
             FileChooser fileChooser = new FileChooser();
             FileChooser.ExtensionFilter textFileFilter = new FileChooser.ExtensionFilter("Text Files", "*.txt");
@@ -270,6 +271,7 @@ public class LabelSetManagerController extends PopUpController {
                 exportLabelSetToFile(labelSetFile, labelSetInUse);
 
             ControllerMediator.getInstance().enableMain();
+            ControllerMediator.getInstance().enableDatasetLoader();
         } else {
             ControllerMediator.getInstance().addConsoleErrorMessage("No label set to export");
         }
@@ -278,6 +280,7 @@ public class LabelSetManagerController extends PopUpController {
     private void enableCalculatingFoldChangeAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableDatasetLoader();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableGeneSelector();
@@ -287,6 +290,7 @@ public class LabelSetManagerController extends PopUpController {
     private void disableCalculatingFoldChangeAssociatedFunctionality() {
         disable();
         ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableDatasetLoader();
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableGeneSelector();

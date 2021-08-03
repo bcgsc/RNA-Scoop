@@ -64,14 +64,15 @@
             </MenuBar>
             <HBox>
                 <VBox.margin>
-                    <Insets top="10" left="10"/>
+                    <Insets top="10" left="10" right="10"/>
                 </VBox.margin>
-                <ComboBox fx:id="pathComboBox" editable="true" promptText="Insert path to file here"/>
-                <Button fx:id="openFileChooserButton" onAction="#handleOpenFileChooserButton" prefWidth="70" text="Open...">
+                <ComboBox fx:id="pathComboBox" editable="true" promptText="Insert path to JSON file here"/>
+                <Button fx:id="openFileChooserButton" onAction="#handleOpenFileChooserButton" prefWidth="310" text="JSON file chooser">
                     <HBox.margin>
-                        <Insets left="5"/>
+                        <Insets left="10" right="10"/>
                     </HBox.margin>
                 </Button>
+                <Button onAction="#handleDatasetLoaderButton" prefWidth="335" text="Load dataset dialogue"/>
             </HBox>
         </VBox>
     </top>

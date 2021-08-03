@@ -37,6 +37,7 @@ public class ControllerMediator implements Mediator{
     private UMAPSettingsController umapSettingsController;
     private TSNESettingsController tsneSettingsController;
     private ImageExporterController imageExporterController;
+    private DatasetLoaderController datasetLoaderController;
 
     // Register controllers
     @Override
@@ -107,6 +108,11 @@ public class ControllerMediator implements Mediator{
     @Override
     public void registerImageExporterController(ImageExporterController imageExporterController) {
         this.imageExporterController = imageExporterController;
+    }
+
+    @Override
+    public void registerDatasetLoaderController(DatasetLoaderController datasetLoaderController) {
+        this.datasetLoaderController = datasetLoaderController;
     }
 
     // Change Main Display
@@ -446,6 +452,12 @@ public class ControllerMediator implements Mediator{
 
     public void unselectCluster(Cluster cluster) {
         clusterViewController.unselectCluster(cluster);
+    }
+
+    // Load dataset
+
+    public void displayDatasetLoader() {
+        datasetLoaderController.display();
     }
 
     //Load from JSON
@@ -851,6 +863,14 @@ public class ControllerMediator implements Mediator{
         labelSetManagerController.disable();
     }
 
+    public void disableDatasetLoader() {
+        datasetLoaderController.disable();
+    }
+
+    public void disableLoadingDatasetAssociatedFunctionality() {
+        mainController.disableLoadingDatasetAssociatedFunctionality();
+    }
+
     //Enable Functionality
     public void enableMain() {
         mainController.enable();
@@ -882,6 +902,14 @@ public class ControllerMediator implements Mediator{
 
     public void enableLabelSetManager() {
         labelSetManagerController.enable();
+    }
+
+    public void enableDatasetLoader() {
+        datasetLoaderController.enable();
+    }
+
+    public void enableLoadingDatasetAssociatedFunctionality() {
+        mainController.enableLoadingDatasetAssociatedFunctionality();
     }
 
     // Everything below here is in support of Singleton pattern

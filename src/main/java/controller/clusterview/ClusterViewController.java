@@ -412,6 +412,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     private void disableAssociatedFunctionality() {
         disable();
         ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableDatasetLoader();
         ControllerMediator.getInstance().disableIsoformPlot();
         ControllerMediator.getInstance().disableGeneSelector();
         ControllerMediator.getInstance().disableGradientAdjuster();
@@ -425,6 +426,7 @@ public class ClusterViewController implements Initializable, InteractiveElementC
     private void enableAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableDatasetLoader();
         ControllerMediator.getInstance().enableIsoformPlot();
         ControllerMediator.getInstance().enableGeneSelector();
         ControllerMediator.getInstance().enableGradientAdjuster();

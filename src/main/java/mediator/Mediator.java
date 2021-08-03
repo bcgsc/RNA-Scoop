@@ -23,4 +23,5 @@ public interface Mediator {
     void registerUMAPSettingsController(UMAPSettingsController umapSettingsController);
     void registerTSNESettingsController(TSNESettingsController tsneSettingsController);
     void registerImageExporterController(ImageExporterController imageExporterController);
+    void registerDatasetLoaderController(DatasetLoaderController datasetLoaderController);
 }

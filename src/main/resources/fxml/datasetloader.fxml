@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1"
+            fx:id="datasetLoader" fx:controller="controller.DatasetLoaderController"
+            style="-fx-background-color: #fcfcfc;" fitToHeight="true" fitToWidth="true">
+    <VBox>
+        <VBox style="-fx-border-color: #c2c2c2; -fx-background-color: #fafafa;" VBox.vgrow="ALWAYS" spacing="15">
+            <VBox.margin>
+                <Insets topRightBottomLeft="10" />
+            </VBox.margin>
+            <VBox spacing="20">
+                <VBox.margin>
+                    <Insets topRightBottomLeft="10" />
+                </VBox.margin>
+                <Text style="-fx-font-weight: bold; -fx-font-size: 14; -fx-spacing: 5;" text="Dataset paths"/>
+                <VBox spacing="10">
+                    <Text style="-fx-font-size: 13;" text="GTF path" />
+                    <TextField fx:id="gtfField" />
+                </VBox>
+                <VBox spacing="10">
+                    <Text style="-fx-font-size: 13;" text="Matrix path" />
+                    <TextField fx:id="matrixField" />
+                </VBox>
+                <VBox spacing="10">
+                    <Text style="-fx-font-size: 13;" text="Column labels path" />
+                    <TextField fx:id="isoformIDsField" />
+                </VBox>
+                <VBox spacing="10">
+                    <Text style="-fx-font-size: 13;" text="Label set paths" />
+                    <VBox fx:id="labelSets" spacing="15" />
+                    <HBox alignment="CENTER_RIGHT" spacing="10">
+                        <Button text="+" onAction="#addLabelSetLoaderSection"/>
+                        <Button text="-" onAction="#removeLabelSetLoaderSection"/>
+                    </HBox>
+                    <VBox spacing="10">
+                        <Text style="-fx-font-size: 13;" text="Embedding path (optional)" />
+                        <TextField fx:id="embeddingField" />
+                    </VBox>
+                </VBox>
+                <VBox spacing="10">
+                    <Text style="-fx-font-size: 13;" text="Expression unit (optional)" />
+                    <TextField fx:id="expressionUnitField" />
+                </VBox>
+                <Separator/>
+            </VBox>
+            <VBox alignment="center">
+                <VBox.margin>
+                    <Insets bottom="30"/>
+                </VBox.margin>
+                <Button style="-fx-font-size: 13" text="Load dataset" onAction="#loadDataset"/>
+            </VBox>
+        </VBox>
+    </VBox>
+</ScrollPane>

@@ -143,6 +143,7 @@ public class AddLabelSetViewController {
      */
     private void disableAssociatedFunctionality() {
         ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableDatasetLoader();
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableGeneFilterer();
@@ -163,6 +164,7 @@ public class AddLabelSetViewController {
      */
     private void enableAssociatedFunctionality() {
         ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableDatasetLoader();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableGeneFilterer();

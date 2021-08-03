@@ -523,6 +523,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
     private void enableAssociatedFunctionality() {
         enable();
         ControllerMediator.getInstance().enableMain();
+        ControllerMediator.getInstance().enableDatasetLoader();
         ControllerMediator.getInstance().enableClusterView();
         ControllerMediator.getInstance().enableClusterViewSettings();
         ControllerMediator.getInstance().enableLabelSetManager();
@@ -532,6 +533,7 @@ public class GeneFiltererController extends PopUpController implements Initializ
     private void disableAssociatedFunctionality() {
         disable();
         ControllerMediator.getInstance().disableMain();
+        ControllerMediator.getInstance().disableDatasetLoader();
         ControllerMediator.getInstance().disableClusterView();
         ControllerMediator.getInstance().disableClusterViewSettings();
         ControllerMediator.getInstance().disableLabelSetManager();
