@@ -34,7 +34,7 @@ public class Main extends Application {
         FXMLLoader tSNESettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/tsnesettings.fxml"));
         FXMLLoader umapSettingsLoader = new FXMLLoader(getClass().getResource("/fxml/clusterviewsettings/umapsettings.fxml"));
         FXMLLoader imageExporterLoader = new FXMLLoader(getClass().getResource("/fxml/imageexporter.fxml"));
-        FXMLLoader datasetLoaderLoader = new FXMLLoader(getClass().getResource("/fxml/datasetLoader.fxml"));
+        FXMLLoader datasetLoaderLoader = new FXMLLoader(getClass().getResource("/fxml/datasetloader.fxml"));
 
         mainLoader.load();
         aboutLoader.load();
