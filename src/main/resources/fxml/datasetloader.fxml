@@ -17,18 +17,55 @@
                 <VBox.margin>
                     <Insets topRightBottomLeft="10" />
                 </VBox.margin>
-                <Text style="-fx-font-weight: bold; -fx-font-size: 14; -fx-spacing: 5;" text="Dataset paths"/>
+                <fx:define>
+                    <ToggleGroup fx:id="loadToggles"/>
+                </fx:define>
+                <RadioButton fx:id="jsonLoadOption" text="Load by JSON" style="-fx-font-size: 13;" selected="true" toggleGroup="$loadToggles"/>
+                <VBox spacing="10">
+                    <Text style="-fx-font-size: 13;" text="JSON path" />
+                    <HBox>
+                        <TextField fx:id="jsonField" HBox.hgrow="ALWAYS">
+                            <HBox.margin>
+                                <Insets right="10"/>
+                            </HBox.margin>
+                        </TextField>
+                        <Button text="Find.." onAction="#getJSONFileFromFileChooser"/>
+                    </HBox>
+                </VBox>
+                <Separator/>
+                <RadioButton fx:id="filesLoadOption" text="Load by individual files" style="-fx-font-size: 13;" toggleGroup="$loadToggles"/>
                 <VBox spacing="10">
                     <Text style="-fx-font-size: 13;" text="GTF path" />
-                    <TextField fx:id="gtfField" />
+                    <HBox>
+                        <TextField fx:id="gtfField" HBox.hgrow="ALWAYS">
+                            <HBox.margin>
+                                <Insets right="10"/>
+                            </HBox.margin>
+                        </TextField>
+                        <Button text="Find.." onAction="#getGTFFileFromFileChooser"/>
+                    </HBox>
                 </VBox>
                 <VBox spacing="10">
                     <Text style="-fx-font-size: 13;" text="Matrix path" />
-                    <TextField fx:id="matrixField" />
+                    <HBox>
+                        <TextField fx:id="matrixField" HBox.hgrow="ALWAYS">
+                            <HBox.margin>
+                                <Insets right="10"/>
+                            </HBox.margin>
+                        </TextField>
+                        <Button text="Find.." onAction="#getMatrixFileFromFileChooser"/>
+                    </HBox>
                 </VBox>
                 <VBox spacing="10">
                     <Text style="-fx-font-size: 13;" text="Column labels path" />
-                    <TextField fx:id="isoformIDsField" />
+                    <HBox>
+                        <TextField fx:id="isoformIDsField" HBox.hgrow="ALWAYS">
+                            <HBox.margin>
+                                <Insets right="10"/>
+                            </HBox.margin>
+                        </TextField>
+                        <Button text="Find.." onAction="#getIsoformIDsFileFromFileChooser"/>
+                    </HBox>
                 </VBox>
                 <VBox spacing="10">
                     <Text style="-fx-font-size: 13;" text="Label set paths" />
@@ -39,7 +76,14 @@
                     </HBox>
                     <VBox spacing="10">
                         <Text style="-fx-font-size: 13;" text="Embedding path (optional)" />
-                        <TextField fx:id="embeddingField" />
+                        <HBox>
+                            <TextField fx:id="embeddingField" HBox.hgrow="ALWAYS">
+                                <HBox.margin>
+                                    <Insets right="10"/>
+                                </HBox.margin>
+                            </TextField>
+                            <Button text="Find.." onAction="#getEmbeddingFileFromFileChooser"/>
+                        </HBox>
                     </VBox>
                 </VBox>
                 <VBox spacing="10">

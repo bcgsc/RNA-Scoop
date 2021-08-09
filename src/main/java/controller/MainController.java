@@ -28,8 +28,6 @@ public class MainController implements InteractiveElementController {
     private static final float MAIN_SCALE_FACTOR = 0.7f;
 
     @FXML private BorderPane borderPane;
-    @FXML private ComboBox pathComboBox;
-    @FXML private Button openFileChooserButton;
     @FXML private Button datasetLoaderButton;
     @FXML private Menu fileMenu;
     @FXML private Menu viewMenu;
@@ -59,13 +57,12 @@ public class MainController implements InteractiveElementController {
     private boolean clusterViewIsOpen;
     private boolean consoleIsOpen;
     private boolean isoformPlotIsOpen;
-    private String currentLoadedPath;
 
     public void initializeMain(Parent console, Parent isoformPlot, Parent clusterView) {
         setUpWindow();
         addPanels(console, isoformPlot, clusterView);
         setViewTogglesToDefault();
-        setUpPathComboBox();
+        Platform.runLater(() -> borderPane.requestFocus());
     }
 
     /**
@@ -74,9 +71,6 @@ public class MainController implements InteractiveElementController {
     public void disable() {
         fileMenu.setDisable(true);
         viewMenu.setDisable(true);
-        openFileChooserButton.setDisable(true);
-        datasetLoaderButton.setDisable(true);
-        pathComboBox.setDisable(true);
     }
 
     /**
@@ -85,9 +79,6 @@ public class MainController implements InteractiveElementController {
     public void enable() {
         fileMenu.setDisable(false);
         viewMenu.setDisable(false);
-        openFileChooserButton.setDisable(false);
-        datasetLoaderButton.setDisable(false);
-        pathComboBox.setDisable(false);
     }
 
     public void openIsoformPlot() {
@@ -137,16 +128,6 @@ public class MainController implements InteractiveElementController {
             consoleToggle.setText("Open Console");
             consoleIsOpen = false;
         }
-    }
-
-    /**
-     * Clears path combo box's list of paths, current loaded path, and path
-     * combo box value
-     */
-    public void clearPathComboBox() {
-        pathComboBox.getItems().clear();
-        currentLoadedPath = null;
-        pathComboBox.setValue(null);
     }
 
     public void restoreMainFromPrevSession(JSONObject prevSession) {
@@ -227,32 +208,6 @@ public class MainController implements InteractiveElementController {
         return window;
     }
 
-    public void disableLoadingDatasetAssociatedFunctionality() {
-        disable();
-        ControllerMediator.getInstance().disableDatasetLoader();
-        ControllerMediator.getInstance().disableIsoformPlot();
-        ControllerMediator.getInstance().disableGeneSelector();
-        ControllerMediator.getInstance().disableClusterView();
-        ControllerMediator.getInstance().disableClusterViewSettings();
-        ControllerMediator.getInstance().disableGradientAdjuster();
-        ControllerMediator.getInstance().disableLabelSetManager();
-        ControllerMediator.getInstance().disableGeneFilterer();
-        // doesn't disable add label set view, because main should be disabled when
-        // that view is active
-    }
-
-    public void enableLoadingDatasetAssociatedFunctionality() {
-        enable();
-        ControllerMediator.getInstance().enableIsoformPlot();
-        ControllerMediator.getInstance().enableDatasetLoader();
-        ControllerMediator.getInstance().enableGeneSelector();
-        ControllerMediator.getInstance().enableClusterView();
-        ControllerMediator.getInstance().enableClusterViewSettings();
-        ControllerMediator.getInstance().enableGradientAdjuster();
-        ControllerMediator.getInstance().enableLabelSetManager();
-        ControllerMediator.getInstance().enableGeneFilterer();
-    }
-
     /**
      * Saves current session to file chosen by user through file chooser and adds
      * error/success messages to console
@@ -305,13 +260,13 @@ public class MainController implements InteractiveElementController {
         openClusterView();
         openConsole();
         setViewTogglesToDefault();
+        ControllerMediator.getInstance().clearLoadedDatasetDataAndScreen();
         ControllerMediator.getInstance().setGradientToDefault();
         ControllerMediator.getInstance().setGeneFilteringParamsToDefault();
         ControllerMediator.getInstance().setClusterViewSettingsToDefault();
         ControllerMediator.getInstance().setImageExporterSettingsToDefault();
         SessionIO.clearCurrentSessionData();
         ControllerMediator.getInstance().clearConsole();
-        clearPathComboBox();
     }
 
     @FXML
@@ -447,20 +402,6 @@ public class MainController implements InteractiveElementController {
     @FXML
     protected void handleAboutButtonAction() {
         ControllerMediator.getInstance().displayAboutWindow();
-    }
-
-    /**
-     * When open file chooser button is pressed, opens file chooser
-     * The chosen file's path given to the path combo box, and the file is loaded
-     */
-    @FXML
-    protected void handleOpenFileChooserButton() {
-        FileChooser fileChooser = new FileChooser();
-        File file = fileChooser.showOpenDialog(window);
-        if (file != null) {
-            pathComboBox.setValue(file.getAbsolutePath());
-            loadFile();
-        }
     }
 
     /**
@@ -630,47 +571,6 @@ public class MainController implements InteractiveElementController {
     }
 
     /**
-     * Clears cell plot (include loaded matrix data), label sets, gene selector window,
-     * current loaded path (as will be updated), disables associated functionality
-     * Loads file from path in path combo box on different thread
-     * Displays error (and successful completion) messages in console
-     */
-    private void loadFile() {
-        currentLoadedPath = null;
-        disableLoadingDatasetAssociatedFunctionality();
-        try {
-            Thread fileLoaderThread = new Thread(new FileLoaderThread());
-            fileLoaderThread.start();
-        } catch (Exception e) {
-            enableLoadingDatasetAssociatedFunctionality();
-            ControllerMediator.getInstance().addConsoleErrorMessage("reading file from path: " + pathComboBox.getValue());
-        }
-    }
-
-    /**
-     * Thread that loads files from paths in path combo box
-     */
-    private class FileLoaderThread implements Runnable {
-
-        /**
-         * Loads file from path in path combo box
-         * If the file is successfully loaded, sets the path as the current loaded path and adds it to
-         * the path combo box's list of loaded paths
-         * Writes messages to the console
-         */
-        @Override
-        public void run() {
-            String filePath = (String) pathComboBox.getValue();
-            boolean success = Parser.loadJSONFile(filePath);
-            if (success) {
-                currentLoadedPath = filePath;
-                runLater(MainController.this::addLoadedPath);
-            }
-            enableLoadingDatasetAssociatedFunctionality();
-        }
-    }
-
-    /**
      * Sets up main window, when this window is closed, program shuts down
      */
     private void setUpWindow() {
@@ -705,48 +605,5 @@ public class MainController implements InteractiveElementController {
         clusterViewIsOpen = true;
         consoleIsOpen = true;
         isoformPlotIsOpen = true;
-    }
-
-    /**
-     * Automatically resizes path combo box when window is resized
-     * Sets path combo box initial width
-     * Allows dragging and dropping of files
-     * Makes it so files are loaded from path in combo box when ENTER is pressed, and
-     * combo box is in focus
-     * Removes initial focus from path combo box
-     */
-    private void setUpPathComboBox() {
-        borderPane.widthProperty().addListener((observable, oldValue, newValue) -> pathComboBox.setPrefWidth(borderPane.getWidth() - 95));
-        pathComboBox.setPrefWidth(borderPane.getWidth() - 95);
-        setUpPathComboBoxDragNDrop();
-        // adds listener to border pane so that focus can be on any or no elements and
-        // the key press is still registered
-        pathComboBox.setOnKeyPressed(event -> {
-            if (event.getCode().equals(KeyCode.ENTER))
-                loadFile();
-        });
-        runLater(() -> borderPane.requestFocus());
-        currentLoadedPath = null;
-    }
-
-    /**
-     * Puts current loaded path at the first position in the path combo box's
-     * list of paths, and selects it
-     */
-    private void addLoadedPath() {
-        ObservableList<String> addedPaths = pathComboBox.getItems();
-        addedPaths.remove(currentLoadedPath);
-        addedPaths.add(0, currentLoadedPath);
-        pathComboBox.getSelectionModel().select(0);
-    }
-
-    /**
-     * Allows user to drag a file into path combo box and set its value to
-     * the file's path. Path combo box is in focus after
-     *
-     * If user drags multiple files, prints an error message to the console
-     */
-    private void setUpPathComboBoxDragNDrop() {
-        Util.setFieldDragNDrop(pathComboBox);
     }
 }

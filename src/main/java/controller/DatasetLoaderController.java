@@ -10,30 +10,34 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import mediator.ControllerMediator;
 import parser.Parser;
 import ui.Main;
 import util.Util;
 
+import java.io.File;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static javafx.application.Platform.runLater;
 
-// TODO: clear???
-// TODO: figure out current loaded path thing
 public class DatasetLoaderController extends PopUpController implements Initializable {
-    private static final float DATASET_LOADER_HEIGHT = 640;
+    private static final float DATASET_LOADER_HEIGHT = 780;
     private static final float DATASET_LOADER_WIDTH = 500;
 
+    @FXML private Toggle jsonLoadOption;
+    @FXML private Toggle filesLoadOption;
+    @FXML private TextField jsonField;
     @FXML private Parent datasetLoader;
     @FXML private TextField gtfField;
     @FXML private TextField matrixField;
@@ -42,10 +46,20 @@ public class DatasetLoaderController extends PopUpController implements Initiali
     @FXML private TextField embeddingField;
     @FXML private TextField expressionUnitField;
 
+    private Toggle optionLoadedBy;
+    private String loadedJSONPath;
+    private String loadedGTFPath;
+    private String loadedMatrixPath;
+    private String loadedIsoformIDsPath;
+    private Collection<LabelSetLoaderSection> loadedLabelSets;
+    private String loadedEmbeddingPath;
+    private String loadedExpressionUnit;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         addLabelSetLoaderSection();
         setUpWindow();
+        setLoadByOptionToDefault();
         runLater(() -> datasetLoader.requestFocus());
     }
 
@@ -57,30 +71,34 @@ public class DatasetLoaderController extends PopUpController implements Initiali
         datasetLoader.setDisable(false);
     }
 
-
-    /**
-     * Sets up Image Exporter window
-     * Makes it so window is hidden when X button is pressed, enables
-     * associated functionality (because is disabled when window is displayed)
-     */
-    private void setUpWindow() {
-        window = new Stage();
-        window.setTitle("RNA-Scoop - Load Dataset");
-        window.getIcons().add(Main.RNA_SCOOP_LOGO);
-        setWindowSizeAndDisplay();
-        Util.setFieldDragNDrop(gtfField);
-        Util.setFieldDragNDrop(matrixField);
-        Util.setFieldDragNDrop(isoformIDsField);
-        Util.setFieldDragNDrop(embeddingField);
-        Util.setFieldDragNDrop(expressionUnitField);
-        window.setOnCloseRequest(event -> {
-            event.consume();
-            window.hide();
-        });
+    public void clearLoadedDatasetDataAndScreen() {
+        clearLoadedDatasetData();
+        resetDatasetLoaderFieldsToSaved();
     }
 
-    private void setWindowSizeAndDisplay() {
-        window.setScene(new Scene(datasetLoader, DATASET_LOADER_WIDTH, DATASET_LOADER_HEIGHT));
+    @FXML
+    protected void getJSONFileFromFileChooser() {
+        chooseFile(jsonField);
+    }
+
+    @FXML
+    protected void getGTFFileFromFileChooser() {
+        chooseFile(gtfField);
+    }
+
+    @FXML
+    protected void getMatrixFileFromFileChooser() {
+        chooseFile(matrixField);
+    }
+
+    @FXML
+    protected void getIsoformIDsFileFromFileChooser() {
+        chooseFile(isoformIDsField);
+    }
+
+    @FXML
+    protected void getEmbeddingFileFromFileChooser() {
+        chooseFile(embeddingField);
     }
 
     @FXML
@@ -101,14 +119,119 @@ public class DatasetLoaderController extends PopUpController implements Initiali
 
     @FXML
     protected void loadDataset() {
-        ControllerMediator.getInstance().disableLoadingDatasetAssociatedFunctionality();
+        disableLoadingDatasetAssociatedFunctionality();
         try {
             Thread fileLoaderThread = new Thread(new FileLoaderThread());
             fileLoaderThread.start();
         } catch (Exception e) {
-            ControllerMediator.getInstance().enableLoadingDatasetAssociatedFunctionality();
+            enableLoadingDatasetAssociatedFunctionality();
             ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e);
         }
+    }
+
+    private void chooseFile(TextField field) {
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showOpenDialog(window);
+        if (file != null) {
+            field.setText(file.getAbsolutePath());
+        }
+    }
+
+    private void resetDatasetLoaderFieldsToSaved() {
+        optionLoadedBy.setSelected(true);
+        jsonField.setText(loadedJSONPath);
+        gtfField.setText(loadedGTFPath);
+        matrixField.setText(loadedMatrixPath);
+        isoformIDsField.setText(loadedIsoformIDsPath);
+        labelSets.getChildren().clear();
+        labelSets.getChildren().addAll(loadedLabelSets);
+        embeddingField.setText(loadedEmbeddingPath);
+        expressionUnitField.setText(loadedExpressionUnit);
+    }
+
+    private void saveLoadedDatasetData() {
+        optionLoadedBy = (jsonLoadOption.isSelected())? jsonLoadOption : filesLoadOption;
+        loadedJSONPath = jsonField.getText();
+        loadedGTFPath = gtfField.getText();
+        loadedMatrixPath = matrixField.getText();
+        loadedIsoformIDsPath = isoformIDsField.getText();
+        saveLoadedLabelSets();
+        loadedEmbeddingPath = embeddingField.getText();
+        loadedExpressionUnit = expressionUnitField.getText();
+    }
+
+    private void clearLoadedDatasetData() {
+        setLoadByOptionToDefault();
+        loadedJSONPath = "";
+        loadedGTFPath = "";
+        loadedLabelSets = new ArrayList<>();
+        loadedLabelSets.add(new LabelSetLoaderSection());
+        loadedMatrixPath = "";
+        loadedIsoformIDsPath = "";
+        loadedEmbeddingPath = "";
+        loadedExpressionUnit = "";
+    }
+
+    private void saveLoadedLabelSets() {
+        List<LabelSetLoaderSection> newLabelSets = (List<LabelSetLoaderSection>) (List<?>) labelSets.getChildren();
+        List<LabelSetLoaderSection> newLabelSetsCopy = newLabelSets.stream().map(LabelSetLoaderSection::new).collect(Collectors.toList());
+        loadedLabelSets = newLabelSetsCopy;
+    }
+    public void disableLoadingDatasetAssociatedFunctionality() {
+        disable();
+        ControllerMediator.getInstance().disableDatasetLoader();
+        ControllerMediator.getInstance().disableIsoformPlot();
+        ControllerMediator.getInstance().disableGeneSelector();
+        ControllerMediator.getInstance().disableClusterView();
+        ControllerMediator.getInstance().disableClusterViewSettings();
+        ControllerMediator.getInstance().disableGradientAdjuster();
+        ControllerMediator.getInstance().disableLabelSetManager();
+        ControllerMediator.getInstance().disableGeneFilterer();
+        // doesn't disable add label set view, because main should be disabled when
+        // that view is active
+    }
+    public void enableLoadingDatasetAssociatedFunctionality() {
+        enable();
+        ControllerMediator.getInstance().enableIsoformPlot();
+        ControllerMediator.getInstance().enableDatasetLoader();
+        ControllerMediator.getInstance().enableGeneSelector();
+        ControllerMediator.getInstance().enableClusterView();
+        ControllerMediator.getInstance().enableClusterViewSettings();
+        ControllerMediator.getInstance().enableGradientAdjuster();
+        ControllerMediator.getInstance().enableLabelSetManager();
+        ControllerMediator.getInstance().enableGeneFilterer();
+    }
+
+    /**
+     * Sets up Image Exporter window
+     * Makes it so window is hidden when X button is pressed, enables
+     * associated functionality (because is disabled when window is displayed)
+     */
+    private void setUpWindow() {
+        window = new Stage();
+        window.setTitle("RNA-Scoop - Load Dataset");
+        window.getIcons().add(Main.RNA_SCOOP_LOGO);
+        setWindowSizeAndDisplay();
+        Util.setFieldDragNDrop(jsonField);
+        Util.setFieldDragNDrop(gtfField);
+        Util.setFieldDragNDrop(matrixField);
+        Util.setFieldDragNDrop(isoformIDsField);
+        Util.setFieldDragNDrop(embeddingField);
+        Util.setFieldDragNDrop(expressionUnitField);
+        window.setOnCloseRequest(event -> {
+            event.consume();
+            resetDatasetLoaderFieldsToSaved();
+            window.hide();
+        });
+    }
+
+    private void setLoadByOptionToDefault() {
+        jsonLoadOption.setSelected(true);
+        optionLoadedBy = jsonLoadOption;
+    }
+
+    private void setWindowSizeAndDisplay() {
+        window.setScene(new Scene(datasetLoader, DATASET_LOADER_WIDTH, DATASET_LOADER_HEIGHT));
     }
 
     private class LabelSetLoaderSection extends HBox {
@@ -116,6 +239,24 @@ public class DatasetLoaderController extends PopUpController implements Initiali
         private TextField pathField;
 
         public LabelSetLoaderSection() {
+            setUpLabelSetLoaderSection();
+        }
+
+        public LabelSetLoaderSection(LabelSetLoaderSection sectionToCopy) {
+            setUpLabelSetLoaderSection();
+            nameField.setText(sectionToCopy.getName());
+            pathField.setText(sectionToCopy.getPath());
+        }
+
+        public String getName() {
+            return nameField.getText();
+        }
+
+        public String getPath() {
+            return pathField.getText();
+        }
+
+        private void setUpLabelSetLoaderSection() {
             setAlignment(Pos.CENTER);
 
             Text nameText = new Text("Name: ");
@@ -131,16 +272,12 @@ public class DatasetLoaderController extends PopUpController implements Initiali
             pathField.setPrefWidth(150);
             Util.setFieldDragNDrop(pathField);
             HBox.setHgrow(pathField, Priority.ALWAYS);
+            HBox.setMargin(pathField, new Insets(0,10,0,0));
 
-            getChildren().addAll(nameText, nameField, pathText, pathField);
-        }
+            Button fileChooser = new Button("Find...");
+            fileChooser.setOnAction((event) -> chooseFile(pathField));
 
-        public String getName() {
-            return nameField.getText();
-        }
-
-        public String getPath() {
-            return pathField.getText();
+            getChildren().addAll(nameText, nameField, pathText, pathField, fileChooser);
         }
     }
 
@@ -149,20 +286,41 @@ public class DatasetLoaderController extends PopUpController implements Initiali
         @Override
         public void run() {
             try {
-                String gtfPath = getNecessaryPath(gtfField, "GTF file");
-                String matrixPath = getNecessaryPath(matrixField, "matrix file");
-                String isoformIDsPath = getNecessaryPath(isoformIDsField, "matrix column labels file");
-                Map<String, String> labelSets = getLabelSets();
-                String embedding = embeddingField.getText();
-                String expressionUnit = expressionUnitField.getText();
-                Parser.loadDatasetFromIndividualPaths(gtfPath, matrixPath, isoformIDsPath, embedding, labelSets, expressionUnit);
-                ControllerMediator.getInstance().enableLoadingDatasetAssociatedFunctionality();
+                if (jsonLoadOption.isSelected())
+                    loadByJSON();
+                else
+                    loadByFiles();
             } catch (RNAScoopException e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleErrorMessage(e.getMessage()));
             } catch (Exception e) {
                 runLater(() -> ControllerMediator.getInstance().addConsoleUnexpectedExceptionMessage(e));
             } finally {
-                runLater(() -> ControllerMediator.getInstance().enableLoadingDatasetAssociatedFunctionality());
+                runLater(DatasetLoaderController.this::enableLoadingDatasetAssociatedFunctionality);
+            }
+        }
+
+        private void loadByJSON() throws RNAScoopException {
+            String jsonPath = getNecessaryPath(jsonField, "JSON file");
+            boolean success = Parser.loadJSONFile(jsonPath);
+            if (success) {
+                saveLoadedDatasetData();
+            } else {
+                Platform.runLater(DatasetLoaderController.this::clearLoadedDatasetData);
+            }
+        }
+
+        private void loadByFiles() throws RNAScoopException {
+            String gtfPath = getNecessaryPath(gtfField, "GTF file");
+            String matrixPath = getNecessaryPath(matrixField, "matrix file");
+            String isoformIDsPath = getNecessaryPath(isoformIDsField, "matrix column labels file");
+            Map<String, String> labelSets = getLabelSets();
+            String embedding = embeddingField.getText();
+            String expressionUnit = expressionUnitField.getText();
+            boolean success = Parser.loadDatasetFromIndividualPaths(gtfPath, matrixPath, isoformIDsPath, embedding, labelSets, expressionUnit);
+            if (success) {
+                saveLoadedDatasetData();
+            } else {
+                Platform.runLater(DatasetLoaderController.this::clearLoadedDatasetData);
             }
         }
 

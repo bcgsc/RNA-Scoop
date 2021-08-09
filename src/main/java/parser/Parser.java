@@ -33,8 +33,8 @@ public class Parser {
      * GTF and cell plot info. Loads both from it
      */
     public static boolean loadJSONFile(String pathToPaths)  {
-        clearCurrentSessionData();
         try {
+            clearCurrentSessionData();
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading file from path: " + pathToPaths));
             Path jsonPath = Paths.get(pathToPaths);
             byte[] encoded = Files.readAllBytes(jsonPath);
@@ -75,8 +75,8 @@ public class Parser {
 
     public static boolean loadDatasetFromIndividualPaths(String gtf, String matrix, String isoformLabels, String embedding,
                                                          Map<String, String> labelSets, String expressionUnit)  {
-        clearCurrentSessionData();
         try {
+            Parser.clearCurrentSessionData();
             runLater(() ->  ControllerMediator.getInstance().addConsoleMessage("Loading dataset"));
             loadDatasetFiles(gtf, matrix, isoformLabels, embedding, labelSets, expressionUnit);
             runLater(() -> ControllerMediator.getInstance().addConsoleMessage("Successfully loaded dataset"));
@@ -187,9 +187,9 @@ public class Parser {
     }
 
     /**
-     * Clears current session data, and waits until it has been cleared
+     * Clears current session data on platform thread, and waits until it has been cleared
      */
-    private static void clearCurrentSessionData() {
+    public static void clearCurrentSessionData() {
         AtomicBoolean clearedData = new AtomicBoolean(false);
         Platform.runLater(() -> {
             SessionIO.clearCurrentSessionData();

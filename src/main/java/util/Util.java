@@ -36,11 +36,6 @@ public class Util {
         setTextFieldDragDropped(node);
     }
 
-    public static void setFieldDragNDrop(ComboBox node) {
-        setNodeDragOver(node);
-        setTextFieldDragDropped(node);
-    }
-
     private static void setNodeDragOver(Node node) {
         node.setOnDragOver(event -> {
             if (event.getGestureSource() != node && event.getDragboard().hasFiles()) {
@@ -58,18 +53,6 @@ public class Util {
                 ControllerMediator.getInstance().addConsoleErrorMessage("You cannot load more than one file at a time");
             else
                 node.setText(db.getFiles().get(0).getAbsolutePath());
-            event.consume();
-        });
-    }
-
-    private static void setTextFieldDragDropped(ComboBox node) {
-        node.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            node.requestFocus();
-            if (db.getFiles().size() > 1)
-                ControllerMediator.getInstance().addConsoleErrorMessage("You cannot load more than one file at a time");
-            else
-                node.setValue(db.getFiles().get(0).getAbsolutePath());
             event.consume();
         });
     }

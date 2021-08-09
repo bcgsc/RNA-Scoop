@@ -38,6 +38,7 @@ public class SessionIO {
     public static void loadSessionAtPath(String path) throws IOException {
         disableAssociatedFunctionality();
         clearCurrentSessionData();
+        ControllerMediator.getInstance().clearLoadedDatasetDataAndScreen();
         ControllerMediator.getInstance().addConsoleMessage("Loading session...");
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         String prevSessionString = new String(encoded, Charset.defaultCharset());

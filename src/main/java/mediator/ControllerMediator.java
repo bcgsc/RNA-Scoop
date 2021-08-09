@@ -143,6 +143,12 @@ public class ControllerMediator implements Mediator{
         consoleController.addConsoleMessage(message);
     }
 
+    // Dataset loader functions
+
+    public void clearLoadedDatasetDataAndScreen() {
+        datasetLoaderController.clearLoadedDatasetDataAndScreen();
+    }
+
     // Display Genes
     public void displayGeneFilterer() {
         geneFiltererController.display();
@@ -867,10 +873,6 @@ public class ControllerMediator implements Mediator{
         datasetLoaderController.disable();
     }
 
-    public void disableLoadingDatasetAssociatedFunctionality() {
-        mainController.disableLoadingDatasetAssociatedFunctionality();
-    }
-
     //Enable Functionality
     public void enableMain() {
         mainController.enable();
@@ -906,10 +908,6 @@ public class ControllerMediator implements Mediator{
 
     public void enableDatasetLoader() {
         datasetLoaderController.enable();
-    }
-
-    public void enableLoadingDatasetAssociatedFunctionality() {
-        mainController.enableLoadingDatasetAssociatedFunctionality();
     }
 
     // Everything below here is in support of Singleton pattern
