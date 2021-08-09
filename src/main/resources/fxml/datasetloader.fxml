@@ -20,7 +20,7 @@
                 <fx:define>
                     <ToggleGroup fx:id="loadToggles"/>
                 </fx:define>
-                <RadioButton fx:id="jsonLoadOption" text="Load by JSON" style="-fx-font-size: 13;" selected="true" toggleGroup="$loadToggles"/>
+                <RadioButton fx:id="jsonLoadOption" text="Load by JSON input file:" style="-fx-font-size: 13;" selected="true" toggleGroup="$loadToggles"/>
                 <VBox spacing="10">
                     <Text style="-fx-font-size: 13;" text="JSON" />
                     <HBox>
@@ -33,7 +33,7 @@
                     </HBox>
                 </VBox>
                 <Separator/>
-                <RadioButton fx:id="filesLoadOption" text="Load by individual files" style="-fx-font-size: 13;" toggleGroup="$loadToggles"/>
+                <RadioButton fx:id="filesLoadOption" text="Load by selecting individual files:" style="-fx-font-size: 13;" toggleGroup="$loadToggles"/>
                 <VBox spacing="10">
                     <Text style="-fx-font-size: 13;" text="Transcript annotation GTF" />
                     <HBox>
