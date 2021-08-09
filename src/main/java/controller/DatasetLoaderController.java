@@ -46,14 +46,15 @@ public class DatasetLoaderController extends PopUpController implements Initiali
     @FXML private TextField embeddingField;
     @FXML private TextField expressionUnitField;
 
-    private Toggle optionLoadedBy;
-    private String loadedJSONPath;
-    private String loadedGTFPath;
-    private String loadedMatrixPath;
-    private String loadedIsoformIDsPath;
-    private Collection<LabelSetLoaderSection> loadedLabelSets;
-    private String loadedEmbeddingPath;
-    private String loadedExpressionUnit;
+    private boolean saved = false;
+    private Toggle optionLoadedBy = null;
+    private String loadedJSONPath = null;
+    private String loadedGTFPath = null;
+    private String loadedMatrixPath = null;
+    private String loadedIsoformIDsPath = null;
+    private Collection<LabelSetLoaderSection> loadedLabelSets = null;
+    private String loadedEmbeddingPath = null;
+    private String loadedExpressionUnit = null;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -138,15 +139,17 @@ public class DatasetLoaderController extends PopUpController implements Initiali
     }
 
     private void resetDatasetLoaderFieldsToSaved() {
-        optionLoadedBy.setSelected(true);
-        jsonField.setText(loadedJSONPath);
-        gtfField.setText(loadedGTFPath);
-        matrixField.setText(loadedMatrixPath);
-        isoformIDsField.setText(loadedIsoformIDsPath);
-        labelSets.getChildren().clear();
-        labelSets.getChildren().addAll(loadedLabelSets);
-        embeddingField.setText(loadedEmbeddingPath);
-        expressionUnitField.setText(loadedExpressionUnit);
+        if (saved) {
+            optionLoadedBy.setSelected(true);
+            jsonField.setText(loadedJSONPath);
+            gtfField.setText(loadedGTFPath);
+            matrixField.setText(loadedMatrixPath);
+            isoformIDsField.setText(loadedIsoformIDsPath);
+            labelSets.getChildren().clear();
+            labelSets.getChildren().addAll(loadedLabelSets);
+            embeddingField.setText(loadedEmbeddingPath);
+            expressionUnitField.setText(loadedExpressionUnit);
+        }
     }
 
     private void saveLoadedDatasetData() {
@@ -158,6 +161,7 @@ public class DatasetLoaderController extends PopUpController implements Initiali
         saveLoadedLabelSets();
         loadedEmbeddingPath = embeddingField.getText();
         loadedExpressionUnit = expressionUnitField.getText();
+        saved = true;
     }
 
     private void clearLoadedDatasetData() {
@@ -170,6 +174,7 @@ public class DatasetLoaderController extends PopUpController implements Initiali
         loadedIsoformIDsPath = "";
         loadedEmbeddingPath = "";
         loadedExpressionUnit = "";
+        saved = false;
     }
 
     private void saveLoadedLabelSets() {
