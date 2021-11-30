@@ -56,3 +56,9 @@ RNA-Scoop is written in Java with IntelliJ IDEA. It uses the following external 
 * [JFreeChart (Future State Edition)](https://github.com/jfree/jfreechart-fse)
 * [JSON-Java](https://github.com/stleary/JSON-java)
 * [ControlsFX](https://github.com/controlsfx/controlsfx)
+
+## Citing RNA-Scoop :scroll:
+
+If you use RNA-Scoop in your work, please cite [our publication](https://academic.oup.com/nargab/article-abstract/doi/10.1093/nargab/lqab105/6445923):
+
+> Maria Stephenson, Ka Ming Nip, Saber HafezQorani, Kristina K Gagalova, Chen Yang, René L Warren, Inanc Birol. RNA-Scoop: interactive visualization of transcripts in single-cell transcriptomes. NAR Genomics and Bioinformatics, Volume 3, Issue 4, December 2021, lqab105, https://doi.org/10.1093/nargab/lqab105
