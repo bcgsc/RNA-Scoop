@@ -49,6 +49,15 @@ RNA-Scoop can be run as simple as:
 java -jar /path/to/RNA-Scoop.jar ...
 ```
 
+## Tutorial :mag:
+
+Consult our [wiki pages](https://github.com/bcgsc/RNA-Scoop/wiki) for an introduction to highlight features in RNA-Scoop.
+
+Watch Maria's 8-minute conference talk at the BioVis COSI at ISMB 2020.
+
+[![RNA-Scoop @ BioVis ISMB 2020](https://img.youtube.com/vi/QPR_NVUQz5M/0.jpg)](https://www.youtube.com/watch?v=QPR_NVUQz5M)
+
+
 ## Setting max heap space in Java :floppy_disk:
 
 The memory required for RNA-Scoop depends of the dimension (rows, columns) of the input expression matrix. If a memory error is encountered while running RNA-Scoop (i.e. `java.lang.OutOfMemoryError: Java heap space`), then the max heap space in Java needs to be increased, e.g.
@@ -57,10 +66,6 @@ java -Xmx16g -jar /path/to/RNA-Scoop.jar ...
 ```
 
 This limits the maximum Java heap to 16 GB with the `-Xmx` option. See documentation for other [JVM options](https://docs.oracle.com/cd/E37116_01/install.111210/e23737/configuring_jvm.htm#OUDIG00071).
-
-## Tutorial :mag:
-
-Please consult our [wiki pages](https://github.com/bcgsc/RNA-Scoop/wiki) for an introduction to highlight features in RNA-Scoop.
 
 ## Implementation :pencil:
 
