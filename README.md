@@ -11,7 +11,7 @@ Specifically, users are able to:
 * Identify isoform expression levels within cells
 * Compare isoform expression across clusters
 
-Written by [Maria Stephenson](mailto:mstephenson@bcgsc.ca) and [Ka Ming Nip](mailto:kmnip@bcgsc.ca) :email:
+Written by [Maria Stephenson](mailto:maria.stephenson235@gmail.com) and [Ka Ming Nip](mailto:kmnip@bcgsc.ca) :email:
 
 ---    
 
