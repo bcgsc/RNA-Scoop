@@ -24,15 +24,20 @@ RNA-Scoop is designed to work with data produced from single-cell protocols that
 * [Java SE Runtime Environment (JRE) 8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)
   * This is not the same as OpenJDK!
 
-Alternatively, you can create a `conda` environment:
+Alternatively, you can create a dedicated `conda` environment to install JRE8:
 ```
 conda create -n rnascoop -c cyclus java-jre -y
 ```
-To activate this environment, use
+
+To activate this `conda` environment, use
 ```
 conda activate rnascoop
 ```
-To deactivate an active environment, use
+You can run RNA-Scoop within this `conda` environment.
+
+**Please note that these commands do not download/install RNA-Scoop! See the next section for more details.**
+
+To deactivate the active `conda` environment, use
 ```
 conda deactivate
 ```
