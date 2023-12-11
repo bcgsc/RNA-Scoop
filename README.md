@@ -28,14 +28,13 @@ Alternatively, you can create a dedicated `conda` environment to install JRE8:
 ```
 conda create -n rnascoop -c cyclus java-jre -y
 ```
+**Please note that the above command does not install RNA-Scoop in `conda`!**
 
 To activate this `conda` environment, use
 ```
 conda activate rnascoop
 ```
-You can run RNA-Scoop within this `conda` environment.
-
-**Please note that these commands do not download/install RNA-Scoop! See the next section for more details.**
+You can run RNA-Scoop within this `conda` environment if you already have the RNA-Scoop JAR file. See the next section for more details.
 
 To deactivate the active `conda` environment, use
 ```
