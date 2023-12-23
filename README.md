@@ -17,7 +17,7 @@ Written by [Maria Stephenson](mailto:maria.stephenson235@gmail.com) and [Ka Ming
 
 ## Disclaimer :warning:
 
-RNA-Scoop is designed to work with data produced from single-cell protocols that supports transcript isoform level analysis. In other words, 3' end capture protocols (such as 10x Genomics or Drop-Seq) designed for measuring gene expression in single cells are NOT supported.
+RNA-Scoop is designed to work with data produced from single-cell protocols that supports transcript isoform level analysis. In other words, 3' end capture protocols (such as 10x Genomics or Drop-Seq) designed for measuring gene expression in single cells are NOT supported. Additionally, while the tool provides does provide fold-change values for isoforms, and a way to filter for different isoform expression patterns, it is primarily a visualization tool. One should use other tools specifically made for tasks like differential isoform expression analysis for more precise calculations.
 
 ## Dependency :pushpin:
 
@@ -26,13 +26,13 @@ RNA-Scoop is designed to work with data produced from single-cell protocols that
 
 Alternatively, you can create a dedicated `conda` environment to install JRE8:
 ```
-conda create -n rnascoop -c cyclus java-jre -y
+conda create -n jre-8-env -c cyclus java-jre -y
 ```
 **Please note that the above command does not install RNA-Scoop in `conda`!**
 
 To activate this `conda` environment, use
 ```
-conda activate rnascoop
+conda activate jre-8-env
 ```
 You can run RNA-Scoop within this `conda` environment if you already have the RNA-Scoop JAR file. See the next section for more details.
 
